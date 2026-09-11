@@ -79,15 +79,28 @@ Code could not fetch it directly.
 | Mainland (Continente) | `RED` (reduzida) | 6% | Art. 18.º n.º 1 a), Lista I |
 | Mainland (Continente) | `INT` (intermédia) | 13% | Art. 18.º n.º 1 b), Lista II |
 | Mainland (Continente) | `NOR` (normal) | 23% | Art. 18.º n.º 1 c) |
-| Açores (PT-AC) | `RED`/`INT`/`NOR` | **not in this source** | Art. 18.º n.º 3 delegates to the Region's own legislative decree under Lei Orgânica n.º 2/2013 — a *separate* document, not stated here |
-| Madeira (PT-MA) | `RED`/`INT`/`NOR` | **not in this source** | same as above, for Madeira's own decree |
+| Açores (PT-AC) | `RED` (reduzida) | ⚠️ 4% (unverified) | secondary source, see below |
+| Açores (PT-AC) | `INT` (intermédia) | ⚠️ 9% (unverified) | secondary source, see below |
+| Açores (PT-AC) | `NOR` (normal) | ⚠️ 16% (unverified) | secondary source, see below |
+| Madeira (PT-MA) | `RED` (reduzida) | ⚠️ 4% (unverified, disputed) | secondary source, see below — a separate web search returned 5% for this one figure |
+| Madeira (PT-MA) | `INT` (intermédia) | ⚠️ 12% (unverified) | secondary source, see below |
+| Madeira (PT-MA) | `NOR` (normal) | ⚠️ 22% (unverified) | secondary source, see below |
 
 ## Still open
 
 Article 18 §3 only says the Regions **may** set their own reduced rates under the
 Regional Finance Law (Lei Orgânica n.º 2/2013) — it does not state what those rates
-currently are. Mainland rates are resolved (6%/13%/23%, cited above); **Açores and
-Madeira's actual current percentages still need their own primary source** — the
-regional legislative decree currently in force for each (e.g. a Decreto Legislativo
-Regional), not a blog/aggregator citing figures like 16/9/4 or 22/12/5. `docs/plans/phase-1.md`
-task 1.2 seeds mainland rates only until that source is provided.
+currently are; that requires each Region's own legislative decree (a Decreto
+Legislativo Regional), which is not in `docs/legal/`. Mainland rates are resolved
+(6%/13%/23%, cited above from the primary CIVA text).
+
+For Açores/Madeira, the owner supplied a screenshot of a third-party table quoting
+4%/9%/16% (Açores) and 4%/12%/22% (Madeira) — "informação que encontrei online," not
+the primary source. This is recorded above as a **candidate, not a confirmed value**:
+a separate web search done earlier gave the same Açores figures but 5% (not 4%) for
+Madeira's reduced rate — two secondary sources disagreeing on one figure is exactly
+why this isn't being treated as settled. `docs/plans/phase-1.md` task 1.2 seeds these
+candidate PT-AC/PT-MA values but flags them for explicit 🧑 owner sign-off (ideally
+against the Jornal Oficial da Região Autónoma dos Açores / da Madeira, or the
+region's finance department) before Phase 2's `PriceCalculator` relies on them for
+real invoices.

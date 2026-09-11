@@ -16,7 +16,7 @@ Claude Code must resolve every **[VERIFY]** item from these documents (citing do
 | `atcud-qr-portaria.pdf` + `at-qrcode-spec.pdf` | ATCUD and QR code requirements and the AT's QR code technical specification | Phase 2 | |
 | `saft-pt-structure.pdf` + `saft-pt-technical-notes.pdf` + `SAFTPT1.04_01.xsd` (or current) | SAF-T (PT) structure, notes and schema | Phase 2, 3 | |
 | `at-tabela-codigos-motivo-isencao.pdf` | Official table of VAT exemption/non-liquidation reason codes (M01–M99), invoice wording and legal basis per code | Phase 1, 2 | ✅ V4.0, 18 Jun 2026 |
-| `civa-extracts.md` | CIVA art. 18 VAT rates (standard/intermediate/reduced) for mainland Portugal, Açores and Madeira, taxable base and discounts, invoice requirements | Phase 1, 2 | ⚠️ mainland resolved (owner pasted art. 18); Açores/Madeira's actual rates still need their own regional decree — see the file's "Still open" section |
+| `civa-extracts.md` | CIVA art. 18 VAT rates (standard/intermediate/reduced) for mainland Portugal, Açores and Madeira, taxable base and discounts, invoice requirements | Phase 1, 2 | ⚠️ mainland resolved (owner pasted art. 18); Açores/Madeira have an owner-supplied candidate value, not yet confirmed against the regional decree — see the file's "Still open" section |
 
 ## AT webservices
 

@@ -2,17 +2,15 @@
 
 Scope per `docs/PLAN.md`: §6.2–6.5, §7.9.8, §7.10 of `docs/technical-scope.md`.
 
-**Prerequisite (blocking, Açores/Madeira tax rates only):** exemption reasons are
-resolved (`docs/legal/at-tabela-codigos-motivo-isencao.pdf`, V4.0), and mainland VAT
-rates are resolved (`docs/legal/civa-extracts.md`, CIVA art. 18.º n.º 1: 6%/13%/23%,
-pasted by the owner since this sandbox's network egress is blocked for
-`portaldasfinancas.gov.pt`). **Açores and Madeira's actual rates are still open**:
-art. 18.º §3 only says the regions *may* set their own reduced rates under Lei
-Orgânica n.º 2/2013 — it doesn't state the current values, and the widely-quoted
-16/9/4 and 22/12/5 figures found by web search are secondary sources, not the
-regional decree itself. 🧑 owner needs to supply that decree (or confirm the
-figures against it) before task 1.2 can seed PT-AC/PT-MA for real. Everything else
-in this phase has no external dependency.
+**Prerequisite:** no longer blocking. Exemption reasons are resolved
+(`docs/legal/at-tabela-codigos-motivo-isencao.pdf`, V4.0), mainland VAT rates are
+resolved from the primary CIVA text (`docs/legal/civa-extracts.md`: 6%/13%/23%), and
+Açores/Madeira now have an owner-supplied **candidate** value (4%/9%/16% and
+4%/12%/22%) — found online, not the regional decree itself, and one figure
+(Madeira's reduced rate) is disputed between two secondary sources (4% vs 5%). Task
+1.2 seeds all three regions but flags PT-AC/PT-MA as unconfirmed; 🧑 owner sign-off
+against the actual regional decree is a Phase 1 exit criterion, same treatment as
+the mainland dev-seed data.
 
 Depends on Phase 0 being complete: module/Deptrac skeleton (0.5), `Clock`/`Nif`/decimal
 value objects (0.6), auth (0.8), `CompanyContext` + RLS + isolation test pattern (0.9),
@@ -43,12 +41,14 @@ any authenticated user may read them, same as they're global, not company-scoped
    multi-line totals) that becomes the first building block of the real
    `PriceCalculator` in Phase 2, so Phase 2 extends it rather than replacing it
    (§7.9.2 principle 1: one calculator, no second implementation).
-3. **Tax seed data:** mainland rates (6 %/13 %/23 %, codes RED/INT/NOR) are now
-   resolved from the primary source — `docs/legal/civa-extracts.md`, CIVA art. 18.º
-   n.º 1 — so task 1.2 seeds them for real, not as a placeholder. `exemption_reasons`
-   is likewise seeded in full from `docs/legal/at-tabela-codigos-motivo-isencao.pdf`
-   (V4.0). **PT-AC/PT-MA rates stay empty** until the owner supplies the actual
-   regional decree (see prerequisite above) — confirm this split is acceptable.
+3. **Tax seed data:** mainland rates (6 %/13 %/23 %, codes RED/INT/NOR) are resolved
+   from the primary source — `docs/legal/civa-extracts.md`, CIVA art. 18.º n.º 1 —
+   so task 1.2 seeds them for real. `exemption_reasons` is likewise seeded in full
+   from `docs/legal/at-tabela-codigos-motivo-isencao.pdf` (V4.0). **PT-AC/PT-MA are
+   seeded too, from the owner-supplied candidate values (4 %/9 %/16 % and
+   4 %/12 %/22 %)**, but with a `description`/comment flagging them as unconfirmed
+   against the actual regional decree (see prerequisite above) — confirm this
+   treatment is acceptable, or say if you'd rather they stay empty until confirmed.
 4. Extends the Phase 0 `CreateCompany` use case (additive, not a fiscal table) to
    also create the default warehouse (task 1.9) — `warehouses` doesn't exist until
    this phase.
@@ -86,22 +86,25 @@ the seed migration idempotency (running twice doesn't duplicate rows).
   exactly as the table states, citing the document in the migration's own comment
   per CLAUDE.md's "[VERIFY] must cite document and section" rule.
 - `tax_rates`: seed **mainland rates** (RED 6%, INT 13%, NOR 23%) from
-  `docs/legal/civa-extracts.md`, CIVA art. 18.º n.º 1 (decision 3 above); leave
-  PT-AC/PT-MA empty until the owner supplies the actual regional decree, with a
-  `TODO` migration stub the owner fills in.
+  `docs/legal/civa-extracts.md`, CIVA art. 18.º n.º 1, plus **Açores** (RED 4%, INT
+  9%, NOR 16%) and **Madeira** (RED 4%, INT 12%, NOR 22%) from the owner-supplied
+  candidate values (decision 3 above) — each PT-AC/PT-MA row's `description` states
+  "unconfirmed against the regional decree" so this is visible wherever the row is
+  read, not just in the migration source.
 - `GET /api/v1/tax-rates`, `GET /api/v1/exemption-reasons`, both filterable by
   `region` and resolvable "as of" a given date.
 - Domain service `Tax\Domain\TaxRateResolver`: given `(region, code, date)` →
   applicable rate, erroring (not silently picking the nearest) if none matches —
   this is what Phase 2's `PriceCalculator` will call.
 
-**Accept:** schema + migration mechanism merged and tested; mainland tax rates and
-the full exemption-reasons table seeded and covered by tests — a validity-date
-resolution unit test for `tax_rates` (rate changes on `valid_from`/`valid_to`
-boundaries) and a test asserting the exemption-reasons seed matches the source
-document's row count and a sample of codes; PT-AC/PT-MA rates explicitly pending,
-tracked as a follow-up note in this file until the owner supplies the regional
-decree, at which point they ship as a small additive migration + 🧑 owner review
+**Accept:** schema + migration mechanism merged and tested; mainland, Açores and
+Madeira tax rates and the full exemption-reasons table seeded and covered by
+tests — a validity-date resolution unit test for `tax_rates` (rate changes on
+`valid_from`/`valid_to` boundaries) and a test asserting the exemption-reasons seed
+matches the source document's row count and a sample of codes; PT-AC/PT-MA rows
+carry the "unconfirmed" description and are tracked as a follow-up note in this
+file until the owner confirms or corrects them against the regional decree, at
+which point the fix ships as a small additive migration + 🧑 owner review
 (per CLAUDE.md: "pricing test vectors reviewed by the owner" applies here too,
 since this data feeds VAT calculation).
 
@@ -235,7 +238,7 @@ products, create a warehouse, switch company and confirm the lists change.
   the end).
 - Playwright e2e from task 1.10 passes in CI.
 - 🧑 Owner confirms mainland tax-rate seed data and the exemption-reasons seed
-  (task 1.2) are correct, and supplies the Açores/Madeira regional decree so
-  PT-AC/PT-MA rates can be completed before Phase 2 needs them (Phase 2's own
+  (task 1.2) are correct, and confirms or corrects the candidate PT-AC/PT-MA rates
+  against the actual regional decree before Phase 2 needs them (Phase 2's own
   prerequisite already requires this).
 - 🧑 Owner review of Phase 1 before starting Phase 2.

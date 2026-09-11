@@ -183,11 +183,12 @@ Everything technical is green; this phase is ready for 🧑 owner review before 
 
 ## Phase 1 — Master data (§6.2–6.5, §7.9.8, §7.10)
 
-Prerequisite: 🧑 legal source for the Açores/Madeira VAT rates in `docs/legal/`
-(exemption reasons and mainland rates are resolved — `docs/legal/at-tabela-codigos-motivo-isencao.pdf`,
+No longer blocked: exemption reasons and mainland VAT rates are resolved from
+primary sources, and Açores/Madeira have an owner-supplied candidate value pending
+final confirmation (`docs/legal/at-tabela-codigos-motivo-isencao.pdf`,
 `docs/legal/civa-extracts.md`). See `docs/plans/phase-1.md` for the full task
-breakdown, decisions made while planning it (`docs/decisions/0003` among them),
-and the exact blocker.
+breakdown and the decisions made while planning it (`docs/decisions/0003` among
+them).
 
 Scope for `docs/plans/phase-1.md`:
 - Global reference data with versioned seeds: document types (incl. OR, PF, NE), tax rates for PT, PT-AC, PT-MA with validity dates, exemption reasons (M codes), units, countries. 🧑 Owner verifies the seed data against official sources.
