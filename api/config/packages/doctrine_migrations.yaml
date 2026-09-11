@@ -1,0 +1,10 @@
+doctrine_migrations:
+    migrations_paths:
+        # namespace is arbitrary but should be different from App\Migrations
+        # as migrations classes should NOT be autoloaded
+        'DoctrineMigrations': '%kernel.project_dir%/migrations'
+    enable_profiler: false
+    # Migrations run as the schema-owning role (app_owner), never as the
+    # app_runtime role the application connects as (CLAUDE.md — multi-tenancy).
+    connection: migrations
+

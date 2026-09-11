@@ -8,6 +8,14 @@ services:
       - ./api:/app
     environment:
       SERVER_NAME: ":80"
+      APP_ENV: dev
+      # Overrides api/.env for the Docker network (service hostnames, not 127.0.0.1).
+      # Passwords are the throwaway dev-only values from docker/postgres/init/01-roles.sql.
+      DATABASE_URL: "postgresql://app_runtime:app_runtime@postgres:5432/tc_erp?serverVersion=16&charset=utf8"
+      DATABASE_MIGRATIONS_URL: "postgresql://app_owner:app_owner@postgres:5432/tc_erp?serverVersion=16&charset=utf8"
+      REDIS_URL: "redis://redis:6379"
+      MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
+      MAILER_DSN: "smtp://mailpit:1025"
     ports:
       - "8080:80"
     depends_on:
@@ -16,9 +24,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      # Placeholder: checks the port is listening. Task 0.3 replaces this with
-      # a check against GET /api/v1/health once the Symfony app exists.
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/80"]
+      test: ["CMD", "curl", "-f", "http://localhost/api/v1/health"]
       interval: 10s
       timeout: 3s
       retries: 10

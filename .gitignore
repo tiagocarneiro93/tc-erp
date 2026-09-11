@@ -1,5 +1,5 @@
-# Environment
-.env
+# Environment — .env and .env.<APP_ENV> hold committed dev-only defaults
+# (Symfony convention); only the .local overrides are actual secrets.
 .env.local
 .env.*.local
 

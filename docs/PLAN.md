@@ -43,12 +43,14 @@ This plan turns `docs/technical-scope.md` into ordered, verifiable work. It is w
 **Note:** built and validated in a sandbox without a Docker daemon (`docker compose config` validated, `make help` verified), so `make up` itself is unverified — please confirm it starts all six services healthy on your machine before we move on. The `php` service's healthcheck is a placeholder TCP check; task 0.3 will point it at the real `/api/v1/health` endpoint.
 
 ### 0.3 Symfony application
-- [ ] Symfony 7.4 skeleton in `/api` with: ORM pack (Doctrine, migrations), Messenger, Security, Validator, Serializer, Uid, Monolog, NelmioApiDocBundle, `brick/math`, `brick/money`, Symfony Mailer, rate limiter.
-- [ ] `declare(strict_types=1);` everywhere.
-- [ ] Two DB connection URLs: `DATABASE_URL` (as `app_runtime`, used by the app) and `DATABASE_MIGRATIONS_URL` (as `app_owner`, used only by `make migrate`).
-- [ ] Health endpoint `GET /api/v1/health` (checks DB and Redis).
+- [x] Symfony 7.4 skeleton in `/api` with: ORM pack (Doctrine, migrations), Messenger, Security, Validator, Serializer, Uid, Monolog, NelmioApiDocBundle, `brick/math`, `brick/money`, Symfony Mailer, rate limiter.
+- [x] `declare(strict_types=1);` everywhere. (All app code written so far has it; task 0.4's PHP-CS-Fixer `declare_strict_types` rule enforces it repo-wide from then on, including recipe-managed boilerplate.)
+- [x] Two DB connection URLs: `DATABASE_URL` (as `app_runtime`, used by the app) and `DATABASE_MIGRATIONS_URL` (as `app_owner`, used only by `make migrate`).
+- [x] Health endpoint `GET /api/v1/health` (checks DB and Redis).
 
 **Accept:** health endpoint returns 200 in Docker; migrations run as owner, app runs as runtime role.
+
+**Note:** verified locally against real PostgreSQL/Redis instances in this sandbox (no Docker daemon available here — see task 0.2's note); `docker-compose.yml`'s `php` service env vars and healthcheck were updated to match. Please confirm `make up` + `curl http://localhost:8080/api/v1/health` on your machine. `doctrine:migrations:status` confirmed the `migrations` connection reaches Postgres as `app_owner`; `psql` as `app_runtime` still cannot `CREATE TABLE` (re-verified after wiring the real app, not just the container).
 
 ### 0.4 Quality tooling and CI
 - [ ] PHP-CS-Fixer (PER-CS + Symfony rules), PHPStan level max with `phpstan-symfony` and `phpstan-doctrine`, PHPUnit, Deptrac.
