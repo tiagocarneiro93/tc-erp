@@ -2,6 +2,8 @@
 
 Claude Code must resolve every **[VERIFY]** item from these documents (citing document and section). Keep the files here, named clearly, and note the version/date downloaded. Always download the **current consolidated version** from official sources (Diário da República, Portal das Finanças, e-Fatura documentation).
 
+**Known limitation:** this sandbox's network egress is blocked for `portaldasfinancas.gov.pt` (and possibly other government domains) — Claude Code cannot fetch these directly and needs the file uploaded instead (save the page as PDF, or paste its content). `civa-extracts.md` (CIVA art. 18 VAT rates) is blocked on this for now; see `docs/plans/phase-1.md`.
+
 ## Certification, invoicing and SAF-T
 
 | File (suggested name) | Content | Needed for | Status |
@@ -13,7 +15,8 @@ Claude Code must resolve every **[VERIFY]** item from these documents (citing do
 | `dl-198-2012.pdf` | Communication of invoice elements to the AT (art. 3) and goods in circulation | Phase 3, 4 | |
 | `atcud-qr-portaria.pdf` + `at-qrcode-spec.pdf` | ATCUD and QR code requirements and the AT's QR code technical specification | Phase 2 | |
 | `saft-pt-structure.pdf` + `saft-pt-technical-notes.pdf` + `SAFTPT1.04_01.xsd` (or current) | SAF-T (PT) structure, notes and schema | Phase 2, 3 | |
-| `civa-extracts.md` | VAT Code references: rates, exemptions (M codes), taxable base and discounts, invoice requirements | Phase 1, 2 | |
+| `at-tabela-codigos-motivo-isencao.pdf` | Official table of VAT exemption/non-liquidation reason codes (M01–M99), invoice wording and legal basis per code | Phase 1, 2 | ✅ V4.0, 18 Jun 2026 |
+| `civa-extracts.md` | CIVA art. 18 VAT rates (standard/intermediate/reduced) for mainland Portugal, Açores and Madeira, taxable base and discounts, invoice requirements | Phase 1, 2 | ⚠️ blocked — see note below |
 
 ## AT webservices
 
