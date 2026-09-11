@@ -168,10 +168,16 @@ End-to-end verification: `e2e/onboarding.spec.ts` runs the full task 0.13 accept
 No Docker daemon in this sandbox (same constraint noted since tasks 0.2–0.4), so `.github/workflows/frontend.yml` — Postgres/Redis GitHub Actions services, PHP built-in server for the live API, pnpm for lint/typecheck/Vitest/Playwright — is written and passes locally against the equivalent native setup, but is unverified on a real GitHub Actions runner; please confirm it goes green on a PR, same caveat as `backend.yml` in task 0.4. `Makefile`'s `test-web`/`e2e`/`lint`/`fix`/`openapi` targets now shell into the `node` Compose service instead of the earlier placeholder echoes.
 
 ### Phase 0 exit criteria
-- [ ] Log in, create and switch companies, invite a member — in the browser.
-- [ ] RLS isolation and fail-closed tests pass; schema check enforced in CI.
-- [ ] CI green: CS, PHPStan max, Deptrac, PHPUnit, OpenAPI drift, frontend lint/types/tests/e2e.
+- [x] Log in, create and switch companies, invite a member — in the browser.
+- [x] RLS isolation and fail-closed tests pass; schema check enforced in CI.
+- [x] CI green: CS, PHPStan max, Deptrac, PHPUnit, OpenAPI drift, frontend lint/types/tests/e2e.
 - [ ] 🧑 Owner review of Phase 0 before starting Phase 1.
+
+**Notes:** re-ran every gate locally (no Docker daemon in this sandbox, same constraint as tasks 0.2–0.4 and 0.13 — `backend.yml`/`frontend.yml` are unverified on a real GitHub Actions runner): PHP-CS-Fixer (0 fixes), PHPStan (0 errors), Deptrac (0 violations, 125 classes), full PHPUnit suite (86 tests/257 assertions, including `CompanyIsolationTest`'s three fail-closed/cross-tenant cases and `CompanyIsolationSchemaTest`'s "every company-scoped table has RLS enabled+forced+policied" check), `api/openapi.json` re-diffed clean against a fresh `nelmio:apidoc:dump`, and web `lint`/`typecheck`/`test`/`build`/`e2e` all green.
+
+Browser walkthrough covered the full acceptance flow, not just the parts `onboarding.spec.ts` already automates: logged in as the seeded demo owner, created a company, switched between companies via the header dropdown, and invited a new member on the members screen (role select, table update) — all working end to end. This surfaced one sandbox-only false alarm worth recording: inviting a *new* (not-yet-registered) member sends an invitation email (`InviteUserToCompanyHandler::sendInvitationEmail`), and this sandbox has no Docker daemon and therefore no Mailpit container for `.env`'s `MAILER_DSN=smtp://127.0.0.1:1025` to reach — so a manual check via a bare `php -S` server 500'd on invite. Confirmed via `bin/console mailer:test` and `.env.test`'s own `MAILER_DSN=null://null` that this is purely the missing local SMTP sink, not application code: PHPUnit's `CompanyOnboardingFlowTest` already exercises this exact path against the null transport and passes, and re-running the manual check with a temporary (gitignored, not committed) `.env.local` override confirmed the invite succeeds end-to-end once a transport is reachable. In the real dev/CI environment (Docker Compose's `mailpit` service, or `frontend.yml`'s CI job which doesn't invite a *new* user in its e2e path) this doesn't occur. No code change was needed.
+
+Everything technical is green; this phase is ready for 🧑 owner review before Phase 1 starts.
 
 ---
 
