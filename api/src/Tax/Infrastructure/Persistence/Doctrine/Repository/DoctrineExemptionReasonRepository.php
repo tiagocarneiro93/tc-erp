@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tax\Infrastructure\Persistence\Doctrine\Repository;
 
+use App\Shared\Domain\Tax\ExemptionReasonExistenceChecker;
 use App\Tax\Domain\ExemptionReason;
 use App\Tax\Domain\ExemptionReasonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class DoctrineExemptionReasonRepository implements ExemptionReasonRepository
+final class DoctrineExemptionReasonRepository implements ExemptionReasonRepository, ExemptionReasonExistenceChecker
 {
     public function __construct(
         #[Autowire(service: 'doctrine.orm.default_entity_manager')]
@@ -36,5 +37,10 @@ final class DoctrineExemptionReasonRepository implements ExemptionReasonReposito
     public function find(string $code): ?ExemptionReason
     {
         return $this->entityManager->find(ExemptionReason::class, $code);
+    }
+
+    public function exists(string $code): bool
+    {
+        return null !== $this->find($code);
     }
 }

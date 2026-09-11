@@ -6,6 +6,524 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/v1/companies/{companyId}/product-families": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "get_product_families_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every product family for this company (a flat list; build the tree client-side from parent_id).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "parent_id": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "post_product_families_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductFamilyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Product family created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "parent_id does not name an existing family."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/product-families/{familyId}": {
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "put_product_families_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "familyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductFamilyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Product family updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "No such family, or parent_id does not name an existing family."
+                    },
+                    "422": {
+                        "description": "This would make the family tree cyclic, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/products": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "get_products_list",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "family_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "active",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "track_stock",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Products matching the filters, if any.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "unit_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "barcode": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "family_id": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "nullable": true
+                                                    },
+                                                    "tax_rate_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "exemption_reason_code": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "track_stock": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "last_cost": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "average_cost": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "next_cursor": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "post_products_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Product created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "family_id does not name an existing family."
+                    },
+                    "422": {
+                        "description": "Invalid type, kind, unit, tax rate, exemption reason, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/products/{productId}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "get_products_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The product.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "kind": {
+                                            "type": "string"
+                                        },
+                                        "unit_code": {
+                                            "type": "string"
+                                        },
+                                        "barcode": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "family_id": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "nullable": true
+                                        },
+                                        "tax_rate_id": {
+                                            "type": "string"
+                                        },
+                                        "exemption_reason_code": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "track_stock": {
+                                            "type": "boolean"
+                                        },
+                                        "active": {
+                                            "type": "boolean"
+                                        },
+                                        "last_cost": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "average_cost": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such product."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "put_products_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Product updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "No such product, or family_id does not name an existing family."
+                    },
+                    "422": {
+                        "description": "Invalid type, unit, tax rate, exemption reason, or the request payload failed validation."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "delete_products_deactivate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Product deactivated (active = false; not a hard delete)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "No such product."
+                    }
+                }
+            }
+        },
         "/api/v1/units": {
             "get": {
                 "tags": [
@@ -1664,6 +2182,68 @@
     },
     "components": {
         "schemas": {
+            "ProductFamilyRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "parent_id": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    }
+                },
+                "type": "object"
+            },
+            "ProductRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "type": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "kind": {
+                        "type": "string",
+                        "default": "simple"
+                    },
+                    "unit_code": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "barcode": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "family_id": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "tax_rate_id": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "exemption_reason_code": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "track_stock": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
             "UpdateAtCredentialsRequest": {
                 "properties": {
                     "subuser": {
@@ -1936,6 +2516,9 @@
         }
     },
     "tags": [
+        {
+            "name": "Products"
+        },
         {
             "name": "Reference data"
         },

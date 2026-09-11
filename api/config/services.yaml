@@ -146,6 +146,18 @@ services:
     App\Parties\Domain\AddressRepository:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineAddressRepository
         public: true
+    App\Shared\Domain\Tax\TaxRateExistenceChecker:
+        alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineTaxRateRepository
+        public: true
+    App\Shared\Domain\Tax\ExemptionReasonExistenceChecker:
+        alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineExemptionReasonRepository
+        public: true
+    App\Catalog\Domain\ProductFamilyRepository:
+        alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineProductFamilyRepository
+        public: true
+    App\Catalog\Domain\ProductRepository:
+        alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineProductRepository
+        public: true
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:

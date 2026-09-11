@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Catalog\Domain\Product" table="products">
+        <id name="id" type="product_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="code" type="string" column="code" />
+        <field name="description" type="string" column="description" />
+        <field name="type" type="string" column="type" />
+        <field name="kind" type="string" column="kind" />
+        <field name="unitCode" type="string" column="unit_code" />
+        <field name="barcode" type="string" column="barcode" nullable="true" />
+        <field name="familyId" type="product_family_id" column="family_id" nullable="true" />
+        <field name="taxRateId" type="string" column="tax_rate_id" />
+        <field name="exemptionReasonCode" type="string" column="exemption_reason_code" nullable="true" />
+        <field name="trackStock" type="boolean" column="track_stock" />
+        <field name="active" type="boolean" column="active" />
+        <field name="lastCost" type="decimal" column="last_cost" precision="19" scale="6" nullable="true" />
+        <field name="averageCost" type="decimal" column="average_cost" precision="19" scale="6" nullable="true" />
+
+        <indexes>
+            <index name="idx_products_company_code" columns="company_id,code" />
+            <index name="idx_products_company_family" columns="company_id,family_id" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

@@ -70,6 +70,18 @@ once in Shared, implemented wherever the concrete knowledge lives).
   `customers`/`suppliers.country` — unlike `PermissionDenied`/`InvalidNif`
   above, this one had no other Platform usage to preserve, so it was
   promoted in place rather than duplicated.
+- Task 1.6 extended the same pattern beyond permissions/actor-identity to
+  reference-data *existence checks*: `App\Shared\Domain\Tax\TaxRateExistenceChecker`
+  and `...\ExemptionReasonExistenceChecker` let Catalog validate
+  `products.tax_rate_id`/`.exemption_reason_code` against Tax's tables
+  without depending on `Tax\Domain\{TaxRateRepository,ExemptionReasonRepository}`.
+  Unlike `InvalidCountryCode`, `TaxRate`/`ExemptionReason` themselves stay
+  exactly where §4.1 already assigns them (Tax owns tax rates and exemption
+  reasons explicitly, unlike `Country`, which phase-1.md's own module-
+  placement notes left unassigned) — only a narrow yes/no port moves to
+  Shared, implemented by the same `DoctrineTaxRateRepository`/
+  `DoctrineExemptionReasonRepository` classes (one class, two interfaces,
+  same as `SymfonyPermissionChecker`).
 
 Both new ports are aliased in `config/services.yaml` to the same Platform
 Infrastructure classes as before (`SymfonyPermissionChecker`,

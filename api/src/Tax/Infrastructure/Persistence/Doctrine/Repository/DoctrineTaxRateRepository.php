@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tax\Infrastructure\Persistence\Doctrine\Repository;
 
+use App\Shared\Domain\Tax\TaxRateExistenceChecker;
 use App\Tax\Domain\TaxRate;
+use App\Tax\Domain\TaxRateId;
 use App\Tax\Domain\TaxRateRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class DoctrineTaxRateRepository implements TaxRateRepository
+final class DoctrineTaxRateRepository implements TaxRateRepository, TaxRateExistenceChecker
 {
     public function __construct(
         #[Autowire(service: 'doctrine.orm.default_entity_manager')]
@@ -55,5 +57,16 @@ final class DoctrineTaxRateRepository implements TaxRateRepository
             ->getOneOrNullResult();
 
         return $result instanceof TaxRate ? $result : null;
+    }
+
+    public function exists(string $taxRateId): bool
+    {
+        try {
+            $id = TaxRateId::fromString($taxRateId);
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
+
+        return null !== $this->entityManager->find(TaxRate::class, $id);
     }
 }
