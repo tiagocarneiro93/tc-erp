@@ -15,5 +15,11 @@
         <field name="validFrom" type="datetimetz_immutable" column="valid_from" />
         <field name="validTo" type="datetimetz_immutable" column="valid_to" nullable="true" />
         <field name="description" type="string" column="description" />
+
+        <unique-constraints>
+            <!-- Exactly one rate per (region, code) effective on a given
+                 date; also the seed migration's ON CONFLICT target. -->
+            <unique-constraint name="uniq_tax_rates_region_code_valid_from" columns="region,code,valid_from" />
+        </unique-constraints>
     </entity>
 </doctrine-mapping>

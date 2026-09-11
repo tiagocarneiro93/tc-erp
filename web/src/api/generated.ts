@@ -64,6 +64,19 @@ export type GetUnitsList200 = {
   items?: GetUnitsList200ItemsItem[];
 };
 
+export type GetDocumentTypesList200ItemsItem = {
+  code?: string;
+  saft_section?: string;
+  signed?: boolean;
+  stock_effect?: string;
+  account_effect?: string;
+  requires_at_prior_communication?: boolean;
+};
+
+export type GetDocumentTypesList200 = {
+  items?: GetDocumentTypesList200ItemsItem[];
+};
+
 export type PostAuthLoginBody = {
   email?: string;
   password?: string;
@@ -280,6 +293,101 @@ export function useGetUnitsList<TData = Awaited<ReturnType<typeof getUnitsList>>
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetUnitsListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetDocumentTypesListUrl = () => {
+
+
+
+
+  return `/api/v1/document-types`
+}
+
+export const getDocumentTypesList = async ( options?: RequestInit): Promise<GetDocumentTypesList200> => {
+
+  return httpClient<GetDocumentTypesList200>(getGetDocumentTypesListUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDocumentTypesListQueryKey = () => {
+    return [
+    `/api/v1/document-types`
+    ] as const;
+    }
+
+
+export const getGetDocumentTypesListQueryOptions = <TData = Awaited<ReturnType<typeof getDocumentTypesList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentTypesList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDocumentTypesListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDocumentTypesList>>> = ({ signal }) => getDocumentTypesList({ signal });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDocumentTypesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDocumentTypesListQueryResult = NonNullable<Awaited<ReturnType<typeof getDocumentTypesList>>>
+export type GetDocumentTypesListQueryError = unknown
+
+
+export function useGetDocumentTypesList<TData = Awaited<ReturnType<typeof getDocumentTypesList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentTypesList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDocumentTypesList>>,
+          TError,
+          Awaited<ReturnType<typeof getDocumentTypesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDocumentTypesList<TData = Awaited<ReturnType<typeof getDocumentTypesList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentTypesList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDocumentTypesList>>,
+          TError,
+          Awaited<ReturnType<typeof getDocumentTypesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDocumentTypesList<TData = Awaited<ReturnType<typeof getDocumentTypesList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentTypesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetDocumentTypesList<TData = Awaited<ReturnType<typeof getDocumentTypesList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentTypesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDocumentTypesListQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

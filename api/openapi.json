@@ -45,6 +45,54 @@
                 }
             }
         },
+        "/api/v1/document-types": {
+            "get": {
+                "tags": [
+                    "Reference data"
+                ],
+                "operationId": "get_document_types_list",
+                "responses": {
+                    "200": {
+                        "description": "All fiscal document types.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "saft_section": {
+                                                        "type": "string"
+                                                    },
+                                                    "signed": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "stock_effect": {
+                                                        "type": "string"
+                                                    },
+                                                    "account_effect": {
+                                                        "type": "string"
+                                                    },
+                                                    "requires_at_prior_communication": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "tags": [

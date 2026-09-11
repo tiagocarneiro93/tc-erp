@@ -62,6 +62,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Tax/Infrastructure/Persistence/Doctrine/Mapping'
                         prefix: 'App\Tax\Domain'
                         alias: Tax
+                    Fiscal:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Fiscal/Infrastructure/Persistence/Doctrine/Mapping'
+                        prefix: 'App\Fiscal\Domain'
+                        alias: Fiscal
             # Same mappings, but via the app_owner connection — used only by
             # the migrations CLI (config/packages/doctrine_migrations.yaml),
             # never by the running application, so `doctrine:migrations:diff`
