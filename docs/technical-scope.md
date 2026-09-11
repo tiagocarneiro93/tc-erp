@@ -1,4 +1,4 @@
-# Invoicing & ERP Platform — Technical Scope v0.5
+# Invoicing & ERP Platform — Technical Scope v0.7
 
 **Codename:** tc-erp (product brand to be defined)
 **Author:** Tiago Carneiro (TCWeb)
@@ -7,6 +7,8 @@
 **Changes in v0.3:** discount order (§7.9.4), product prices with or without VAT (§7.9.8), composite products / kits (§7.10) — kits priced and taxed as a single item.
 **Changes in v0.4:** working documents (quotes, proformas, orders) moved into v1 (§6.8); open decisions reorganised by phase with recommendations (§14).
 **Changes in v0.5:** Phase 0 decisions confirmed (§14.1).
+**Changes in v0.6:** PDFs generated on demand, only sealed PDFs sent electronically are stored (§7.8); issuer snapshot and template version on documents; print log.
+**Changes in v0.7:** seal model (per-company qualified seal, remote hash signing, PAdES embedded in PHP) and storage sizing (§7.8).
 **Date:** September 2026
 
 > This is a living document. Every section marked **[DECIDE]** is an open decision to discuss before implementation. Items marked **[VERIFY]** must be confirmed against the current legislation (Portaria 363/2010, Despacho 8632/2014, Decreto-Lei 28/2019, the ATCUD/QR code Portaria, and the SAF-T (PT) technical notes and XSD on the Portal das Finanças) before being implemented.
@@ -335,6 +337,8 @@ documents (
 , issue_date DATE, system_entry_at TIMESTAMPTZ
 , customer_id NULL
 , customer_snapshot JSONB                -- nif, name, address, country at issuance
+, issuer_snapshot JSONB                  -- company name, NIF, address, capital, registry at issuance
+, template_version                       -- PDF layout version used for this document (§7.8)
 , pricing_mode                           -- net|gross (§7.9)
 , rounding_method                        -- per_line|per_group (§7.9.5)
 , currency CHAR(3), exchange_rate NULL
@@ -486,7 +490,10 @@ at_communications (
 audit_log (id, occurred_at, user_id NULL, api_token_id NULL, action, subject_type, subject_id,
            data JSONB, ip, user_agent)       -- insert-only
 
-stored_files (id, kind                     -- document_pdf|sealed_pdf|saft|attachment
+document_prints (id, document_id, kind   -- print|download|email
+                , copy_label, user_id, occurred_at)    -- insert-only; drives original/copy mentions (§7.8)
+
+stored_files (id, kind                     -- sealed_pdf|saft|attachment
              , subject_type, subject_id, storage_key, sha256, size, created_at)
 ```
 
@@ -567,10 +574,27 @@ Anything in steps 3–14 failing rolls everything back: no number is consumed, n
 
 ### 7.8 PDF, qualified seal and email
 
-- PDF rendered server-side from the stored document (never from UI state). Candidate: Twig templates → headless Chromium (Gotenberg service) **[DECIDE]**.
-- Contents: all legal mentions, ATCUD, QR code, 4 hash characters + certification mention, AT code for transport docs.
-- From 1 January 2027: PDFs sent electronically receive a **qualified electronic seal** through a qualified trust service provider, via an `ElectronicSealer` port **[DECIDE]** provider; start the certificate process early.
-- Original and sealed PDFs stored with SHA-256 in object storage (object lock / WORM for the 10-year retention).
+**PDFs are generated on demand**, not stored. Issued documents are immutable and contain every value the PDF needs, so a PDF is a deterministic rendering of stored data, produced when someone downloads, prints or emails it.
+
+- `DocumentPdfRenderer` port (module *Output*) with one implementation behind it; engine **[DECIDE]**: a PHP library (e.g. mPDF: no extra service, simpler operations) or Twig → Gotenberg/Chromium (best layout fidelity, one more container). The port makes the engine replaceable.
+- Rendering uses **only stored document data**: lines, totals, `customer_snapshot` and `issuer_snapshot` (so a later change of company address, logo or customer data never alters old documents).
+- **Template versioning:** each document records `template_version`; old template versions stay in the codebase so a document re-rendered years later looks as it did when issued. New layouts create a new version.
+- Contents: all legal mentions, ATCUD, QR code, 4 hash characters + certification mention, AT code for transport docs, "Este documento não serve de fatura" for working documents.
+- **Original / copies:** every print, download and email is logged in `document_prints`, so the renderer can apply the correct mentions (e.g. original, duplicate, reprint/2.ª via) **[VERIFY]** exact rules for copy and reprint mentions in the Despacho.
+- Optional short-lived cache (e.g. a few minutes) for repeated downloads of the same unsealed PDF; the cache is never a source of truth.
+
+**Sealed PDFs are the exception and are stored.** From 1 January 2027, PDFs sent electronically receive a qualified electronic seal via an `ElectronicSealer` port and a qualified trust service provider **[DECIDE]** provider. The sealed file is a signed artifact: each seal has a cost and a timestamp, and re-sealing on every download would produce a different file each time. The exact file sent to the customer is therefore stored once (object storage, SHA-256, object lock / WORM for the 10-year retention) and re-downloaded as is **[VERIFY]** archiving obligations for electronic invoices in DL 28/2019.
+
+**Seal model:**
+- Each client company needs **its own** qualified electronic seal certificate (the seal identifies the issuing company); a TCWeb certificate cannot seal other companies' invoices **[VERIFY]**.
+- Qualified keys live in a qualified signature creation device (the provider's HSM, or a chip) and cannot be exported to the server as a file. The platform therefore uses **remote sealing**: PHP renders the PDF, computes its hash, the provider signs the hash, and PHP embeds the signature into the PDF (PAdES). The PDF itself never leaves the platform.
+- Onboarding: the company obtains the seal certificate from the provider (identity checks are the provider's), then links it in company settings.
+- Personal qualified signatures (Cartão de Cidadão with professional attributes, Chave Móvel Digital) require the representative's interaction per signature, so they do not fit automatic sealing; a manual "sign with CC/CMD" flow may be considered after v1.
+- Only documents **sent electronically** are sealed and stored; documents only printed on paper are not.
+
+**Storage sizing:** growth is linear with the number of electronically sent documents, not exponential. Example: 300 companies × 500 sent documents/month × ~100 KB ≈ 15 GB/month (~180 GB/year). Mitigations: optimised PDFs (font subsetting, compressed logos), lifecycle rules moving files older than N months to a cheaper storage class, storage limits per plan.
+
+Object storage therefore holds only: sealed PDFs, SAF-T export files, and attachments (e.g. scanned supplier documents).
 
 ### 7.9 Pricing, VAT and rounding
 
@@ -815,7 +839,7 @@ Compliance & reporting
 
 ### 10.1 Local development (Docker Compose)
 
-FrankenPHP (or PHP-FPM + Caddy) · PostgreSQL 16 · Redis · Mailpit · MinIO (S3) · Gotenberg (PDF) · Vite dev server. One `make up` to start everything; seed script creating a demo company with sample data.
+FrankenPHP (or PHP-FPM + Caddy) · PostgreSQL 16 · Redis · Mailpit · MinIO (S3, for sealed PDFs, SAF-T files and attachments) · Vite dev server (+ Gotenberg only if chosen as PDF engine). One `make up` to start everything; seed script creating a demo company with sample data.
 
 ### 10.2 Production (initial)
 
@@ -951,7 +975,7 @@ Each decision has a recommendation; confirming the recommendation is enough to p
 
 | # | Decision | Recommendation |
 |---|---|---|
-| 18 | PDF engine | Gotenberg (HTML/Twig → PDF), best template control |
+| 18 | PDF engine (on-demand rendering, §7.8) | PHP library (mPDF) vs Twig → Gotenberg; decide with a quick spike rendering the invoice template in both |
 | 19 | Negative stock | Company setting, default: warn but allow |
 | 20 | Stock valuation | Weighted average cost |
 | 21 | Nested kits | Not in v1 |

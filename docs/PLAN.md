@@ -170,7 +170,7 @@ Scope for `docs/plans/phase-2.md` (suggested order):
 3. Drafts: create/update/delete, `calculate`, validation rules.
 4. Fiscal tables with immutability: grants, triggers (§6.9), status events; DB integrity tests.
 5. `DocumentSigner` port + OpenSSL adapter (dev key generated locally, git-ignored); signing string exactly per Despacho (**[VERIFY]** resolved from `docs/legal/`); golden-file tests.
-6. Issuance use case (§7.1) end to end: series lock, chronology, canonical calculation, signing, ATCUD, QR payload, inserts, series update, idempotency, audit; concurrency test (parallel issuance, no gaps/duplicates, valid chain).
+6. Issuance use case (§7.1) end to end: series lock, chronology, canonical calculation, signing, ATCUD, QR payload, inserts (with customer and issuer snapshots and template version), series update, idempotency, audit; concurrency test (parallel issuance, no gaps/duplicates, valid chain).
 7. Document types FT, FS, FR, NC, ND; references for NC/ND; credit note from document.
 8. Working documents OR, PF, NE (§6.8) and conversions (full and partial) with pending quantities.
 9. Receipts (RG) with allocations to open invoices.
@@ -186,8 +186,8 @@ Exit: all fiscal test families green (golden, concurrency, integrity, vectors); 
 Prerequisites: 🧑 trust service provider sandbox; 🧑 AT test environment access and certificates; 🧑 SAF-T XSD and AT webservice manuals in `docs/legal/`.
 
 Scope for `docs/plans/phase-3.md`:
-- Gotenberg service; Twig PDF templates with all legal mentions (hash characters + certification mention, ATCUD, QR image, "Este documento não serve de fatura" for working documents); PDFs generated from stored data only.
-- Object storage (MinIO/S3) via `stored_files`, SHA-256, retention metadata.
+- `DocumentPdfRenderer` port with on-demand rendering (§7.8): spike both engines (mPDF vs Twig → Gotenberg) on the invoice template, 🧑 owner picks one; versioned templates with all legal mentions (hash characters + certification mention, ATCUD, QR image, "Este documento não serve de fatura" for working documents); rendering from stored data and snapshots only; `document_prints` log and copy mentions.
+- Object storage (MinIO/S3) via `stored_files` for sealed PDFs, SAF-T files and attachments only, SHA-256, retention metadata.
 - `ElectronicSealer` port: fake adapter for dev/tests, provider adapter for the chosen trust service provider.
 - Email sending of documents (async).
 - SAF-T (PT) streaming generator + XSD validation in app and CI.
