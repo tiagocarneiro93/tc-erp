@@ -13,10 +13,18 @@ deptrac:
           collectors:
               - type: classNameRegex
                 value: '#^App\\Shared\\Domain\\.*#'
+        - name: Shared.Application
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Shared\\Application\\.*#'
         - name: Shared.Infrastructure
           collectors:
               - type: classNameRegex
                 value: '#^App\\Shared\\Infrastructure\\.*#'
+        - name: Shared.UIHttp
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Shared\\UI\\Http\\.*#'
 
         - name: Platform.Domain
           collectors:
@@ -34,6 +42,23 @@ deptrac:
           collectors:
               - type: classNameRegex
                 value: '#^App\\Platform\\UI\\Http\\.*#'
+
+        - name: Catalog.Domain
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Catalog\\Domain\\.*#'
+        - name: Catalog.Application
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Catalog\\Application\\.*#'
+        - name: Catalog.Infrastructure
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Catalog\\Infrastructure\\.*#'
+        - name: Catalog.UIHttp
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Catalog\\UI\\Http\\.*#'
     ruleset:
         # Domain: nothing but itself and Shared.Domain (CLAUDE.md: "Domain
         # depends on nothing outside Domain and Shared/Domain").
@@ -63,8 +88,34 @@ deptrac:
             - Platform.Domain
             - Shared.Domain
 
+        Catalog.Domain:
+            - Catalog.Domain
+            - Shared.Domain
+        Catalog.Application:
+            - Catalog.Application
+            - Catalog.Domain
+            - Shared.Domain
+        Catalog.Infrastructure:
+            - Catalog.Infrastructure
+            - Catalog.Application
+            - Catalog.Domain
+            - Shared.Domain
+            - Shared.Infrastructure
+        Catalog.UIHttp:
+            - Catalog.UIHttp
+            - Catalog.Application
+            - Catalog.Domain
+            - Shared.Domain
+
         Shared.Domain:
+            - Shared.Domain
+        Shared.Application:
+            - Shared.Application
             - Shared.Domain
         Shared.Infrastructure:
             - Shared.Infrastructure
+            - Shared.Domain
+        Shared.UIHttp:
+            - Shared.UIHttp
+            - Shared.Application
             - Shared.Domain

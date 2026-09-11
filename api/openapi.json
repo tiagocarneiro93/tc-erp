@@ -6,6 +6,45 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/v1/units": {
+            "get": {
+                "tags": [
+                    "Reference data"
+                ],
+                "operationId": "get_units_list",
+                "responses": {
+                    "200": {
+                        "description": "All units of measure.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "decimals": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "tags": [
@@ -519,6 +558,43 @@
                     }
                 }
             }
+        },
+        "/api/v1/countries": {
+            "get": {
+                "tags": [
+                    "Reference data"
+                ],
+                "operationId": "get_countries_list",
+                "responses": {
+                    "200": {
+                        "description": "All countries.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "description": "ISO 3166-1 alpha-2",
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -600,6 +676,9 @@
         }
     },
     "tags": [
+        {
+            "name": "Reference data"
+        },
         {
             "name": "Auth"
         },

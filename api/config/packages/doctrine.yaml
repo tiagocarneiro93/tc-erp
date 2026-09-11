@@ -42,6 +42,18 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Platform/Infrastructure/Persistence/Doctrine/Mapping'
                         prefix: 'App\Platform\Domain'
                         alias: Platform
+                    Shared:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Shared/Infrastructure/Persistence/Doctrine/Mapping'
+                        prefix: 'App\Shared\Domain'
+                        alias: Shared
+                    Catalog:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Catalog/Infrastructure/Persistence/Doctrine/Mapping'
+                        prefix: 'App\Catalog\Domain'
+                        alias: Catalog
             # Same mappings, but via the app_owner connection — used only by
             # the migrations CLI (config/packages/doctrine_migrations.yaml),
             # never by the running application, so `doctrine:migrations:diff`

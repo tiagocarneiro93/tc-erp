@@ -190,17 +190,14 @@ final confirmation (`docs/legal/at-tabela-codigos-motivo-isencao.pdf`,
 breakdown and the decisions made while planning it (`docs/decisions/0003` among
 them).
 
-Scope for `docs/plans/phase-1.md`:
-- Global reference data with versioned seeds: document types (incl. OR, PF, NE), tax rates for PT, PT-AC, PT-MA with validity dates, exemption reasons (M codes), units, countries. 🧑 Owner verifies the seed data against official sources.
-- Company profile and fiscal settings (`company_profile`, `settings`), encrypted AT credentials storage (no AT calls yet).
-- Customers and suppliers (NIF validation, final consumer customer, addresses).
-- Products: kinds `simple`/`kit`, SAF-T product type, units, families, default tax rate and exemption reason, `track_stock`.
-- Price lists and product prices stored **as entered** with `includes_vat` (§7.9.8); live display of the other value via a calculation endpoint (uses a first, minimal version of `PriceCalculator` for unit conversion only).
-- Kit composition (`product_components`), no nesting, cycle-free, informational VAT-rate warning.
-- Warehouses (default warehouse created at onboarding).
-- Web: list screens (TanStack Table, cursor pagination, filters, search) and forms (React Hook Form + Zod) for all of the above.
+Full task breakdown, decisions and acceptance criteria: `docs/plans/phase-1.md`.
 
-Exit: full CRUD via API and web; isolation tests for every new company table; OpenAPI and client regenerated.
+### 1.1 Global reference data: countries and units
+- [x] `countries` (Shared, global) and `units` (Catalog, global) as versioned data migrations; `GET /api/v1/countries`, `GET /api/v1/units`.
+
+**Accept:** migrations run; both endpoints return the seeded lists; PHPUnit covers the seed migration idempotency.
+
+**Notes:** first entities in both Shared and Catalog, so this task also stood up the module scaffolding: added `Shared.Application`/`Shared.UIHttp` and all four `Catalog.*` Deptrac layers (Catalog didn't exist before), plus their `orm.mappings` entries in `config/packages/doctrine.yaml`. Hit a real Doctrine gotcha worth recording: `SimplifiedXmlDriver` (what `doctrine.orm.mappings` actually wires up, confirmed by reading the compiled container) uses `SymfonyFileLocator`, whose own doc comment says mapping files "consist of the short classname only" — it does **not** support subdirectories mirroring a sub-namespace the way plain `XmlDriver`/`DefaultFileLocator` does; its filename-join separator defaults to `.`, not `/`, so a nested `Reference/Country.orm.xml` silently fails to resolve (a generic "no mapping file found" error, reproduced and root-caused with a standalone PHP script against the actual vendor class before finding the fix). Fixed by keeping `Country` flat under `Shared\Domain` (`Country.php`, `Country.orm.xml` directly in each module's root), matching Platform's own existing convention — simpler than fighting the locator, and consistent with how `Role`/`Company`/`User` are already organised. `doctrine:migrations:diff` also proposed dropping `audit_log`/`idempotency_keys` as a false positive (they're raw-DBAL tables, not Doctrine entities, so the diff tool sees them as "extra"); stripped from the generated migration by hand. Seed migration inserts use `ON CONFLICT (code) DO NOTHING` so the idempotency test (`CountriesAndUnitsSeedMigrationTest`) can genuinely re-run the migration's queued SQL a second time and assert row counts don't change — migrations classes are deliberately excluded from Composer's autoloader (`config/packages/doctrine_migrations.yaml`'s own comment), so the test `require`s the file directly rather than importing it. Countries: full ISO 3166-1 alpha-2 list, Portuguese names (188 entries) — not legally sensitive per the plan, no `[VERIFY]`. Units: the starter set named in the plan (UN, KG, CX, L, M, M², M³, DZ, H) with reasonable per-unit decimal precision. Both endpoints require authentication (`IS_AUTHENTICATED_FULLY` already covers all of `/api/v1` by default) but have no company scope and no permission check, matching the plan's "any authenticated user may read global reference data" note. 101 tests total; PHPStan, Deptrac, CS-Fixer all green; `api/openapi.json` and the web client regenerated.
 
 ---
 

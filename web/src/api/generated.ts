@@ -54,6 +54,16 @@ export interface ChangeMemberRoleRequest {
   role?: string;
 }
 
+export type GetUnitsList200ItemsItem = {
+  code?: string;
+  name?: string;
+  decimals?: number;
+};
+
+export type GetUnitsList200 = {
+  items?: GetUnitsList200ItemsItem[];
+};
+
 export type PostAuthLoginBody = {
   email?: string;
   password?: string;
@@ -116,6 +126,16 @@ export type GetMe200 = {
   companies?: GetMe200CompaniesItem[];
 };
 
+export type GetCountriesList200ItemsItem = {
+  /** ISO 3166-1 alpha-2 */
+  code?: string;
+  name?: string;
+};
+
+export type GetCountriesList200 = {
+  items?: GetCountriesList200ItemsItem[];
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -130,6 +150,101 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetUnitsListUrl = () => {
+
+
+
+
+  return `/api/v1/units`
+}
+
+export const getUnitsList = async ( options?: RequestInit): Promise<GetUnitsList200> => {
+
+  return httpClient<GetUnitsList200>(getGetUnitsListUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUnitsListQueryKey = () => {
+    return [
+    `/api/v1/units`
+    ] as const;
+    }
+
+
+export const getGetUnitsListQueryOptions = <TData = Awaited<ReturnType<typeof getUnitsList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnitsList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUnitsListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUnitsList>>> = ({ signal }) => getUnitsList({ signal });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUnitsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetUnitsListQueryResult = NonNullable<Awaited<ReturnType<typeof getUnitsList>>>
+export type GetUnitsListQueryError = unknown
+
+
+export function useGetUnitsList<TData = Awaited<ReturnType<typeof getUnitsList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnitsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnitsList>>,
+          TError,
+          Awaited<ReturnType<typeof getUnitsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUnitsList<TData = Awaited<ReturnType<typeof getUnitsList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnitsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnitsList>>,
+          TError,
+          Awaited<ReturnType<typeof getUnitsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUnitsList<TData = Awaited<ReturnType<typeof getUnitsList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnitsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetUnitsList<TData = Awaited<ReturnType<typeof getUnitsList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnitsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUnitsListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getPostAuthLoginUrl = () => {
 
@@ -1234,6 +1349,101 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = voi
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetMeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetCountriesListUrl = () => {
+
+
+
+
+  return `/api/v1/countries`
+}
+
+export const getCountriesList = async ( options?: RequestInit): Promise<GetCountriesList200> => {
+
+  return httpClient<GetCountriesList200>(getGetCountriesListUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCountriesListQueryKey = () => {
+    return [
+    `/api/v1/countries`
+    ] as const;
+    }
+
+
+export const getGetCountriesListQueryOptions = <TData = Awaited<ReturnType<typeof getCountriesList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCountriesList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCountriesListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCountriesList>>> = ({ signal }) => getCountriesList({ signal });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCountriesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCountriesListQueryResult = NonNullable<Awaited<ReturnType<typeof getCountriesList>>>
+export type GetCountriesListQueryError = unknown
+
+
+export function useGetCountriesList<TData = Awaited<ReturnType<typeof getCountriesList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCountriesList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCountriesList>>,
+          TError,
+          Awaited<ReturnType<typeof getCountriesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCountriesList<TData = Awaited<ReturnType<typeof getCountriesList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCountriesList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCountriesList>>,
+          TError,
+          Awaited<ReturnType<typeof getCountriesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCountriesList<TData = Awaited<ReturnType<typeof getCountriesList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCountriesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetCountriesList<TData = Awaited<ReturnType<typeof getCountriesList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCountriesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCountriesListQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
