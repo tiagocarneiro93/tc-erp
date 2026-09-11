@@ -68,7 +68,7 @@ final class AuthController
 
     #[Route('/api/v1/auth/change-password', name: 'auth_change_password', methods: ['POST'])]
     #[OA\Response(response: 204, description: 'Password changed.')]
-    #[OA\Response(response: 422, description: 'Wrong current password, or the new one is empty.')]
+    #[OA\Response(response: 422, description: 'Wrong current password, or the new one does not meet the password policy.')]
     public function changePassword(#[MapRequestPayload] ChangePasswordRequest $request): Response
     {
         $this->commandBus->dispatch(new ChangePassword(
@@ -92,7 +92,7 @@ final class AuthController
 
     #[Route('/api/v1/auth/password/reset/confirm', name: 'auth_confirm_password_reset', methods: ['POST'])]
     #[OA\Response(response: 204, description: 'Password set.')]
-    #[OA\Response(response: 422, description: 'The token is invalid, expired or already used, or the new password is empty.')]
+    #[OA\Response(response: 422, description: 'The token is invalid, expired or already used, or the new password does not meet the password policy.')]
     public function confirmPasswordReset(#[MapRequestPayload] ConfirmPasswordResetRequest $request): Response
     {
         $this->commandBus->dispatch(new ConfirmPasswordReset($request->token, $request->newPassword));

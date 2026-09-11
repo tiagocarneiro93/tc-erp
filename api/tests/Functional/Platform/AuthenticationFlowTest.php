@@ -48,7 +48,7 @@ final class AuthenticationFlowTest extends WebTestCase
         // 3. Change the password.
         $client->request('POST', '/api/v1/auth/change-password', server: self::HEADERS, content: json_encode([
             'current_password' => 'temporary-pw',
-            'new_password' => 'a-brand-new-password',
+            'new_password' => 'Brand-New-Pw1',
         ], \JSON_THROW_ON_ERROR));
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
@@ -59,6 +59,32 @@ final class AuthenticationFlowTest extends WebTestCase
         $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
         self::assertSame($email, $body['user']['email']);
         self::assertFalse($body['user']['must_change_password']);
+    }
+
+    public function testChangingToAPasswordThatDoesNotMeetThePolicyIsRejected(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+        $email = $this->uniqueEmail();
+
+        /** @var UserRepository $users */
+        $users = $container->get(UserRepository::class);
+        /** @var PasswordHasher $hasher */
+        $hasher = $container->get(PasswordHasher::class);
+
+        $users->save(User::register(UserId::generate(), $email, 'Flow User', $hasher->hash('temporary-pw'), new \DateTimeImmutable()));
+
+        $client->request('POST', '/api/v1/auth/login', server: self::HEADERS, content: json_encode([
+            'email' => $email,
+            'password' => 'temporary-pw',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseIsSuccessful();
+
+        $client->request('POST', '/api/v1/auth/change-password', server: self::HEADERS, content: json_encode([
+            'current_password' => 'temporary-pw',
+            'new_password' => 'all-lowercase-no-digits',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(422);
     }
 
     public function testWrongPasswordIsRejected(): void

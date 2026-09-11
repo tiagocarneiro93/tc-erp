@@ -91,7 +91,7 @@
                         "description": "Password changed."
                     },
                     "422": {
-                        "description": "Wrong current password, or the new one is empty."
+                        "description": "Wrong current password, or the new one does not meet the password policy."
                     }
                 }
             }
@@ -140,7 +140,7 @@
                         "description": "Password set."
                     },
                     "422": {
-                        "description": "The token is invalid, expired or already used, or the new password is empty."
+                        "description": "The token is invalid, expired or already used, or the new password does not meet the password policy."
                     }
                 }
             }

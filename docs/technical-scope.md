@@ -729,7 +729,7 @@ Products assembled in advance and stocked as themselves (assembly order consumes
 ### 8.1 Access control (Despacho requirements and good practice)
 
 - Individual authenticated users; no shared accounts.
-- Password must be changed at first login; cannot be empty; administrators can never see or set a known password (invite links / reset flows only) **[VERIFY]** full list in the Despacho §3.
+- Password must be changed at first login; cannot be empty; administrators can never see or set a known password (invite links / reset flows only). Full list per `docs/legal/despacho-8632-2014.pdf` §3.1.1: force a password change on first access and whenever otherwise necessary, the new password cannot be empty, the administrator can never know or view it, and an administrator-triggered reset must itself be changed as soon as the user accesses it. The Despacho sets no minimum length or complexity — that's this product's own policy, decided by the owner: minimum 6 characters, at least one uppercase letter, one lowercase letter, one digit and one special character.
 - Permission-based roles per company (issue documents, cancel, manage series, stock, purchases, settings, read-only, accountant).
 - MFA (TOTP) available, recommended for owners/admins.
 - Every fiscal action and every sensitive setting change goes to `audit_log`.

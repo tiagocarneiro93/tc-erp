@@ -55,7 +55,7 @@ final class PasswordResetFlowTest extends WebTestCase
 
         $client->request('POST', '/api/v1/auth/password/reset/confirm', server: self::HEADERS, content: json_encode([
             'token' => $token,
-            'new_password' => 'a-completely-new-password',
+            'new_password' => 'Completely-New-Pw1',
         ], \JSON_THROW_ON_ERROR));
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
@@ -68,7 +68,7 @@ final class PasswordResetFlowTest extends WebTestCase
 
         $client->request('POST', '/api/v1/auth/login', server: self::HEADERS, content: json_encode([
             'email' => $userEmail,
-            'password' => 'a-completely-new-password',
+            'password' => 'Completely-New-Pw1',
         ], \JSON_THROW_ON_ERROR));
         self::assertResponseIsSuccessful();
     }
@@ -90,7 +90,7 @@ final class PasswordResetFlowTest extends WebTestCase
 
         $client->request('POST', '/api/v1/auth/password/reset/confirm', server: self::HEADERS, content: json_encode([
             'token' => 'not-a-real-token',
-            'new_password' => 'whatever-new',
+            'new_password' => 'Whatever-New1',
         ], \JSON_THROW_ON_ERROR));
 
         self::assertResponseStatusCodeSame(422);
