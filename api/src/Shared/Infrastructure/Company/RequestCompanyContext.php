@@ -10,12 +10,9 @@ use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Plain mutable holder, one instance per request/worker message (Symfony's
- * default service scope). Only infrastructure that resolves or restores the
- * company — the route listener, the Messenger middleware — calls
- * {@see self::set()}/{@see self::clear()}; everything else depends on the
- * read-only {@see CompanyContext} port. Implements {@see ResetInterface} so
- * a long-running worker runtime (e.g. FrankenPHP worker mode) can never
- * carry one request's company into the next.
+ * default service scope). Implements {@see ResetInterface} so a
+ * long-running worker runtime (e.g. FrankenPHP worker mode) can never carry
+ * one request's company into the next.
  */
 final class RequestCompanyContext implements CompanyContext, ResetInterface
 {

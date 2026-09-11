@@ -34,4 +34,10 @@ final class DoctrineMembershipRepository implements MembershipRepository
         $this->entityManager->persist($membership);
         $this->entityManager->flush();
     }
+
+    public function remove(Membership $membership): void
+    {
+        $this->entityManager->remove($membership);
+        $this->entityManager->flush();
+    }
 }

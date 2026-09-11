@@ -49,6 +49,7 @@ services:
         public: true
     App\Platform\Domain\PasswordHasher: '@App\Platform\Infrastructure\Security\SymfonyPasswordHasher'
     App\Platform\Domain\PasswordResetMailer: '@App\Platform\Infrastructure\Mail\SymfonyPasswordResetMailer'
+    App\Platform\Domain\InvitationMailer: '@App\Platform\Infrastructure\Mail\SymfonyInvitationMailer'
 
     # Same alias-must-be-public pattern as the repositories above, so
     # UI/Http controllers can depend on the Application-layer port instead
@@ -56,12 +57,19 @@ services:
     App\Platform\Application\Security\CurrentUserId:
         alias: App\Platform\Infrastructure\Security\SymfonyCurrentUserId
         public: true
+    App\Platform\Application\Security\PermissionChecker: '@App\Platform\Infrastructure\Security\SymfonyPermissionChecker'
 
     App\Platform\Infrastructure\Mail\SymfonyPasswordResetMailer:
         arguments:
             $fromAddress: '%app.mailer_from_address%'
+    App\Platform\Infrastructure\Mail\SymfonyInvitationMailer:
+        arguments:
+            $fromAddress: '%app.mailer_from_address%'
 
     App\Platform\Application\Command\RequestPasswordResetHandler:
+        arguments:
+            $frontendUrl: '%app.frontend_url%'
+    App\Platform\Application\Command\InviteUserToCompanyHandler:
         arguments:
             $frontendUrl: '%app.frontend_url%'
 

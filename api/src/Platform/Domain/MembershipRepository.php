@@ -16,4 +16,6 @@ interface MembershipRepository
     public function findByUser(UserId $userId): array;
 
     public function save(Membership $membership): void;
+
+    public function remove(Membership $membership): void;
 }
