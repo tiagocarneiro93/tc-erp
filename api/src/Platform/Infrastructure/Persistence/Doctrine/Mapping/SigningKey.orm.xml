@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Platform\Domain\SigningKey" table="signing_keys">
+        <id name="version" type="integer" column="version">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="publicKeyPem" type="text" column="public_key_pem" />
+        <field name="activeFrom" type="datetimetz_immutable" column="active_from" />
+        <field name="retiredAt" type="datetimetz_immutable" column="retired_at" nullable="true" />
+    </entity>
+</doctrine-mapping>

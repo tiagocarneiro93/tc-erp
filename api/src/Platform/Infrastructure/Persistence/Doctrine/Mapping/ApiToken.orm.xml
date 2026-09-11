@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Global table despite the company_id column — see ApiToken's docblock. -->
+    <entity name="App\Platform\Domain\ApiToken" table="api_tokens">
+        <id name="id" type="api_token_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="name" type="string" column="name" />
+        <field name="tokenHash" type="string" column="token_hash" />
+        <field name="scopes" type="jsonb" column="scopes" />
+        <field name="lastUsedAt" type="datetimetz_immutable" column="last_used_at" nullable="true" />
+        <field name="expiresAt" type="datetimetz_immutable" column="expires_at" nullable="true" />
+        <field name="revokedAt" type="datetimetz_immutable" column="revoked_at" nullable="true" />
+    </entity>
+</doctrine-mapping>

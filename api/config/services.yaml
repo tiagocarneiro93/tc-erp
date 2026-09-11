@@ -25,3 +25,20 @@ services:
     # Domain/Application code depends on the Clock port, never `new
     # DateTimeImmutable()` directly (CLAUDE.md — architecture rules).
     App\Shared\Domain\Clock\Clock: '@App\Shared\Infrastructure\Clock\SystemClock'
+
+    # Repository ports (Domain) -> Doctrine adapters (Infrastructure). Public
+    # so integration tests can fetch them directly before anything in the
+    # app itself consumes them (tasks 0.8/0.10 will); otherwise Symfony's
+    # container compiler removes an alias nothing references as dead code.
+    App\Platform\Domain\UserRepository:
+        alias: App\Platform\Infrastructure\Persistence\Doctrine\Repository\DoctrineUserRepository
+        public: true
+    App\Platform\Domain\CompanyRepository:
+        alias: App\Platform\Infrastructure\Persistence\Doctrine\Repository\DoctrineCompanyRepository
+        public: true
+    App\Platform\Domain\MembershipRepository:
+        alias: App\Platform\Infrastructure\Persistence\Doctrine\Repository\DoctrineMembershipRepository
+        public: true
+    App\Platform\Domain\RoleRepository:
+        alias: App\Platform\Infrastructure\Persistence\Doctrine\Repository\DoctrineRoleRepository
+        public: true

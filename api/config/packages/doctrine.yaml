@@ -1,5 +1,14 @@
 doctrine:
     dbal:
+        # Custom types for value objects (CLAUDE.md — Domain has no Doctrine
+        # dependency; the Type classes live in Infrastructure). Add one line
+        # per new typed ID, following the same AbstractUuidIdType pattern.
+        types:
+            nif: App\Shared\Infrastructure\Persistence\Doctrine\Type\NifType
+            jsonb: App\Shared\Infrastructure\Persistence\Doctrine\Type\JsonbType
+            user_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\UserIdType
+            company_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\CompanyIdType
+            api_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\ApiTokenIdType
         default_connection: default
         connections:
             # The app connects as app_runtime: no table ownership, no BYPASSRLS,
@@ -11,22 +20,36 @@ doctrine:
             migrations:
                 url: '%env(resolve:DATABASE_MIGRATIONS_URL)%'
     orm:
-        validate_xml_mapping: true
-        naming_strategy: doctrine.orm.naming_strategy.underscore
-        identity_generation_preferences:
-            Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
-        auto_mapping: false
-        # One named mapping per module (CLAUDE.md — Domain has no Doctrine
-        # dependency; mapping lives in Infrastructure as XML). Add a new
-        # entry here, following the same pattern, whenever a module gets
-        # its first entity.
-        mappings:
-            Platform:
-                type: xml
-                is_bundle: false
-                dir: '%kernel.project_dir%/src/Platform/Infrastructure/Persistence/Doctrine/Mapping'
-                prefix: 'App\Platform\Domain'
-                alias: Platform
+        default_entity_manager: default
+        entity_managers:
+            # Used by the app at runtime, via the app_runtime connection.
+            default: &entity_manager_defaults
+                connection: default
+                validate_xml_mapping: true
+                naming_strategy: doctrine.orm.naming_strategy.underscore
+                identity_generation_preferences:
+                    Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
+                auto_mapping: false
+                mappings: &mappings
+                    # One named mapping per module (CLAUDE.md — Domain has no
+                    # Doctrine dependency; mapping lives in Infrastructure as
+                    # XML). Add a new entry here, following the same pattern,
+                    # whenever a module gets its first entity.
+                    Platform:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Platform/Infrastructure/Persistence/Doctrine/Mapping'
+                        prefix: 'App\Platform\Domain'
+                        alias: Platform
+            # Same mappings, but via the app_owner connection — used only by
+            # the migrations CLI (config/packages/doctrine_migrations.yaml),
+            # never by the running application, so `doctrine:migrations:diff`
+            # can compare entities against the schema while DDL still runs
+            # as app_owner (CLAUDE.md — multi-tenancy).
+            migrations:
+                <<: *entity_manager_defaults
+                connection: migrations
+                mappings: *mappings
 
 when@prod:
     doctrine:

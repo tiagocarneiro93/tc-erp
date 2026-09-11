@@ -6,5 +6,7 @@ doctrine_migrations:
     enable_profiler: false
     # Migrations run as the schema-owning role (app_owner), never as the
     # app_runtime role the application connects as (CLAUDE.md — multi-tenancy).
-    connection: migrations
+    # `em:` (not `connection:`) so doctrine:migrations:diff can still compare
+    # against the mapped entities (config/packages/doctrine.yaml).
+    em: migrations
 

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Platform\Domain\Company" table="companies">
+        <id name="id" type="company_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="nif" type="nif" column="nif" unique="true" />
+        <field name="legalName" type="string" column="legal_name" />
+        <field name="status" type="string" column="status" />
+        <field name="plan" type="string" column="plan" nullable="true" />
+        <field name="createdAt" type="datetimetz_immutable" column="created_at" />
+    </entity>
+</doctrine-mapping>

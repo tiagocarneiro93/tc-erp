@@ -83,10 +83,12 @@ This plan turns `docs/technical-scope.md` into ordered, verifiable work. It is w
 **Notes:** `CompanyId`/`UserId` (concrete `AbstractUuidId` subclasses) live in `Platform/Domain` since they're Platform-specific, not generic Shared concepts — 0.7 will use them on the `companies`/`users` entities. `Nif` deliberately validates only the modulus-11 check digit, not the legal list of valid leading-digit categories (a separate, more volatile rule, not asked for here). "String (de)serialisation" is `fromString()`/`toString()` round-tripping; wiring these into request/response DTOs happens as real endpoints are built. 25 unit tests, all green; `grep -rn '\bfloat\b' src/Shared/Domain/` finds none outside a comment.
 
 ### 0.7 Platform domain and persistence
-- [ ] Global tables (§6.1): `users`, `companies`, `memberships`, `roles`, `role_permissions`, `api_tokens` (structure only for now), `signing_keys` (structure only).
-- [ ] Seed roles and permissions (owner, admin, billing, stock, accountant, read_only) — permission list documented in `docs/decisions/0002-roles-and-permissions.md`.
+- [x] Global tables (§6.1): `users`, `companies`, `memberships`, `roles`, `role_permissions`, `api_tokens` (structure only for now), `signing_keys` (structure only).
+- [x] Seed roles and permissions (owner, admin, billing, stock, accountant, read_only) — permission list documented in `docs/decisions/0002-roles-and-permissions.md`.
 
 **Accept:** migrations run; repositories covered by integration tests against PostgreSQL.
+
+**Notes:** resolved a real inconsistency in technical-scope.md: §5.1 lists API tokens as global (no `company_id`), but §6.1's `api_tokens` column list includes one. Kept `company_id` (matches §6.1 and §9.2's "company-scoped API tokens") but did **not** add RLS — token lookup during authentication has to work before any company context exists, so it can't fail-closed on a missing one; documented the reasoning on `ApiToken`. Introduced two Doctrine entity managers (`default` on `app_runtime`, `migrations` on `app_owner`, same mappings) after discovering `doctrine:migrations:diff` needs an entity manager to compare against — pinning only a DBAL `connection:` in `doctrine_migrations.yaml` (my original 0.5 setup) silently drops the schema provider. Added a `jsonb` Doctrine type (Postgres `JSONB`, not plain `JSON`) since it recurs across most future modules. `ApiToken`/`SigningKey` are structure-only, no repository yet, matching the "structure only for now" scope. 36 tests total (11 new integration tests against real Postgres, wrapped per-test in a rolled-back transaction); Deptrac, PHPStan and CS-Fixer all still green; no Doctrine/Symfony import anywhere in `Platform/Domain`.
 
 ### 0.8 Authentication
 - [ ] Session-based JSON login for the SPA (`json_login`), logout, `GET /api/v1/me` (user, companies with role, permissions).
