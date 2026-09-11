@@ -2,13 +2,17 @@
 
 Scope per `docs/PLAN.md`: §6.2–6.5, §7.9.8, §7.10 of `docs/technical-scope.md`.
 
-**Prerequisite (blocking, tax rates only):** exemption reasons are resolved —
-`docs/legal/at-tabela-codigos-motivo-isencao.pdf` (V4.0, 18 Jun 2026) is the official
-M01–M99 table. Mainland/Açores/Madeira VAT rates (CIVA art. 18) are still missing:
-this sandbox's network egress is blocked for `portaldasfinancas.gov.pt`, so the page
-at `docs/legal/README.md`'s note could not be fetched — 🧑 owner needs to upload it
-(save as PDF, screenshot, or pasted text) as `docs/legal/civa-extracts.md`. Everything
-else in this phase has no external dependency.
+**Prerequisite (blocking, Açores/Madeira tax rates only):** exemption reasons are
+resolved (`docs/legal/at-tabela-codigos-motivo-isencao.pdf`, V4.0), and mainland VAT
+rates are resolved (`docs/legal/civa-extracts.md`, CIVA art. 18.º n.º 1: 6%/13%/23%,
+pasted by the owner since this sandbox's network egress is blocked for
+`portaldasfinancas.gov.pt`). **Açores and Madeira's actual rates are still open**:
+art. 18.º §3 only says the regions *may* set their own reduced rates under Lei
+Orgânica n.º 2/2013 — it doesn't state the current values, and the widely-quoted
+16/9/4 and 22/12/5 figures found by web search are secondary sources, not the
+regional decree itself. 🧑 owner needs to supply that decree (or confirm the
+figures against it) before task 1.2 can seed PT-AC/PT-MA for real. Everything else
+in this phase has no external dependency.
 
 Depends on Phase 0 being complete: module/Deptrac skeleton (0.5), `Clock`/`Nif`/decimal
 value objects (0.6), auth (0.8), `CompanyContext` + RLS + isolation test pattern (0.9),
@@ -39,13 +43,12 @@ any authenticated user may read them, same as they're global, not company-scoped
    multi-line totals) that becomes the first building block of the real
    `PriceCalculator` in Phase 2, so Phase 2 extends it rather than replacing it
    (§7.9.2 principle 1: one calculator, no second implementation).
-3. **Tax seed data for dev/demo purposes:** mainland rates (23 %/13 %/6 %, codes
-   NOR/INT/RED) are public knowledge and already used as examples in
-   `technical-scope.md` §7.9.1, so task 1.2 ships them as the dev seed. **PT-AC/PT-MA
-   rates are not seeded with real values until `docs/legal/civa-extracts.md` exists**
-   (still blocked — see prerequisite above); `exemption_reasons` **is** now seeded in
-   full from `docs/legal/at-tabela-codigos-motivo-isencao.pdf` (V4.0), since that
-   source landed. Confirm the mainland-only tax-rate split is acceptable.
+3. **Tax seed data:** mainland rates (6 %/13 %/23 %, codes RED/INT/NOR) are now
+   resolved from the primary source — `docs/legal/civa-extracts.md`, CIVA art. 18.º
+   n.º 1 — so task 1.2 seeds them for real, not as a placeholder. `exemption_reasons`
+   is likewise seeded in full from `docs/legal/at-tabela-codigos-motivo-isencao.pdf`
+   (V4.0). **PT-AC/PT-MA rates stay empty** until the owner supplies the actual
+   regional decree (see prerequisite above) — confirm this split is acceptable.
 4. Extends the Phase 0 `CreateCompany` use case (additive, not a fiscal table) to
    also create the default warehouse (task 1.9) — `warehouses` doesn't exist until
    this phase.
@@ -82,9 +85,10 @@ the seed migration idempotency (running twice doesn't duplicate rows).
   invoice wording (`description`), and legal basis (`legal_reference`) transcribed
   exactly as the table states, citing the document in the migration's own comment
   per CLAUDE.md's "[VERIFY] must cite document and section" rule.
-- `tax_rates`: seed **mainland rates only** for now (decision 3 above); leave
-  PT-AC/PT-MA empty until `docs/legal/civa-extracts.md` lands, with a `TODO`
-  migration stub the owner fills in.
+- `tax_rates`: seed **mainland rates** (RED 6%, INT 13%, NOR 23%) from
+  `docs/legal/civa-extracts.md`, CIVA art. 18.º n.º 1 (decision 3 above); leave
+  PT-AC/PT-MA empty until the owner supplies the actual regional decree, with a
+  `TODO` migration stub the owner fills in.
 - `GET /api/v1/tax-rates`, `GET /api/v1/exemption-reasons`, both filterable by
   `region` and resolvable "as of" a given date.
 - Domain service `Tax\Domain\TaxRateResolver`: given `(region, code, date)` →
@@ -96,8 +100,8 @@ the full exemption-reasons table seeded and covered by tests — a validity-date
 resolution unit test for `tax_rates` (rate changes on `valid_from`/`valid_to`
 boundaries) and a test asserting the exemption-reasons seed matches the source
 document's row count and a sample of codes; PT-AC/PT-MA rates explicitly pending,
-tracked as a follow-up note in this file until `docs/legal/civa-extracts.md`
-lands, at which point they ship as a small additive migration + 🧑 owner review
+tracked as a follow-up note in this file until the owner supplies the regional
+decree, at which point they ship as a small additive migration + 🧑 owner review
 (per CLAUDE.md: "pricing test vectors reviewed by the owner" applies here too,
 since this data feeds VAT calculation).
 
@@ -231,7 +235,7 @@ products, create a warehouse, switch company and confirm the lists change.
   the end).
 - Playwright e2e from task 1.10 passes in CI.
 - 🧑 Owner confirms mainland tax-rate seed data and the exemption-reasons seed
-  (task 1.2) are correct, and supplies `docs/legal/civa-extracts.md` so PT-AC/PT-MA
-  rates can be completed before Phase 2 needs them (Phase 2's own prerequisite
-  already requires this).
+  (task 1.2) are correct, and supplies the Açores/Madeira regional decree so
+  PT-AC/PT-MA rates can be completed before Phase 2 needs them (Phase 2's own
+  prerequisite already requires this).
 - 🧑 Owner review of Phase 1 before starting Phase 2.
