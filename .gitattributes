@@ -1,0 +1,14 @@
+# Force LF line endings for all text files regardless of platform or local
+# git config (core.autocrlf), so shebang scripts (api/bin/console,
+# api/bin/phpunit) don't break with "php\r: No such file or directory" when
+# checked out on Windows and run inside a Linux container.
+* text=auto eol=lf
+
+# Known binary types: never touch line endings, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
