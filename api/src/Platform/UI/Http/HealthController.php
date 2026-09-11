@@ -6,10 +6,12 @@ namespace App\Platform\UI\Http;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DbalException;
+use OpenApi\Attributes as OA;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
+#[OA\Tag(name: 'Health')]
 final class HealthController
 {
     public function __construct(
@@ -20,6 +22,8 @@ final class HealthController
     }
 
     #[Route('/api/v1/health', name: 'health', methods: ['GET'])]
+    #[OA\Response(response: 200, description: 'Database and Redis are both reachable.')]
+    #[OA\Response(response: 503, description: 'Database or Redis is unreachable.')]
     public function __invoke(): JsonResponse
     {
         $checks = [

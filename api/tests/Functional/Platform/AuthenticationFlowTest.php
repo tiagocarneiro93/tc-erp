@@ -47,8 +47,8 @@ final class AuthenticationFlowTest extends WebTestCase
 
         // 3. Change the password.
         $client->request('POST', '/api/v1/auth/change-password', server: self::HEADERS, content: json_encode([
-            'currentPassword' => 'temporary-pw',
-            'newPassword' => 'a-brand-new-password',
+            'current_password' => 'temporary-pw',
+            'new_password' => 'a-brand-new-password',
         ], \JSON_THROW_ON_ERROR));
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 

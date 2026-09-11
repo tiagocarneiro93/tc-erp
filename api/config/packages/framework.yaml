@@ -11,6 +11,12 @@ framework:
         cookie_secure: auto
         cookie_samesite: lax
 
+    # snake_case JSON in and out (CLAUDE.md, technical-scope.md §9.1)
+    # applies to every #[MapRequestPayload]/#[MapQueryString] DTO: a PHP
+    # property `legalName` maps to and from the JSON key `legal_name`.
+    serializer:
+        name_converter: 'serializer.name_converter.camel_case_to_snake_case'
+
     #esi: true
     #fragments: true
 

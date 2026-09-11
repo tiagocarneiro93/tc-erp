@@ -71,6 +71,21 @@ jobs:
           PGPASSWORD=postgres createdb -h 127.0.0.1 -U postgres tc_erp
           PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d tc_erp -v ON_ERROR_STOP=1 -f ../docker/postgres/init/02-databases.sql
 
+      # Both databases: tc_erp for the PHPStan step below (phpstan-doctrine
+      # introspects the schema), tc_erp_test for PHPUnit.
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://app_runtime:app_runtime@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
+          DATABASE_MIGRATIONS_URL: postgresql://app_owner:app_owner@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Run database migrations (test)
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app_runtime:app_runtime@127.0.0.1:5432/tc_erp_test?serverVersion=17&charset=utf8
+          DATABASE_MIGRATIONS_URL: postgresql://app_owner:app_owner@127.0.0.1:5432/tc_erp_test?serverVersion=17&charset=utf8
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
       - name: Coding standards (PHP-CS-Fixer)
         run: vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
 

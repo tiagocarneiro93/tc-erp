@@ -8,16 +8,13 @@ use App\Platform\Application\Command\ChangeMemberRole;
 use App\Platform\Application\Command\InviteUserToCompany;
 use App\Platform\Application\Command\RemoveMember;
 use App\Platform\Application\Security\CurrentUserId;
-use App\Platform\Domain\Exception\AlreadyAMember;
-use App\Platform\Domain\Exception\NotAMember;
-use App\Platform\Domain\Exception\PermissionDenied;
-use App\Platform\Domain\Exception\UnknownRole;
 use App\Platform\Domain\UserId;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\Messenger\Exception\HandlerFailedException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -25,7 +22,11 @@ use Symfony\Component\Routing\Attribute\Route;
  * `{companyId}` is resolved and authorized by `CompanyRouteListener`
  * (membership) before these actions run; the `members.manage` permission
  * check happens in each command handler (docs/PLAN.md task 0.9/0.10).
+ * Domain exceptions are left to propagate to
+ * {@see \App\Shared\Infrastructure\Http\ProblemDetailsExceptionListener}
+ * (task 0.11).
  */
+#[OA\Tag(name: 'Companies')]
 final class CompanyUsersController
 {
     public function __construct(
@@ -35,96 +36,65 @@ final class CompanyUsersController
     }
 
     #[Route('/api/v1/companies/{companyId}/users', name: 'company_users_invite', methods: ['POST'])]
+    #[OA\Response(response: 201, description: 'Membership created. A brand-new user is emailed a set-password link.')]
+    #[OA\Response(response: 403, description: 'The caller lacks the members.manage permission.')]
+    #[OA\Response(response: 404, description: 'The caller is not a member of this company.')]
+    #[OA\Response(response: 409, description: 'This user is already a member of this company.')]
+    #[OA\Response(response: 422, description: 'Unknown role, or the request payload failed validation.')]
     public function invite(#[MapRequestPayload] InviteUserRequest $request, Request $httpRequest): Response
     {
-        try {
-            $this->dispatch(new InviteUserToCompany(
-                $this->currentUserId->id(),
-                $request->email,
-                $request->name,
-                $request->role,
-                $httpRequest->getClientIp() ?? '',
-                $httpRequest->headers->get('User-Agent', ''),
-            ));
-        } catch (PermissionDenied $e) {
-            return $this->problem($e->getMessage(), 403);
-        } catch (UnknownRole $e) {
-            return $this->problem($e->getMessage(), 422);
-        } catch (AlreadyAMember $e) {
-            return $this->problem($e->getMessage(), 409);
-        }
+        $this->commandBus->dispatch(new InviteUserToCompany(
+            $this->currentUserId->id(),
+            $request->email,
+            $request->name,
+            $request->role,
+            $httpRequest->getClientIp() ?? '',
+            $httpRequest->headers->get('User-Agent', ''),
+        ));
 
         return new JsonResponse(null, 201);
     }
 
     #[Route('/api/v1/companies/{companyId}/users/{userId}', name: 'company_users_change_role', methods: ['PUT'])]
+    #[OA\Response(response: 204, description: 'Role changed.')]
+    #[OA\Response(response: 403, description: 'The caller lacks the members.manage permission.')]
+    #[OA\Response(response: 404, description: 'The caller is not a member of this company, or the target user is not either.')]
+    #[OA\Response(response: 422, description: 'Unknown role.')]
     public function changeRole(string $userId, #[MapRequestPayload] ChangeMemberRoleRequest $request, Request $httpRequest): Response
     {
-        try {
-            $this->dispatch(new ChangeMemberRole(
-                $this->currentUserId->id(),
-                UserId::fromString($userId),
-                $request->role,
-                $httpRequest->getClientIp() ?? '',
-                $httpRequest->headers->get('User-Agent', ''),
-            ));
-        } catch (\InvalidArgumentException) {
-            return $this->problem('No such user.', 404);
-        } catch (PermissionDenied $e) {
-            return $this->problem($e->getMessage(), 403);
-        } catch (UnknownRole $e) {
-            return $this->problem($e->getMessage(), 422);
-        } catch (NotAMember $e) {
-            return $this->problem($e->getMessage(), 404);
-        }
+        $this->commandBus->dispatch(new ChangeMemberRole(
+            $this->currentUserId->id(),
+            $this->parseUserId($userId),
+            $request->role,
+            $httpRequest->getClientIp() ?? '',
+            $httpRequest->headers->get('User-Agent', ''),
+        ));
 
         return new JsonResponse(null, 204);
     }
 
     #[Route('/api/v1/companies/{companyId}/users/{userId}', name: 'company_users_remove', methods: ['DELETE'])]
+    #[OA\Response(response: 204, description: 'Member removed.')]
+    #[OA\Response(response: 403, description: 'The caller lacks the members.manage permission.')]
+    #[OA\Response(response: 404, description: 'The caller is not a member of this company, or the target user is not either.')]
     public function remove(string $userId, Request $httpRequest): Response
     {
-        try {
-            $this->dispatch(new RemoveMember(
-                $this->currentUserId->id(),
-                UserId::fromString($userId),
-                $httpRequest->getClientIp() ?? '',
-                $httpRequest->headers->get('User-Agent', ''),
-            ));
-        } catch (\InvalidArgumentException) {
-            return $this->problem('No such user.', 404);
-        } catch (PermissionDenied $e) {
-            return $this->problem($e->getMessage(), 403);
-        } catch (NotAMember $e) {
-            return $this->problem($e->getMessage(), 404);
-        }
+        $this->commandBus->dispatch(new RemoveMember(
+            $this->currentUserId->id(),
+            $this->parseUserId($userId),
+            $httpRequest->getClientIp() ?? '',
+            $httpRequest->headers->get('User-Agent', ''),
+        ));
 
         return new JsonResponse(null, 204);
     }
 
-    /**
-     * Messenger wraps handler exceptions in HandlerFailedException; unwrap
-     * so callers can catch the real domain exception.
-     */
-    private function dispatch(object $command): void
+    private function parseUserId(string $userId): UserId
     {
         try {
-            $this->commandBus->dispatch($command);
-        } catch (HandlerFailedException $e) {
-            foreach ($e->getWrappedExceptions() as $wrapped) {
-                throw $wrapped;
-            }
-
-            throw $e;
+            return UserId::fromString($userId);
+        } catch (\InvalidArgumentException) {
+            throw new NotFoundHttpException('No such user.');
         }
-    }
-
-    private function problem(string $detail, int $status): JsonResponse
-    {
-        return new JsonResponse(
-            ['title' => $detail, 'status' => $status],
-            $status,
-            ['Content-Type' => 'application/problem+json'],
-        );
     }
 }

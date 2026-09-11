@@ -44,9 +44,9 @@ final class CompanyOnboardingFlowTest extends WebTestCase
         // 2. It shows up in "my companies", with the owner role.
         $client->request('GET', '/api/v1/companies', server: self::HEADERS);
         self::assertResponseIsSuccessful();
-        /** @var array{companies: list<array{id: string, role: string, legal_name: string}>} $list */
+        /** @var array{items: list<array{id: string, role: string, legal_name: string}>} $list */
         $list = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        $mine = array_values(array_filter($list['companies'], static fn (array $c) => $c['id'] === $companyId));
+        $mine = array_values(array_filter($list['items'], static fn (array $c) => $c['id'] === $companyId));
         self::assertCount(1, $mine);
         self::assertSame('owner', $mine[0]['role']);
         self::assertSame('Acme Lda', $mine[0]['legal_name']);
@@ -133,7 +133,7 @@ final class CompanyOnboardingFlowTest extends WebTestCase
 
         $create = static fn () => $client->request('POST', '/api/v1/companies', server: self::HEADERS, content: json_encode([
             'nif' => $nif,
-            'legalName' => 'Whatever Lda',
+            'legal_name' => 'Whatever Lda',
         ], \JSON_THROW_ON_ERROR));
 
         $create();
@@ -151,7 +151,7 @@ final class CompanyOnboardingFlowTest extends WebTestCase
         $client->request('POST', '/api/v1/companies', server: self::HEADERS, content: json_encode([
             // Wrong length: never valid, regardless of check digit.
             'nif' => '12345678',
-            'legalName' => 'Whatever Lda',
+            'legal_name' => 'Whatever Lda',
         ], \JSON_THROW_ON_ERROR));
 
         self::assertResponseStatusCodeSame(422);
@@ -202,7 +202,7 @@ final class CompanyOnboardingFlowTest extends WebTestCase
     {
         $client->request('POST', '/api/v1/companies', server: self::HEADERS, content: json_encode([
             'nif' => $this->uniqueNif(),
-            'legalName' => $legalName,
+            'legal_name' => $legalName,
         ], \JSON_THROW_ON_ERROR));
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
         /** @var array{id: string} $created */

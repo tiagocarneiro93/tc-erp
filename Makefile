@@ -43,7 +43,8 @@ migrate: ## Run Doctrine migrations as the migration owner role
 	$(COMPOSE) exec php bin/console doctrine:migrations:migrate --no-interaction
 
 openapi: ## Dump OpenAPI spec to api/openapi.json and regenerate the web client
-	@echo "openapi: not available yet (tasks 0.11, 0.13)"
+	$(COMPOSE) exec php bin/console nelmio:apidoc:dump --format=json --no-interaction > api/openapi.json
+	@echo "openapi: web client regeneration not available yet (task 0.13 — no /web app exists to generate into)"
 
 seed: ## Load development fixtures
 	@echo "seed: not available yet (task 0.12)"

@@ -7,11 +7,13 @@ namespace App\Platform\UI\Http;
 use App\Platform\Application\Query\GetMe;
 use App\Platform\Application\Query\MeView;
 use App\Platform\Application\Security\CurrentUserId;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
+#[OA\Tag(name: 'Me')]
 final class MeController
 {
     use HandleTrait;
@@ -24,6 +26,9 @@ final class MeController
     }
 
     #[Route('/api/v1/me', name: 'me', methods: ['GET'])]
+    #[OA\Response(response: 200, description: 'The authenticated user, their companies, role and permissions.')]
+    #[OA\Response(response: 401, description: 'Not authenticated.')]
+    #[OA\Response(response: 403, description: 'must_change_password is still true.')]
     public function __invoke(): JsonResponse
     {
         /** @var MeView $me */

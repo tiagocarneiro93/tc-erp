@@ -92,6 +92,13 @@ services:
     App\Shared\Domain\Audit\AuditLogger:
         alias: App\Shared\Infrastructure\Audit\DoctrineAuditLogger
         public: true
+    App\Shared\Domain\Idempotency\IdempotencyKeyStore:
+        alias: App\Shared\Infrastructure\Persistence\Doctrine\DoctrineIdempotencyKeyStore
+        public: true
+    # Nothing calls this yet either — no issuing endpoint exists before
+    # Phase 2 — so it needs the same public: true treatment.
+    App\Shared\Infrastructure\Http\IdempotencyKeyGuard:
+        public: true
 
     # Scoped to the `default` connection only — `migrations` runs DDL as
     # app_owner and never needs a company context (config/packages/doctrine.yaml).

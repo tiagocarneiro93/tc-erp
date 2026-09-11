@@ -1,0 +1,475 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "tc-erp",
+        "description": "Invoicing & ERP API for Portuguese SMEs",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authenticates with email and password and starts a session cookie.",
+                "operationId": "post_auth_login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "authenticated": {
+                                            "type": "boolean"
+                                        },
+                                        "must_change_password": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong email or password."
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Ends the session.",
+                "operationId": "post_auth_logout",
+                "responses": {
+                    "302": {
+                        "description": "Session cleared."
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/change-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "operationId": "post_auth_change_password",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Password changed."
+                    },
+                    "422": {
+                        "description": "Wrong current password, or the new one is empty."
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/password/reset": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "operationId": "post_auth_request_password_reset",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RequestPasswordResetRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Always returned, whether or not the email matched a user (no account enumeration)."
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/password/reset/confirm": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "operationId": "post_auth_confirm_password_reset",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConfirmPasswordResetRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Password set."
+                    },
+                    "422": {
+                        "description": "The token is invalid, expired or already used, or the new password is empty."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies": {
+            "get": {
+                "tags": [
+                    "Companies"
+                ],
+                "operationId": "get_companies_list_mine",
+                "parameters": [
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Companies the caller is a member of."
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Companies"
+                ],
+                "operationId": "post_companies_create",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Company created; the caller becomes its owner.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid NIF or the request payload failed validation."
+                    },
+                    "409": {
+                        "description": "A company with this NIF already exists."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/users": {
+            "post": {
+                "tags": [
+                    "Companies"
+                ],
+                "operationId": "post_company_users_invite",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InviteUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Membership created. A brand-new user is emailed a set-password link."
+                    },
+                    "403": {
+                        "description": "The caller lacks the members.manage permission."
+                    },
+                    "404": {
+                        "description": "The caller is not a member of this company."
+                    },
+                    "409": {
+                        "description": "This user is already a member of this company."
+                    },
+                    "422": {
+                        "description": "Unknown role, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/users/{userId}": {
+            "put": {
+                "tags": [
+                    "Companies"
+                ],
+                "operationId": "put_company_users_change_role",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangeMemberRoleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Role changed."
+                    },
+                    "403": {
+                        "description": "The caller lacks the members.manage permission."
+                    },
+                    "404": {
+                        "description": "The caller is not a member of this company, or the target user is not either."
+                    },
+                    "422": {
+                        "description": "Unknown role."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Companies"
+                ],
+                "operationId": "delete_company_users_remove",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Member removed."
+                    },
+                    "403": {
+                        "description": "The caller lacks the members.manage permission."
+                    },
+                    "404": {
+                        "description": "The caller is not a member of this company, or the target user is not either."
+                    }
+                }
+            }
+        },
+        "/api/v1/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "operationId": "get_health",
+                "responses": {
+                    "200": {
+                        "description": "Database and Redis are both reachable."
+                    },
+                    "503": {
+                        "description": "Database or Redis is unreachable."
+                    }
+                }
+            }
+        },
+        "/api/v1/me": {
+            "get": {
+                "tags": [
+                    "Me"
+                ],
+                "operationId": "get_me",
+                "responses": {
+                    "200": {
+                        "description": "The authenticated user, their companies, role and permissions."
+                    },
+                    "401": {
+                        "description": "Not authenticated."
+                    },
+                    "403": {
+                        "description": "must_change_password is still true."
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ChangePasswordRequest": {
+                "properties": {
+                    "current_password": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            },
+            "RequestPasswordResetRequest": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            },
+            "ConfirmPasswordResetRequest": {
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            },
+            "CreateCompanyRequest": {
+                "properties": {
+                    "nif": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "legal_name": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            },
+            "InviteUserRequest": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "role": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            },
+            "ChangeMemberRoleRequest": {
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth"
+        },
+        {
+            "name": "Companies"
+        },
+        {
+            "name": "Health"
+        },
+        {
+            "name": "Me"
+        }
+    ]
+}
