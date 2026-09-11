@@ -4,40 +4,67 @@ deptrac:
     exclude_files:
         - '#.*Tests?\.php#'
     layers:
-        # One layer per architectural tier, matching *any* module
-        # (App\<Module>\<Tier>\...) so a new module needs no change here.
-        # This enforces layering direction (CLAUDE.md — architecture rules)
-        # today. Per-module cross-boundary isolation ("modules communicate
-        # through application services or domain events, never by reaching
-        # into another module's repositories") needs per-module layers and
-        # is refined in task 0.5 once real modules exist.
-        - name: Domain
+        # One layer per (module, tier) pair (CLAUDE.md — architecture rules).
+        # This is Deptrac's standard pattern for modular monoliths: it can't
+        # parametrise layers by a regex capture group, so a brand new module
+        # needs its own four layers + ruleset entry added here, copying the
+        # Platform block below. See docs/decisions/0001-modular-monolith-hexagonal.md.
+        - name: Shared.Domain
           collectors:
               - type: classNameRegex
-                value: '#^App\\[^\\]+\\Domain\\.*#'
-        - name: Application
+                value: '#^App\\Shared\\Domain\\.*#'
+        - name: Shared.Infrastructure
           collectors:
               - type: classNameRegex
-                value: '#^App\\[^\\]+\\Application\\.*#'
-        - name: Infrastructure
+                value: '#^App\\Shared\\Infrastructure\\.*#'
+
+        - name: Platform.Domain
           collectors:
               - type: classNameRegex
-                value: '#^App\\[^\\]+\\Infrastructure\\.*#'
-        - name: UIHttp
+                value: '#^App\\Platform\\Domain\\.*#'
+        - name: Platform.Application
           collectors:
               - type: classNameRegex
-                value: '#^App\\[^\\]+\\UI\\Http\\.*#'
+                value: '#^App\\Platform\\Application\\.*#'
+        - name: Platform.Infrastructure
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Platform\\Infrastructure\\.*#'
+        - name: Platform.UIHttp
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Platform\\UI\\Http\\.*#'
     ruleset:
-        Domain:
-            - Domain
-        Application:
-            - Application
-            - Domain
-        Infrastructure:
-            - Infrastructure
-            - Application
-            - Domain
-        UIHttp:
-            - UIHttp
-            - Application
-            - Domain
+        # Domain: nothing but itself and Shared.Domain (CLAUDE.md: "Domain
+        # depends on nothing outside Domain and Shared/Domain").
+        Platform.Domain:
+            - Platform.Domain
+            - Shared.Domain
+
+        # Application: its own Domain, plus any module's Application layer
+        # (CLAUDE.md: "Modules communicate through application services or
+        # domain events, never through another module's repositories").
+        Platform.Application:
+            - Platform.Application
+            - Platform.Domain
+            - Shared.Domain
+
+        # Infrastructure and UI: depend on Application and Domain of their
+        # own module only, never another module's Infrastructure directly.
+        Platform.Infrastructure:
+            - Platform.Infrastructure
+            - Platform.Application
+            - Platform.Domain
+            - Shared.Domain
+            - Shared.Infrastructure
+        Platform.UIHttp:
+            - Platform.UIHttp
+            - Platform.Application
+            - Platform.Domain
+            - Shared.Domain
+
+        Shared.Domain:
+            - Shared.Domain
+        Shared.Infrastructure:
+            - Shared.Infrastructure
+            - Shared.Domain

@@ -15,9 +15,18 @@ doctrine:
         naming_strategy: doctrine.orm.naming_strategy.underscore
         identity_generation_preferences:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
-        # Per-module XML mappings are registered in task 0.5 (module structure);
-        # no entities exist yet.
         auto_mapping: false
+        # One named mapping per module (CLAUDE.md — Domain has no Doctrine
+        # dependency; mapping lives in Infrastructure as XML). Add a new
+        # entry here, following the same pattern, whenever a module gets
+        # its first entity.
+        mappings:
+            Platform:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Platform/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'App\Platform\Domain'
+                alias: Platform
 
 when@prod:
     doctrine:

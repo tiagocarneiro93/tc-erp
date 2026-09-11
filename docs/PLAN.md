@@ -62,13 +62,15 @@ This plan turns `docs/technical-scope.md` into ordered, verifiable work. It is w
 **Notes:** all four tools verified locally (real Postgres/Redis, no Docker daemon in this sandbox — see task 0.2/0.3 notes); deliberately introduced a `Domain -> Infrastructure` dependency and confirmed Deptrac reports it and exits non-zero, then removed it. Used `deptrac/deptrac` rather than `qossmic/deptrac` (the latter is marked abandoned upstream in favour of the former). The Deptrac ruleset here only enforces layering direction (Domain/Application/Infrastructure/UI generically); per-module cross-boundary isolation is refined in task 0.5 once real modules exist. GitHub Actions workflow (`.github/workflows/backend.yml`) is written but unverified against real GitHub Actions runners — please confirm it goes green on a PR.
 
 ### 0.5 Module structure and architecture rules
-- [ ] Create `src/Shared` and `src/Platform` with `Domain/`, `Application/`, `Infrastructure/`, `UI/Http/`.
-- [ ] Deptrac layers and rules as in `CLAUDE.md` (Domain independent of frameworks; modules isolated).
-- [ ] Doctrine configured for XML mapping from `src/*/Infrastructure/Persistence/Doctrine/Mapping`.
-- [ ] Messenger buses: `command.bus` (sync, with `doctrine_transaction` middleware), `query.bus` (sync), `event.bus`; async transport on Redis (used from Phase 3).
-- [ ] ADR `docs/decisions/0001-modular-monolith-hexagonal.md` summarising the architecture.
+- [x] Create `src/Shared` and `src/Platform` with `Domain/`, `Application/`, `Infrastructure/`, `UI/Http/`.
+- [x] Deptrac layers and rules as in `CLAUDE.md` (Domain independent of frameworks; modules isolated).
+- [x] Doctrine configured for XML mapping from `src/*/Infrastructure/Persistence/Doctrine/Mapping`.
+- [x] Messenger buses: `command.bus` (sync, with `doctrine_transaction` middleware), `query.bus` (sync), `event.bus`; async transport on Redis (used from Phase 3).
+- [x] ADR `docs/decisions/0001-modular-monolith-hexagonal.md` summarising the architecture.
 
 **Accept:** a sample command/handler in Platform runs through the bus inside a transaction (covered by a test).
+
+**Notes:** Deptrac can't parametrise layers by module name, so cross-module isolation uses one layer per (module, tier) pair — see the ADR for the pattern to copy when a new module is added. `HealthController` (task 0.3) moved into `Platform/UI/Http/` now that the module structure exists. Re-verified Deptrac catches a real `Platform.Domain -> Platform.Infrastructure` violation under the new ruleset (and doesn't false-flag on vendor/framework dependencies, which land as "uncovered", not "violation").
 
 ### 0.6 Shared kernel
 - [ ] `Clock` interface + system implementation + frozen test clock.
