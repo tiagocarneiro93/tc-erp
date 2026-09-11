@@ -1,6 +1,7 @@
 FROM dunglas/frankenphp:1-php8.4-bookworm
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # openssl and zip's zlib dependency ship with the base image; the rest are
 # required by CLAUDE.md's stack list. redis is used by the health check
