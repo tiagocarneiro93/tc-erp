@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
-import { getGetCompaniesListMineQueryOptions } from '@/api/generated'
+import { getGetCompaniesListMineQueryOptions, getGetMeQueryOptions } from '@/api/generated'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CompanyList } from '@/features/companies/CompanyList'
@@ -33,7 +33,15 @@ function CompaniesPage() {
           <CardContent>
             <CreateCompanyForm
               onSuccess={async () => {
-                await queryClient.invalidateQueries({ queryKey: getGetCompaniesListMineQueryOptions().queryKey })
+                // /_authenticated/c/$companyId's beforeLoad guards on the
+                // cached /me companies list, not /companies -- without this,
+                // ensureQueryData returns the pre-creation list (it doesn't
+                // revalidate stale cache by default) and clicking straight
+                // into the new company bounces back here.
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: getGetCompaniesListMineQueryOptions().queryKey }),
+                  queryClient.invalidateQueries({ queryKey: getGetMeQueryOptions().queryKey }),
+                ])
                 setCreating(false)
               }}
             />
