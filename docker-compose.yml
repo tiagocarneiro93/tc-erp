@@ -92,6 +92,10 @@ services:
     working_dir: /app
     volumes:
       - ./web:/app
+    environment:
+      # The web/vite.config.ts proxy target defaults to localhost:8080, which
+      # inside this container is itself, not the php service.
+      VITE_API_PROXY_TARGET: "http://php"
     command: >
       sh -c "if [ -f package.json ]; then corepack enable && pnpm install && pnpm dev --host;
       else echo 'node: /web has no app yet (task 0.13)'; sleep infinity; fi"
