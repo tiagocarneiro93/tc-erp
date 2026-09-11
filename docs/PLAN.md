@@ -53,11 +53,13 @@ This plan turns `docs/technical-scope.md` into ordered, verifiable work. It is w
 **Note:** verified locally against real PostgreSQL/Redis instances in this sandbox (no Docker daemon available here — see task 0.2's note); `docker-compose.yml`'s `php` service env vars and healthcheck were updated to match. Please confirm `make up` + `curl http://localhost:8080/api/v1/health` on your machine. `doctrine:migrations:status` confirmed the `migrations` connection reaches Postgres as `app_owner`; `psql` as `app_runtime` still cannot `CREATE TABLE` (re-verified after wiring the real app, not just the container).
 
 ### 0.4 Quality tooling and CI
-- [ ] PHP-CS-Fixer (PER-CS + Symfony rules), PHPStan level max with `phpstan-symfony` and `phpstan-doctrine`, PHPUnit, Deptrac.
-- [ ] Custom PHPStan rule (or tagged check) forbidding `float` type declarations in `*/Domain/*` of Tax, Fiscal, Inventory and Accounts modules.
-- [ ] GitHub Actions workflow: backend (cs check, PHPStan, Deptrac, PHPUnit with a PostgreSQL service), frontend (added in 0.13), OpenAPI drift check (added in 0.11), RLS schema check (added in 0.9).
+- [x] PHP-CS-Fixer (PER-CS + Symfony rules), PHPStan level max with `phpstan-symfony` and `phpstan-doctrine`, PHPUnit, Deptrac.
+- [x] Custom PHPStan rule (or tagged check) forbidding `float` type declarations in `*/Domain/*` of Tax, Fiscal, Inventory and Accounts modules.
+- [x] GitHub Actions workflow: backend (cs check, PHPStan, Deptrac, PHPUnit with a PostgreSQL service), frontend (added in 0.13), OpenAPI drift check (added in 0.11), RLS schema check (added in 0.9).
 
 **Accept:** CI is green on an empty-but-configured project; a deliberately introduced Deptrac violation fails CI (then removed).
+
+**Notes:** all four tools verified locally (real Postgres/Redis, no Docker daemon in this sandbox — see task 0.2/0.3 notes); deliberately introduced a `Domain -> Infrastructure` dependency and confirmed Deptrac reports it and exits non-zero, then removed it. Used `deptrac/deptrac` rather than `qossmic/deptrac` (the latter is marked abandoned upstream in favour of the former). The Deptrac ruleset here only enforces layering direction (Domain/Application/Infrastructure/UI generically); per-module cross-boundary isolation is refined in task 0.5 once real modules exist. GitHub Actions workflow (`.github/workflows/backend.yml`) is written but unverified against real GitHub Actions runners — please confirm it goes green on a PR.
 
 ### 0.5 Module structure and architecture rules
 - [ ] Create `src/Shared` and `src/Platform` with `Domain/`, `Application/`, `Infrastructure/`, `UI/Http/`.

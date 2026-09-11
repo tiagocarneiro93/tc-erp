@@ -90,12 +90,12 @@
         }
     },
     "require-dev": {
+        "deptrac/deptrac": "^4.7",
         "friendsofphp/php-cs-fixer": ">=3.95.25",
         "phpstan/phpstan": ">=2.2.13",
         "phpstan/phpstan-doctrine": ">=2.0.28",
         "phpstan/phpstan-symfony": ">=2.0.20",
         "phpunit/phpunit": "^11.5.56",
-        "qossmic/deptrac": ">=2.0.4",
         "symfony/browser-kit": "7.4.*",
         "symfony/maker-bundle": ">=1.67",
         "symfony/phpunit-bridge": "7.4.*"
