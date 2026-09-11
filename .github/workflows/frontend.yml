@@ -1,0 +1,104 @@
+name: Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'api/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'api/**'
+      - '.github/workflows/frontend.yml'
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tc_erp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint, typecheck and unit test (no API needed)
+        working-directory: web
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+
+      # The e2e spec exercises the real login -> create company -> switch
+      # company flow (docs/PLAN.md task 0.13), so it needs a live API backed
+      # by a migrated, seeded database (task 0.12's demo accounts).
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, pdo_pgsql, bcmath, sodium, zip, opcache, redis
+          coverage: none
+
+      - name: Install API dependencies
+        working-directory: api
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Set up database roles
+        run: |
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f docker/postgres/init/01-roles.sql
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d tc_erp -v ON_ERROR_STOP=1 -f docker/postgres/init/02-databases.sql
+
+      - name: Migrate and seed the API database
+        working-directory: api
+        env:
+          APP_ENV: dev
+          DATABASE_URL: postgresql://app_runtime:app_runtime@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
+          DATABASE_MIGRATIONS_URL: postgresql://app_owner:app_owner@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
+          REDIS_URL: redis://127.0.0.1:6379
+        run: |
+          php bin/console doctrine:migrations:migrate --no-interaction
+          php bin/console app:seed --no-interaction
+
+      - name: Start the API
+        working-directory: api
+        env:
+          APP_ENV: dev
+          DATABASE_URL: postgresql://app_runtime:app_runtime@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
+          DATABASE_MIGRATIONS_URL: postgresql://app_owner:app_owner@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
+          REDIS_URL: redis://127.0.0.1:6379
+        run: |
+          php -S 127.0.0.1:8080 -t public &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/api/v1/health && break || sleep 1; done
+
+      - name: Install Playwright browsers
+        working-directory: web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: e2e (Playwright)
+        working-directory: web
+        env:
+          VITE_API_PROXY_TARGET: http://127.0.0.1:8080
+        run: pnpm e2e

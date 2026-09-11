@@ -26,7 +26,20 @@ final class MeController
     }
 
     #[Route('/api/v1/me', name: 'me', methods: ['GET'])]
-    #[OA\Response(response: 200, description: 'The authenticated user, their companies, role and permissions.')]
+    #[OA\Response(response: 200, description: 'The authenticated user, their companies, role and permissions.', content: new OA\JsonContent(properties: [
+        new OA\Property(property: 'user', properties: [
+            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+            new OA\Property(property: 'email', type: 'string', format: 'email'),
+            new OA\Property(property: 'name', type: 'string'),
+            new OA\Property(property: 'must_change_password', type: 'boolean'),
+        ], type: 'object'),
+        new OA\Property(property: 'companies', type: 'array', items: new OA\Items(properties: [
+            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+            new OA\Property(property: 'legal_name', type: 'string'),
+            new OA\Property(property: 'role', type: 'string'),
+            new OA\Property(property: 'permissions', type: 'array', items: new OA\Items(type: 'string')),
+        ], type: 'object')),
+    ]))]
     #[OA\Response(response: 401, description: 'Not authenticated.')]
     #[OA\Response(response: 403, description: 'must_change_password is still true.')]
     public function __invoke(): JsonResponse

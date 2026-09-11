@@ -29,6 +29,11 @@ final class DoctrineMembershipRepository implements MembershipRepository
         return $this->entityManager->getRepository(Membership::class)->findBy(['userId' => $userId]);
     }
 
+    public function findByCompany(CompanyId $companyId): array
+    {
+        return $this->entityManager->getRepository(Membership::class)->findBy(['companyId' => $companyId]);
+    }
+
     public function save(Membership $membership): void
     {
         $this->entityManager->persist($membership);

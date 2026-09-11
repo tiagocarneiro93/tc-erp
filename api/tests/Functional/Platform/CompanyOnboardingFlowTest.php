@@ -70,6 +70,15 @@ final class CompanyOnboardingFlowTest extends WebTestCase
         self::assertNotNull($membership);
         self::assertSame('accountant', $membership->role());
 
+        // 3b. The company's member list shows both the owner and the new member.
+        $client->request('GET', "/api/v1/companies/{$companyId}/users", server: self::HEADERS);
+        self::assertResponseIsSuccessful();
+        /** @var array{items: list<array{user_id: string, email: string, role: string}>} $membersList */
+        $membersList = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        $roleByEmail = array_column($membersList['items'], 'role', 'email');
+        self::assertSame('accountant', $roleByEmail[$memberEmail]);
+        self::assertCount(2, $membersList['items']);
+
         // 4. Change their role.
         $client->request('PUT', "/api/v1/companies/{$companyId}/users/{$memberId->toString()}", server: self::HEADERS, content: json_encode([
             'role' => 'stock',

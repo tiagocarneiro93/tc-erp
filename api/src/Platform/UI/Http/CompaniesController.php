@@ -69,7 +69,15 @@ final class CompaniesController
     #[Route('/api/v1/companies', name: 'companies_list_mine', methods: ['GET'])]
     #[OA\Parameter(name: 'cursor', in: 'query', schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'Companies the caller is a member of.')]
+    #[OA\Response(response: 200, description: 'Companies the caller is a member of.', content: new OA\JsonContent(properties: [
+        new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [
+            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+            new OA\Property(property: 'nif', type: 'string'),
+            new OA\Property(property: 'legal_name', type: 'string'),
+            new OA\Property(property: 'role', type: 'string'),
+        ], type: 'object')),
+        new OA\Property(property: 'next_cursor', type: 'string', nullable: true),
+    ]))]
     public function listMine(Request $request): JsonResponse
     {
         /** @var list<MyCompanyView> $companies */

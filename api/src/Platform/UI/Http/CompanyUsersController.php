@@ -7,6 +7,8 @@ namespace App\Platform\UI\Http;
 use App\Platform\Application\Command\ChangeMemberRole;
 use App\Platform\Application\Command\InviteUserToCompany;
 use App\Platform\Application\Command\RemoveMember;
+use App\Platform\Application\Query\CompanyMemberView;
+use App\Platform\Application\Query\ListCompanyMembers;
 use App\Platform\Application\Security\CurrentUserId;
 use App\Platform\Domain\UserId;
 use OpenApi\Attributes as OA;
@@ -15,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -29,10 +32,37 @@ use Symfony\Component\Routing\Attribute\Route;
 #[OA\Tag(name: 'Companies')]
 final class CompanyUsersController
 {
+    use HandleTrait;
+
     public function __construct(
         private readonly MessageBusInterface $commandBus,
+        MessageBusInterface $queryBus,
         private readonly CurrentUserId $currentUserId,
     ) {
+        $this->messageBus = $queryBus;
+    }
+
+    #[Route('/api/v1/companies/{companyId}/users', name: 'company_users_list', methods: ['GET'])]
+    #[OA\Response(response: 200, description: 'Members of this company.', content: new OA\JsonContent(properties: [
+        new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [
+            new OA\Property(property: 'user_id', type: 'string', format: 'uuid'),
+            new OA\Property(property: 'email', type: 'string', format: 'email'),
+            new OA\Property(property: 'name', type: 'string'),
+            new OA\Property(property: 'role', type: 'string'),
+        ], type: 'object')),
+    ]))]
+    #[OA\Response(response: 404, description: 'The caller is not a member of this company.')]
+    public function list(): JsonResponse
+    {
+        /** @var list<CompanyMemberView> $members */
+        $members = $this->handle(new ListCompanyMembers());
+
+        return new JsonResponse(['items' => array_map(static fn (CompanyMemberView $m) => [
+            'user_id' => $m->userId,
+            'email' => $m->email,
+            'name' => $m->name,
+            'role' => $m->role,
+        ], $members)]);
     }
 
     #[Route('/api/v1/companies/{companyId}/users', name: 'company_users_invite', methods: ['POST'])]

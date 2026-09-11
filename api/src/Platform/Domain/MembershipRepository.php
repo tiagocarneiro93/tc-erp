@@ -15,6 +15,11 @@ interface MembershipRepository
      */
     public function findByUser(UserId $userId): array;
 
+    /**
+     * @return list<Membership>
+     */
+    public function findByCompany(CompanyId $companyId): array;
+
     public function save(Membership $membership): void;
 
     public function remove(Membership $membership): void;

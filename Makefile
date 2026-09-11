@@ -23,28 +23,31 @@ test-api: ## Run PHPUnit
 	$(COMPOSE) exec php vendor/bin/phpunit
 
 test-web: ## Run Vitest
-	@echo "test-web: /web has no app yet (task 0.13)"
+	$(COMPOSE) exec node pnpm test
 
-e2e: ## Run Playwright e2e tests
-	@echo "e2e: /web has no app yet (task 0.13)"
+e2e: ## Run Playwright e2e tests (login -> create company -> switch company)
+	$(COMPOSE) exec node pnpm exec playwright install --with-deps chromium
+	$(COMPOSE) exec -e E2E_BASE_URL=http://localhost:5173 node pnpm e2e
 
 lint: ## Run PHP-CS-Fixer (check), PHPStan, Deptrac, ESLint, tsc
 	$(COMPOSE) exec php vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
 	$(COMPOSE) exec php bin/console cache:clear --env=dev
 	$(COMPOSE) exec php vendor/bin/phpstan analyse
 	$(COMPOSE) exec php vendor/bin/deptrac analyse --no-interaction
-	@echo "lint (web): not available yet (task 0.13)"
+	$(COMPOSE) exec node pnpm lint
+	$(COMPOSE) exec node pnpm typecheck
 
 fix: ## Auto-fix code style
 	$(COMPOSE) exec php vendor/bin/php-cs-fixer fix --ansi
-	@echo "fix (web): not available yet (task 0.13)"
+	$(COMPOSE) exec node pnpm lint:fix
+	$(COMPOSE) exec node pnpm format
 
 migrate: ## Run Doctrine migrations as the migration owner role
 	$(COMPOSE) exec php bin/console doctrine:migrations:migrate --no-interaction
 
 openapi: ## Dump OpenAPI spec to api/openapi.json and regenerate the web client
 	$(COMPOSE) exec php bin/console nelmio:apidoc:dump --format=json --no-interaction > api/openapi.json
-	@echo "openapi: web client regeneration not available yet (task 0.13 — no /web app exists to generate into)"
+	$(COMPOSE) exec node pnpm generate-client
 
 seed: ## Load development fixtures
 	$(COMPOSE) exec php bin/console app:seed --no-interaction
