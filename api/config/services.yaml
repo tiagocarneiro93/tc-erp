@@ -7,6 +7,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.mailer_from_address: '%env(MAILER_FROM_ADDRESS)%'
+    app.frontend_url: '%env(FRONTEND_URL)%'
 
 services:
     # default configuration for services in *this* file
@@ -42,3 +44,23 @@ services:
     App\Platform\Domain\RoleRepository:
         alias: App\Platform\Infrastructure\Persistence\Doctrine\Repository\DoctrineRoleRepository
         public: true
+    App\Platform\Domain\PasswordResetTokenRepository:
+        alias: App\Platform\Infrastructure\Persistence\Doctrine\Repository\DoctrinePasswordResetTokenRepository
+        public: true
+    App\Platform\Domain\PasswordHasher: '@App\Platform\Infrastructure\Security\SymfonyPasswordHasher'
+    App\Platform\Domain\PasswordResetMailer: '@App\Platform\Infrastructure\Mail\SymfonyPasswordResetMailer'
+
+    # Same alias-must-be-public pattern as the repositories above, so
+    # UI/Http controllers can depend on the Application-layer port instead
+    # of the Infrastructure Security adapter (Deptrac — architecture rules).
+    App\Platform\Application\Security\CurrentUserId:
+        alias: App\Platform\Infrastructure\Security\SymfonyCurrentUserId
+        public: true
+
+    App\Platform\Infrastructure\Mail\SymfonyPasswordResetMailer:
+        arguments:
+            $fromAddress: '%app.mailer_from_address%'
+
+    App\Platform\Application\Command\RequestPasswordResetHandler:
+        arguments:
+            $frontendUrl: '%app.frontend_url%'

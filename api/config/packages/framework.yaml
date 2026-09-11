@@ -3,7 +3,13 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    # Cookie flags per CLAUDE.md task 0.8: httpOnly, Secure, SameSite=Lax.
+    # cookie_secure: auto means "secure only when the request is HTTPS", so
+    # local http:// dev still works; every real environment terminates TLS.
+    session:
+        cookie_httponly: true
+        cookie_secure: auto
+        cookie_samesite: lax
 
     #esi: true
     #fragments: true

@@ -9,6 +9,7 @@ doctrine:
             user_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\UserIdType
             company_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\CompanyIdType
             api_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\ApiTokenIdType
+            password_reset_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\PasswordResetTokenIdType
         default_connection: default
         connections:
             # The app connects as app_runtime: no table ownership, no BYPASSRLS,
