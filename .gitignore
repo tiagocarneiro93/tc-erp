@@ -1,0 +1,30 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# PHP / Symfony
+/api/vendor/
+/api/var/
+/api/.phpunit.cache/
+/api/public/bundles/
+
+# Node / web
+/web/node_modules/
+/web/dist/
+/web/coverage/
+/web/.vite/
+
+# Secrets / keys — never commit the signing key (CLAUDE.md — hard rules)
+*.pem
+*.key
+docker/keys/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
