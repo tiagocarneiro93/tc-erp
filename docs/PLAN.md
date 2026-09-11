@@ -73,12 +73,14 @@ This plan turns `docs/technical-scope.md` into ordered, verifiable work. It is w
 **Notes:** Deptrac can't parametrise layers by module name, so cross-module isolation uses one layer per (module, tier) pair — see the ADR for the pattern to copy when a new module is added. `HealthController` (task 0.3) moved into `Platform/UI/Http/` now that the module structure exists. Re-verified Deptrac catches a real `Platform.Domain -> Platform.Infrastructure` violation under the new ruleset (and doesn't false-flag on vendor/framework dependencies, which land as "uncovered", not "violation").
 
 ### 0.6 Shared kernel
-- [ ] `Clock` interface + system implementation + frozen test clock.
-- [ ] UUID v7 identifiers (typed IDs per aggregate, e.g. `CompanyId`, `UserId`).
-- [ ] `Nif` value object with Portuguese check-digit validation (test-first, with valid/invalid examples).
-- [ ] Decimal helpers around `brick/math` (`Decimal`, `Money` in EUR, `Quantity`, `Percentage`), with string (de)serialisation for the API.
+- [x] `Clock` interface + system implementation + frozen test clock.
+- [x] UUID v7 identifiers (typed IDs per aggregate, e.g. `CompanyId`, `UserId`).
+- [x] `Nif` value object with Portuguese check-digit validation (test-first, with valid/invalid examples).
+- [x] Decimal helpers around `brick/math` (`Decimal`, `Money` in EUR, `Quantity`, `Percentage`), with string (de)serialisation for the API.
 
 **Accept:** unit tests for all value objects; no `float` anywhere in `Shared/Domain`.
+
+**Notes:** `CompanyId`/`UserId` (concrete `AbstractUuidId` subclasses) live in `Platform/Domain` since they're Platform-specific, not generic Shared concepts — 0.7 will use them on the `companies`/`users` entities. `Nif` deliberately validates only the modulus-11 check digit, not the legal list of valid leading-digit categories (a separate, more volatile rule, not asked for here). "String (de)serialisation" is `fromString()`/`toString()` round-tripping; wiring these into request/response DTOs happens as real endpoints are built. 25 unit tests, all green; `grep -rn '\bfloat\b' src/Shared/Domain/` finds none outside a comment.
 
 ### 0.7 Platform domain and persistence
 - [ ] Global tables (§6.1): `users`, `companies`, `memberships`, `roles`, `role_permissions`, `api_tokens` (structure only for now), `signing_keys` (structure only).
