@@ -2,8 +2,12 @@
 
 Scope per `docs/PLAN.md`: §6.2–6.5, §7.9.8, §7.10 of `docs/technical-scope.md`.
 
-**Prerequisite (blocking, tax data only):** 🧑 legal sources for tax rates and exemption
-reasons in `docs/legal/` (see `docs/legal/README.md` → `civa-extracts.md`). Everything
+**Prerequisite (blocking, tax rates only):** exemption reasons are resolved —
+`docs/legal/at-tabela-codigos-motivo-isencao.pdf` (V4.0, 18 Jun 2026) is the official
+M01–M99 table. Mainland/Açores/Madeira VAT rates (CIVA art. 18) are still missing:
+this sandbox's network egress is blocked for `portaldasfinancas.gov.pt`, so the page
+at `docs/legal/README.md`'s note could not be fetched — 🧑 owner needs to upload it
+(save as PDF, screenshot, or pasted text) as `docs/legal/civa-extracts.md`. Everything
 else in this phase has no external dependency.
 
 Depends on Phase 0 being complete: module/Deptrac skeleton (0.5), `Clock`/`Nif`/decimal
@@ -11,6 +15,16 @@ value objects (0.6), auth (0.8), `CompanyContext` + RLS + isolation test pattern
 `CreateCompany` use case (0.10), Problem Details/pagination/OpenAPI conventions (0.11),
 web shell with company switcher (0.13). Tasks below assume all of that exists; do not
 start 1.1 until Phase 0's exit criteria are met.
+
+Every new company-scoped write endpoint is permission-gated the same way task
+0.10's `InviteUserToCompanyHandler` checks `members.manage` — via
+`PermissionChecker::isGranted()` against `docs/decisions/0002-roles-and-permissions.md`'s
+existing list (`company.manage` for 1.4, `customers.manage`/`customers.read` for 1.5,
+`products.manage`/`products.read` for 1.6–1.8, `stock.manage`/`stock.read` for
+warehouses in 1.9 — there's no dedicated warehouse permission in ADR 0002, and a
+warehouse is a stock-location concept). The global read-only reference-data endpoints
+(1.1, 1.3, and `tax_rates`/`exemption_reasons` in 1.2) need no permission check —
+any authenticated user may read them, same as they're global, not company-scoped.
 
 ## Decisions this plan makes (owner: confirm or override before coding)
 
@@ -28,13 +42,19 @@ start 1.1 until Phase 0's exit criteria are met.
 3. **Tax seed data for dev/demo purposes:** mainland rates (23 %/13 %/6 %, codes
    NOR/INT/RED) are public knowledge and already used as examples in
    `technical-scope.md` §7.9.1, so task 1.2 ships them as the dev seed. **PT-AC/PT-MA
-   rates and the full `exemption_reasons` (M-code) list are not seeded with real
-   values until `docs/legal/civa-extracts.md` exists** — task 1.2 builds the
-   schema and versioned-seed mechanism either way, and stops before committing
-   those two data sets as real. Confirm this split is acceptable.
+   rates are not seeded with real values until `docs/legal/civa-extracts.md` exists**
+   (still blocked — see prerequisite above); `exemption_reasons` **is** now seeded in
+   full from `docs/legal/at-tabela-codigos-motivo-isencao.pdf` (V4.0), since that
+   source landed. Confirm the mainland-only tax-rate split is acceptable.
 4. Extends the Phase 0 `CreateCompany` use case (additive, not a fiscal table) to
    also create the default warehouse (task 1.9) — `warehouses` doesn't exist until
    this phase.
+5. **No platform-admin UI for `tax_rates`/`exemption_reasons` in this phase**
+   (decisions/0003, agreed while planning this phase): they ship as versioned data
+   migrations per §6.5, exactly as already documented. A cross-company "platform
+   admin" account (managing this reference data, subscription plans, and
+   admin-assisted company creation) is deferred to Phase 7, next to the
+   billing/subscription model it depends on.
 
 ---
 
@@ -56,21 +76,28 @@ the seed migration idempotency (running twice doesn't duplicate rows).
 - Versioned seed mechanism: each rate/reason change ships as a new data migration
   (e.g. named after the State Budget year), never an edit to an old one — mirrors
   the "never edit a committed migration" rule for the fiscal-adjacent nature of
-  this data.
-- Seed **mainland rates only** for now (decision 3 above); leave PT-AC/PT-MA and
-  `exemption_reasons` empty until legal sources land, with a `TODO` migration
-  stub the owner fills in.
+  this data. No admin UI edits this data in this phase (decision 5 above).
+- `exemption_reasons`: seed the **full real M01–M99 list** from
+  `docs/legal/at-tabela-codigos-motivo-isencao.pdf` (V4.0, 18 Jun 2026) — code,
+  invoice wording (`description`), and legal basis (`legal_reference`) transcribed
+  exactly as the table states, citing the document in the migration's own comment
+  per CLAUDE.md's "[VERIFY] must cite document and section" rule.
+- `tax_rates`: seed **mainland rates only** for now (decision 3 above); leave
+  PT-AC/PT-MA empty until `docs/legal/civa-extracts.md` lands, with a `TODO`
+  migration stub the owner fills in.
 - `GET /api/v1/tax-rates`, `GET /api/v1/exemption-reasons`, both filterable by
   `region` and resolvable "as of" a given date.
 - Domain service `Tax\Domain\TaxRateResolver`: given `(region, code, date)` →
   applicable rate, erroring (not silently picking the nearest) if none matches —
   this is what Phase 2's `PriceCalculator` will call.
 
-**Accept:** schema + migration mechanism merged and tested; mainland rates seeded
-and covered by a validity-date resolution unit test (rate changes on
-`valid_from`/`valid_to` boundaries); PT-AC/PT-MA and exemption reasons explicitly
-pending, tracked as a follow-up note in this file until `docs/legal/` has the
-source, at which point they ship as a small additive migration + 🧑 owner review
+**Accept:** schema + migration mechanism merged and tested; mainland tax rates and
+the full exemption-reasons table seeded and covered by tests — a validity-date
+resolution unit test for `tax_rates` (rate changes on `valid_from`/`valid_to`
+boundaries) and a test asserting the exemption-reasons seed matches the source
+document's row count and a sample of codes; PT-AC/PT-MA rates explicitly pending,
+tracked as a follow-up note in this file until `docs/legal/civa-extracts.md`
+lands, at which point they ship as a small additive migration + 🧑 owner review
 (per CLAUDE.md: "pricing test vectors reviewed by the owner" applies here too,
 since this data feeds VAT calculation).
 
@@ -203,8 +230,8 @@ products, create a warehouse, switch company and confirm the lists change.
 - `make lint` and `make test` green (per CLAUDE.md, on every task, not just at
   the end).
 - Playwright e2e from task 1.10 passes in CI.
-- 🧑 Owner confirms mainland tax-rate seed data (task 1.2) is correct, and
-  supplies `docs/legal/civa-extracts.md` so PT-AC/PT-MA rates and the
-  `exemption_reasons` list can be completed before Phase 2 needs them (Phase 2's
-  own prerequisite already requires this).
+- 🧑 Owner confirms mainland tax-rate seed data and the exemption-reasons seed
+  (task 1.2) are correct, and supplies `docs/legal/civa-extracts.md` so PT-AC/PT-MA
+  rates can be completed before Phase 2 needs them (Phase 2's own prerequisite
+  already requires this).
 - 🧑 Owner review of Phase 1 before starting Phase 2.

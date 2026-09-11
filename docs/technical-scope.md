@@ -289,11 +289,11 @@ product_components (kit_product_id, component_product_id, quantity NUMERIC(19,6)
 tax_rates         (id, region            -- PT|PT-AC|PT-MA
                   , code                 -- NOR|INT|RED|ISE|OUT (SAF-T TaxCode)
                   , percentage, valid_from, valid_to NULL, description)
-exemption_reasons (code PK               -- M01..M99 [VERIFY] current official list
+exemption_reasons (code PK               -- M01..M99 per docs/legal/at-tabela-codigos-motivo-isencao.pdf
                   , description, legal_reference, valid_from, valid_to NULL)
 ```
 
-Tax rates and exemption reasons are global and versioned by validity dates; changes (e.g. a new State Budget) ship as data migrations. All calculations go through the single `PriceCalculator` described in §7.9.
+Tax rates and exemption reasons are global and versioned by validity dates; changes (e.g. a new State Budget) ship as data migrations — no admin UI manages this data before Phase 7 (decisions/0003). All calculations go through the single `PriceCalculator` described in §7.9.
 
 ### 6.6 Fiscal core
 
@@ -911,7 +911,7 @@ Phases are sequential in focus but overlap in practice. Each ends with a demo on
 | **4. Movement of goods** | GT/GR/GD, AT transport webservice, GR → invoice conversion | Transport documents obtain AT codes in test environment |
 | **5. Stock & purchases** | Stock ledger, levels, average cost, sales kits (§7.10), adjustments, transfers, counts, supplier documents, supplier payments, current accounts | Stock and accounts reconcile with documents |
 | **6. Hardening & certification** | Security review, performance tests, backups/restore drill, documentation, certification dossier, Modelo 24, conformity tests | **AT certificate obtained** |
-| **7. Pilot & launch** | Pilot with 1–3 real companies, data migration tools, billing/subscriptions, onboarding | First paying customers |
+| **7. Pilot & launch** | Pilot with 1–3 real companies, data migration tools, billing/subscriptions, onboarding, **platform admin** (cross-company authorization concept; manage `tax_rates`/`exemption_reasons` reference data, subscription plans, admin-assisted company creation — decisions/0003) | First paying customers |
 | **8. After v1** | CIUS-PT (B2G), quotes/proformas/orders, POS, lots and traceability, integrations, MCP | — |
 
 Note: phases 2–4 are the certification-critical path; start the qualified seal provider and AT test environment access **early in phase 2** since both involve external lead times.

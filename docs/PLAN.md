@@ -183,7 +183,10 @@ Everything technical is green; this phase is ready for 🧑 owner review before 
 
 ## Phase 1 — Master data (§6.2–6.5, §7.9.8, §7.10)
 
-Prerequisite: 🧑 legal sources for tax rates and exemption reasons in `docs/legal/`.
+Prerequisite: 🧑 legal source for tax rates in `docs/legal/` (exemption reasons are
+resolved — `docs/legal/at-tabela-codigos-motivo-isencao.pdf`). See `docs/plans/phase-1.md`
+for the full task breakdown, decisions made while planning it (`docs/decisions/0003`
+among them), and the exact blocker.
 
 Scope for `docs/plans/phase-1.md`:
 - Global reference data with versioned seeds: document types (incl. OR, PF, NE), tax rates for PT, PT-AC, PT-MA with validity dates, exemption reasons (M codes), units, countries. 🧑 Owner verifies the seed data against official sources.
