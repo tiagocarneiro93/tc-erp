@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Tax\Domain\TaxRate" table="tax_rates">
+        <id name="id" type="tax_rate_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="region" type="string" column="region" />
+        <field name="code" type="string" column="code" />
+        <field name="percentage" type="percentage" column="percentage" />
+        <field name="validFrom" type="datetimetz_immutable" column="valid_from" />
+        <field name="validTo" type="datetimetz_immutable" column="valid_to" nullable="true" />
+        <field name="description" type="string" column="description" />
+    </entity>
+</doctrine-mapping>

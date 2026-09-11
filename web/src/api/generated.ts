@@ -136,6 +136,52 @@ export type GetCountriesList200 = {
   items?: GetCountriesList200ItemsItem[];
 };
 
+export type GetExemptionReasonsListParams = {
+/**
+ * Only reasons valid on this date; omit to list every reason ever seeded.
+ */
+as_of?: string;
+};
+
+export type GetExemptionReasonsList200ItemsItem = {
+  code?: string;
+  description?: string;
+  legal_reference?: string;
+  valid_from?: string;
+  /** @nullable */
+  valid_to?: string | null;
+};
+
+export type GetExemptionReasonsList200 = {
+  items?: GetExemptionReasonsList200ItemsItem[];
+};
+
+export type GetTaxRatesListParams = {
+/**
+ * PT|PT-AC|PT-MA
+ */
+region?: string;
+/**
+ * Only rates valid on this date; omit to list every rate ever seeded.
+ */
+as_of?: string;
+};
+
+export type GetTaxRatesList200ItemsItem = {
+  id?: string;
+  region?: string;
+  code?: string;
+  percentage?: string;
+  valid_from?: string;
+  /** @nullable */
+  valid_to?: string | null;
+  description?: string;
+};
+
+export type GetTaxRatesList200 = {
+  items?: GetTaxRatesList200ItemsItem[];
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -1444,6 +1490,210 @@ export function useGetCountriesList<TData = Awaited<ReturnType<typeof getCountri
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetCountriesListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetExemptionReasonsListUrl = (params?: GetExemptionReasonsListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/exemption-reasons?${stringifiedParams}` : `/api/v1/exemption-reasons`
+}
+
+export const getExemptionReasonsList = async (params?: GetExemptionReasonsListParams, options?: RequestInit): Promise<GetExemptionReasonsList200> => {
+
+  return httpClient<GetExemptionReasonsList200>(getGetExemptionReasonsListUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetExemptionReasonsListQueryKey = (params?: GetExemptionReasonsListParams,) => {
+    return [
+    `/api/v1/exemption-reasons`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetExemptionReasonsListQueryOptions = <TData = Awaited<ReturnType<typeof getExemptionReasonsList>>, TError = void>(params?: GetExemptionReasonsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExemptionReasonsList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetExemptionReasonsListQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getExemptionReasonsList>>> = ({ signal }) => getExemptionReasonsList(params, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getExemptionReasonsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetExemptionReasonsListQueryResult = NonNullable<Awaited<ReturnType<typeof getExemptionReasonsList>>>
+export type GetExemptionReasonsListQueryError = void
+
+
+export function useGetExemptionReasonsList<TData = Awaited<ReturnType<typeof getExemptionReasonsList>>, TError = void>(
+ params: undefined |  GetExemptionReasonsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExemptionReasonsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExemptionReasonsList>>,
+          TError,
+          Awaited<ReturnType<typeof getExemptionReasonsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetExemptionReasonsList<TData = Awaited<ReturnType<typeof getExemptionReasonsList>>, TError = void>(
+ params?: GetExemptionReasonsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExemptionReasonsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExemptionReasonsList>>,
+          TError,
+          Awaited<ReturnType<typeof getExemptionReasonsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetExemptionReasonsList<TData = Awaited<ReturnType<typeof getExemptionReasonsList>>, TError = void>(
+ params?: GetExemptionReasonsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExemptionReasonsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetExemptionReasonsList<TData = Awaited<ReturnType<typeof getExemptionReasonsList>>, TError = void>(
+ params?: GetExemptionReasonsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExemptionReasonsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetExemptionReasonsListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetTaxRatesListUrl = (params?: GetTaxRatesListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/tax-rates?${stringifiedParams}` : `/api/v1/tax-rates`
+}
+
+export const getTaxRatesList = async (params?: GetTaxRatesListParams, options?: RequestInit): Promise<GetTaxRatesList200> => {
+
+  return httpClient<GetTaxRatesList200>(getGetTaxRatesListUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTaxRatesListQueryKey = (params?: GetTaxRatesListParams,) => {
+    return [
+    `/api/v1/tax-rates`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetTaxRatesListQueryOptions = <TData = Awaited<ReturnType<typeof getTaxRatesList>>, TError = void>(params?: GetTaxRatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxRatesList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTaxRatesListQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaxRatesList>>> = ({ signal }) => getTaxRatesList(params, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTaxRatesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTaxRatesListQueryResult = NonNullable<Awaited<ReturnType<typeof getTaxRatesList>>>
+export type GetTaxRatesListQueryError = void
+
+
+export function useGetTaxRatesList<TData = Awaited<ReturnType<typeof getTaxRatesList>>, TError = void>(
+ params: undefined |  GetTaxRatesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxRatesList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaxRatesList>>,
+          TError,
+          Awaited<ReturnType<typeof getTaxRatesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTaxRatesList<TData = Awaited<ReturnType<typeof getTaxRatesList>>, TError = void>(
+ params?: GetTaxRatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxRatesList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaxRatesList>>,
+          TError,
+          Awaited<ReturnType<typeof getTaxRatesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTaxRatesList<TData = Awaited<ReturnType<typeof getTaxRatesList>>, TError = void>(
+ params?: GetTaxRatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxRatesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetTaxRatesList<TData = Awaited<ReturnType<typeof getTaxRatesList>>, TError = void>(
+ params?: GetTaxRatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxRatesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTaxRatesListQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

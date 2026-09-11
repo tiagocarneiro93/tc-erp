@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Tax\Domain\ExemptionReason" table="exemption_reasons">
+        <id name="code" type="string" column="code">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="description" type="string" column="description" />
+        <field name="legalReference" type="text" column="legal_reference" />
+        <field name="validFrom" type="datetimetz_immutable" column="valid_from" />
+        <field name="validTo" type="datetimetz_immutable" column="valid_to" nullable="true" />
+    </entity>
+</doctrine-mapping>

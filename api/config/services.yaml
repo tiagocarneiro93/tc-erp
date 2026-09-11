@@ -101,6 +101,12 @@ services:
     App\Catalog\Domain\UnitRepository:
         alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineUnitRepository
         public: true
+    App\Tax\Domain\TaxRateRepository:
+        alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineTaxRateRepository
+        public: true
+    App\Tax\Domain\ExemptionReasonRepository:
+        alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineExemptionReasonRepository
+        public: true
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:

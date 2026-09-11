@@ -595,6 +595,145 @@
                     }
                 }
             }
+        },
+        "/api/v1/exemption-reasons": {
+            "get": {
+                "tags": [
+                    "Reference data"
+                ],
+                "operationId": "get_exemption_reasons_list",
+                "parameters": [
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "description": "Only reasons valid on this date; omit to list every reason ever seeded.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "VAT exemption/non-liquidation reason codes.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "legal_reference": {
+                                                        "type": "string"
+                                                    },
+                                                    "valid_from": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "valid_to": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid as_of date."
+                    }
+                }
+            }
+        },
+        "/api/v1/tax-rates": {
+            "get": {
+                "tags": [
+                    "Reference data"
+                ],
+                "operationId": "get_tax_rates_list",
+                "parameters": [
+                    {
+                        "name": "region",
+                        "in": "query",
+                        "description": "PT|PT-AC|PT-MA",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "description": "Only rates valid on this date; omit to list every rate ever seeded.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tax rates.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "region": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "percentage": {
+                                                        "type": "string"
+                                                    },
+                                                    "valid_from": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "valid_to": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "nullable": true
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid as_of date."
+                    }
+                }
+            }
         }
     },
     "components": {
