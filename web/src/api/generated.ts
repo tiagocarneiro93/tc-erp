@@ -57,6 +57,51 @@ export interface UpdateCompanyProfileRequest {
   cash_vat?: boolean;
 }
 
+export interface CustomerRequest {
+  code?: string;
+  nif?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  payment_terms_days?: number | null;
+  is_final_consumer?: boolean;
+}
+
+export interface SupplierRequest {
+  code?: string;
+  nif?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  payment_terms_days?: number | null;
+}
+
 export interface ChangePasswordRequest {
   current_password?: string;
   new_password?: string;
@@ -142,6 +187,124 @@ export type GetDocumentTypesList200ItemsItem = {
 
 export type GetDocumentTypesList200 = {
   items?: GetDocumentTypesList200ItemsItem[];
+};
+
+export type GetCustomersListParams = {
+search?: string;
+cursor?: string;
+limit?: number;
+};
+
+export type GetCustomersList200ItemsItem = {
+  id?: string;
+  code?: string;
+  nif?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  payment_terms_days?: number | null;
+  is_final_consumer?: boolean;
+  active?: boolean;
+};
+
+export type GetCustomersList200 = {
+  items?: GetCustomersList200ItemsItem[];
+  /** @nullable */
+  next_cursor?: string | null;
+};
+
+export type PostCustomersCreate201 = {
+  id?: string;
+};
+
+export type GetCustomersGet200 = {
+  id?: string;
+  code?: string;
+  nif?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  payment_terms_days?: number | null;
+  is_final_consumer?: boolean;
+  active?: boolean;
+};
+
+export type GetSuppliersListParams = {
+search?: string;
+cursor?: string;
+limit?: number;
+};
+
+export type GetSuppliersList200ItemsItem = {
+  id?: string;
+  code?: string;
+  nif?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  payment_terms_days?: number | null;
+  active?: boolean;
+};
+
+export type GetSuppliersList200 = {
+  items?: GetSuppliersList200ItemsItem[];
+  /** @nullable */
+  next_cursor?: string | null;
+};
+
+export type PostSuppliersCreate201 = {
+  id?: string;
+};
+
+export type GetSuppliersGet200 = {
+  id?: string;
+  code?: string;
+  nif?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  payment_terms_days?: number | null;
+  active?: boolean;
 };
 
 export type PostAuthLoginBody = {
@@ -795,6 +958,908 @@ export function useGetDocumentTypesList<TData = Awaited<ReturnType<typeof getDoc
 
 
 
+
+export const getGetCustomersListUrl = (companyId: string,
+    params?: GetCustomersListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/companies/${companyId}/customers?${stringifiedParams}` : `/api/v1/companies/${companyId}/customers`
+}
+
+export const getCustomersList = async (companyId: string,
+    params?: GetCustomersListParams, options?: RequestInit): Promise<GetCustomersList200> => {
+
+  return httpClient<GetCustomersList200>(getGetCustomersListUrl(companyId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCustomersListQueryKey = (companyId: string,
+    params?: GetCustomersListParams,) => {
+    return [
+    `/api/v1/companies/${companyId}/customers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCustomersListQueryOptions = <TData = Awaited<ReturnType<typeof getCustomersList>>, TError = unknown>(companyId: string,
+    params?: GetCustomersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCustomersListQueryKey(companyId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCustomersList>>> = ({ signal }) => getCustomersList(companyId,params, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCustomersList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCustomersListQueryResult = NonNullable<Awaited<ReturnType<typeof getCustomersList>>>
+export type GetCustomersListQueryError = unknown
+
+
+export function useGetCustomersList<TData = Awaited<ReturnType<typeof getCustomersList>>, TError = unknown>(
+ companyId: string,
+    params: undefined |  GetCustomersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomersList>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomersList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCustomersList<TData = Awaited<ReturnType<typeof getCustomersList>>, TError = unknown>(
+ companyId: string,
+    params?: GetCustomersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomersList>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomersList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCustomersList<TData = Awaited<ReturnType<typeof getCustomersList>>, TError = unknown>(
+ companyId: string,
+    params?: GetCustomersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetCustomersList<TData = Awaited<ReturnType<typeof getCustomersList>>, TError = unknown>(
+ companyId: string,
+    params?: GetCustomersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCustomersListQueryOptions(companyId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostCustomersCreateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/customers`
+}
+
+export const postCustomersCreate = async (companyId: string,
+    customerRequest: CustomerRequest, options?: RequestInit): Promise<PostCustomersCreate201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostCustomersCreate201>(getPostCustomersCreateUrl(companyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(customerRequest)
+  }
+);}
+
+
+
+
+
+export const getPostCustomersCreateMutationKey = () => ['postCustomersCreate'] as const;
+
+export const getPostCustomersCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postCustomersCreate>>, TError,PostCustomersCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postCustomersCreate>>, TError,PostCustomersCreateMutationVariables, TContext> => {
+
+const mutationKey = getPostCustomersCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postCustomersCreate>>, PostCustomersCreateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  postCustomersCreate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostCustomersCreateMutationResult = NonNullable<Awaited<ReturnType<typeof postCustomersCreate>>>
+    export type PostCustomersCreateMutationBody = CustomerRequest
+    export type PostCustomersCreateMutationError = void
+    export type PostCustomersCreateMutationVariables = {companyId: string;data: CustomerRequest}
+
+    export const usePostCustomersCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postCustomersCreate>>, TError,PostCustomersCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postCustomersCreate>>,
+        TError,
+        PostCustomersCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostCustomersCreateMutationOptions(options), queryClient);
+    }
+
+export const getGetCustomersGetUrl = (companyId: string,
+    customerId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/customers/${customerId}`
+}
+
+export const getCustomersGet = async (companyId: string,
+    customerId: string, options?: RequestInit): Promise<GetCustomersGet200> => {
+
+  return httpClient<GetCustomersGet200>(getGetCustomersGetUrl(companyId,customerId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCustomersGetQueryKey = (companyId: string,
+    customerId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/customers/${customerId}`
+    ] as const;
+    }
+
+
+export const getGetCustomersGetQueryOptions = <TData = Awaited<ReturnType<typeof getCustomersGet>>, TError = void>(companyId: string,
+    customerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCustomersGetQueryKey(companyId,customerId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCustomersGet>>> = ({ signal }) => getCustomersGet(companyId,customerId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined && customerId !== null && customerId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCustomersGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCustomersGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCustomersGet>>>
+export type GetCustomersGetQueryError = void
+
+
+export function useGetCustomersGet<TData = Awaited<ReturnType<typeof getCustomersGet>>, TError = void>(
+ companyId: string,
+    customerId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomersGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomersGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCustomersGet<TData = Awaited<ReturnType<typeof getCustomersGet>>, TError = void>(
+ companyId: string,
+    customerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomersGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomersGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCustomersGet<TData = Awaited<ReturnType<typeof getCustomersGet>>, TError = void>(
+ companyId: string,
+    customerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetCustomersGet<TData = Awaited<ReturnType<typeof getCustomersGet>>, TError = void>(
+ companyId: string,
+    customerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomersGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCustomersGetQueryOptions(companyId,customerId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutCustomersUpdateUrl = (companyId: string,
+    customerId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/customers/${customerId}`
+}
+
+export const putCustomersUpdate = async (companyId: string,
+    customerId: string,
+    customerRequest: CustomerRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutCustomersUpdateUrl(companyId,customerId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(customerRequest)
+  }
+);}
+
+
+
+
+
+export const getPutCustomersUpdateMutationKey = () => ['putCustomersUpdate'] as const;
+
+export const getPutCustomersUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCustomersUpdate>>, TError,PutCustomersUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putCustomersUpdate>>, TError,PutCustomersUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPutCustomersUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putCustomersUpdate>>, PutCustomersUpdateMutationVariables> = (props) => {
+          const {companyId,customerId,data} = props ?? {};
+
+          return  putCustomersUpdate(companyId,customerId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutCustomersUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof putCustomersUpdate>>>
+    export type PutCustomersUpdateMutationBody = CustomerRequest
+    export type PutCustomersUpdateMutationError = void
+    export type PutCustomersUpdateMutationVariables = {companyId: string;customerId: string;data: CustomerRequest}
+
+    export const usePutCustomersUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCustomersUpdate>>, TError,PutCustomersUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putCustomersUpdate>>,
+        TError,
+        PutCustomersUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutCustomersUpdateMutationOptions(options), queryClient);
+    }
+
+export const getDeleteCustomersDeactivateUrl = (companyId: string,
+    customerId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/customers/${customerId}`
+}
+
+export const deleteCustomersDeactivate = async (companyId: string,
+    customerId: string, options?: RequestInit): Promise<void> => {
+
+  return httpClient<void>(getDeleteCustomersDeactivateUrl(companyId,customerId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCustomersDeactivateMutationKey = () => ['deleteCustomersDeactivate'] as const;
+
+export const getDeleteCustomersDeactivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCustomersDeactivate>>, TError,DeleteCustomersDeactivateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCustomersDeactivate>>, TError,DeleteCustomersDeactivateMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCustomersDeactivateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCustomersDeactivate>>, DeleteCustomersDeactivateMutationVariables> = (props) => {
+          const {companyId,customerId} = props ?? {};
+
+          return  deleteCustomersDeactivate(companyId,customerId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCustomersDeactivateMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCustomersDeactivate>>>
+
+    export type DeleteCustomersDeactivateMutationError = void
+    export type DeleteCustomersDeactivateMutationVariables = {companyId: string;customerId: string}
+
+    export const useDeleteCustomersDeactivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCustomersDeactivate>>, TError,DeleteCustomersDeactivateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCustomersDeactivate>>,
+        TError,
+        DeleteCustomersDeactivateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCustomersDeactivateMutationOptions(options), queryClient);
+    }
+
+export const getGetSuppliersListUrl = (companyId: string,
+    params?: GetSuppliersListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/companies/${companyId}/suppliers?${stringifiedParams}` : `/api/v1/companies/${companyId}/suppliers`
+}
+
+export const getSuppliersList = async (companyId: string,
+    params?: GetSuppliersListParams, options?: RequestInit): Promise<GetSuppliersList200> => {
+
+  return httpClient<GetSuppliersList200>(getGetSuppliersListUrl(companyId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSuppliersListQueryKey = (companyId: string,
+    params?: GetSuppliersListParams,) => {
+    return [
+    `/api/v1/companies/${companyId}/suppliers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSuppliersListQueryOptions = <TData = Awaited<ReturnType<typeof getSuppliersList>>, TError = unknown>(companyId: string,
+    params?: GetSuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSuppliersListQueryKey(companyId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSuppliersList>>> = ({ signal }) => getSuppliersList(companyId,params, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSuppliersList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSuppliersListQueryResult = NonNullable<Awaited<ReturnType<typeof getSuppliersList>>>
+export type GetSuppliersListQueryError = unknown
+
+
+export function useGetSuppliersList<TData = Awaited<ReturnType<typeof getSuppliersList>>, TError = unknown>(
+ companyId: string,
+    params: undefined |  GetSuppliersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSuppliersList>>,
+          TError,
+          Awaited<ReturnType<typeof getSuppliersList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSuppliersList<TData = Awaited<ReturnType<typeof getSuppliersList>>, TError = unknown>(
+ companyId: string,
+    params?: GetSuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSuppliersList>>,
+          TError,
+          Awaited<ReturnType<typeof getSuppliersList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSuppliersList<TData = Awaited<ReturnType<typeof getSuppliersList>>, TError = unknown>(
+ companyId: string,
+    params?: GetSuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSuppliersList<TData = Awaited<ReturnType<typeof getSuppliersList>>, TError = unknown>(
+ companyId: string,
+    params?: GetSuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSuppliersListQueryOptions(companyId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostSuppliersCreateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/suppliers`
+}
+
+export const postSuppliersCreate = async (companyId: string,
+    supplierRequest: SupplierRequest, options?: RequestInit): Promise<PostSuppliersCreate201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostSuppliersCreate201>(getPostSuppliersCreateUrl(companyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(supplierRequest)
+  }
+);}
+
+
+
+
+
+export const getPostSuppliersCreateMutationKey = () => ['postSuppliersCreate'] as const;
+
+export const getPostSuppliersCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postSuppliersCreate>>, TError,PostSuppliersCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postSuppliersCreate>>, TError,PostSuppliersCreateMutationVariables, TContext> => {
+
+const mutationKey = getPostSuppliersCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postSuppliersCreate>>, PostSuppliersCreateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  postSuppliersCreate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostSuppliersCreateMutationResult = NonNullable<Awaited<ReturnType<typeof postSuppliersCreate>>>
+    export type PostSuppliersCreateMutationBody = SupplierRequest
+    export type PostSuppliersCreateMutationError = void
+    export type PostSuppliersCreateMutationVariables = {companyId: string;data: SupplierRequest}
+
+    export const usePostSuppliersCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postSuppliersCreate>>, TError,PostSuppliersCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postSuppliersCreate>>,
+        TError,
+        PostSuppliersCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostSuppliersCreateMutationOptions(options), queryClient);
+    }
+
+export const getGetSuppliersGetUrl = (companyId: string,
+    supplierId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/suppliers/${supplierId}`
+}
+
+export const getSuppliersGet = async (companyId: string,
+    supplierId: string, options?: RequestInit): Promise<GetSuppliersGet200> => {
+
+  return httpClient<GetSuppliersGet200>(getGetSuppliersGetUrl(companyId,supplierId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSuppliersGetQueryKey = (companyId: string,
+    supplierId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/suppliers/${supplierId}`
+    ] as const;
+    }
+
+
+export const getGetSuppliersGetQueryOptions = <TData = Awaited<ReturnType<typeof getSuppliersGet>>, TError = void>(companyId: string,
+    supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSuppliersGetQueryKey(companyId,supplierId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSuppliersGet>>> = ({ signal }) => getSuppliersGet(companyId,supplierId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined && supplierId !== null && supplierId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSuppliersGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSuppliersGetQueryResult = NonNullable<Awaited<ReturnType<typeof getSuppliersGet>>>
+export type GetSuppliersGetQueryError = void
+
+
+export function useGetSuppliersGet<TData = Awaited<ReturnType<typeof getSuppliersGet>>, TError = void>(
+ companyId: string,
+    supplierId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSuppliersGet>>,
+          TError,
+          Awaited<ReturnType<typeof getSuppliersGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSuppliersGet<TData = Awaited<ReturnType<typeof getSuppliersGet>>, TError = void>(
+ companyId: string,
+    supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSuppliersGet>>,
+          TError,
+          Awaited<ReturnType<typeof getSuppliersGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSuppliersGet<TData = Awaited<ReturnType<typeof getSuppliersGet>>, TError = void>(
+ companyId: string,
+    supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSuppliersGet<TData = Awaited<ReturnType<typeof getSuppliersGet>>, TError = void>(
+ companyId: string,
+    supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuppliersGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSuppliersGetQueryOptions(companyId,supplierId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutSuppliersUpdateUrl = (companyId: string,
+    supplierId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/suppliers/${supplierId}`
+}
+
+export const putSuppliersUpdate = async (companyId: string,
+    supplierId: string,
+    supplierRequest: SupplierRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutSuppliersUpdateUrl(companyId,supplierId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(supplierRequest)
+  }
+);}
+
+
+
+
+
+export const getPutSuppliersUpdateMutationKey = () => ['putSuppliersUpdate'] as const;
+
+export const getPutSuppliersUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putSuppliersUpdate>>, TError,PutSuppliersUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putSuppliersUpdate>>, TError,PutSuppliersUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPutSuppliersUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putSuppliersUpdate>>, PutSuppliersUpdateMutationVariables> = (props) => {
+          const {companyId,supplierId,data} = props ?? {};
+
+          return  putSuppliersUpdate(companyId,supplierId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutSuppliersUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof putSuppliersUpdate>>>
+    export type PutSuppliersUpdateMutationBody = SupplierRequest
+    export type PutSuppliersUpdateMutationError = void
+    export type PutSuppliersUpdateMutationVariables = {companyId: string;supplierId: string;data: SupplierRequest}
+
+    export const usePutSuppliersUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putSuppliersUpdate>>, TError,PutSuppliersUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putSuppliersUpdate>>,
+        TError,
+        PutSuppliersUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutSuppliersUpdateMutationOptions(options), queryClient);
+    }
+
+export const getDeleteSuppliersDeactivateUrl = (companyId: string,
+    supplierId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/suppliers/${supplierId}`
+}
+
+export const deleteSuppliersDeactivate = async (companyId: string,
+    supplierId: string, options?: RequestInit): Promise<void> => {
+
+  return httpClient<void>(getDeleteSuppliersDeactivateUrl(companyId,supplierId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteSuppliersDeactivateMutationKey = () => ['deleteSuppliersDeactivate'] as const;
+
+export const getDeleteSuppliersDeactivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSuppliersDeactivate>>, TError,DeleteSuppliersDeactivateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSuppliersDeactivate>>, TError,DeleteSuppliersDeactivateMutationVariables, TContext> => {
+
+const mutationKey = getDeleteSuppliersDeactivateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSuppliersDeactivate>>, DeleteSuppliersDeactivateMutationVariables> = (props) => {
+          const {companyId,supplierId} = props ?? {};
+
+          return  deleteSuppliersDeactivate(companyId,supplierId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSuppliersDeactivateMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSuppliersDeactivate>>>
+
+    export type DeleteSuppliersDeactivateMutationError = void
+    export type DeleteSuppliersDeactivateMutationVariables = {companyId: string;supplierId: string}
+
+    export const useDeleteSuppliersDeactivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSuppliersDeactivate>>, TError,DeleteSuppliersDeactivateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSuppliersDeactivate>>,
+        TError,
+        DeleteSuppliersDeactivateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteSuppliersDeactivateMutationOptions(options), queryClient);
+    }
 
 export const getPostAuthLoginUrl = () => {
 

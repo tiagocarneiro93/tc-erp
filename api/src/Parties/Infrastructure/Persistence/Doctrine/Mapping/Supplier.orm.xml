@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Parties\Domain\Supplier" table="suppliers">
+        <id name="id" type="supplier_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="code" type="string" column="code" />
+        <field name="nif" type="string" column="nif" />
+        <field name="name" type="string" column="name" />
+        <field name="address" type="string" column="address" nullable="true" />
+        <field name="postalCode" type="string" column="postal_code" nullable="true" />
+        <field name="city" type="string" column="city" nullable="true" />
+        <field name="country" type="string" column="country" />
+        <field name="email" type="string" column="email" nullable="true" />
+        <field name="phone" type="string" column="phone" nullable="true" />
+        <field name="paymentTermsDays" type="integer" column="payment_terms_days" nullable="true" />
+        <field name="active" type="boolean" column="active" />
+        <field name="createdAt" type="datetimetz_immutable" column="created_at" />
+        <field name="updatedAt" type="datetimetz_immutable" column="updated_at" />
+
+        <indexes>
+            <index name="idx_suppliers_company_code" columns="company_id,code" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

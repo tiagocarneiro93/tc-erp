@@ -137,6 +137,15 @@ services:
     App\Company\Infrastructure\Security\SodiumAtCredentialsEncryptor:
         arguments:
             $base64Key: '%env(AT_CREDENTIALS_ENCRYPTION_KEY)%'
+    App\Parties\Domain\CustomerRepository:
+        alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
+        public: true
+    App\Parties\Domain\SupplierRepository:
+        alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineSupplierRepository
+        public: true
+    App\Parties\Domain\AddressRepository:
+        alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineAddressRepository
+        public: true
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:

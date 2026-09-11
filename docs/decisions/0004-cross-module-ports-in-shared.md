@@ -63,6 +63,13 @@ once in Shared, implemented wherever the concrete knowledge lives).
   (422) is the cross-module twin of `Platform\Domain\Exception\InvalidNif`,
   thrown wherever `Nif::fromString()` is validated outside Platform (task
   1.4's `UpdateCompanyProfile`, and 1.5's customers/suppliers next).
+- `App\Shared\Domain\Exception\InvalidCountryCode` started life as
+  `Company\Domain\Exception\InvalidCountryCode` in task 1.4 (validating
+  `company_profile.country` against the `countries` table) and was moved to
+  Shared as soon as task 1.5 needed the identical check for
+  `customers`/`suppliers.country` — unlike `PermissionDenied`/`InvalidNif`
+  above, this one had no other Platform usage to preserve, so it was
+  promoted in place rather than duplicated.
 
 Both new ports are aliased in `config/services.yaml` to the same Platform
 Infrastructure classes as before (`SymfonyPermissionChecker`,

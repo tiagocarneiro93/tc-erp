@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Company\Application\Command;
+namespace App\Parties\Application\Command;
 
-use App\Company\Domain\CompanyProfileRepository;
-use App\Company\Domain\Exception\CompanyProfileNotFound;
+use App\Parties\Domain\Supplier;
+use App\Parties\Domain\SupplierRepository;
 use App\Shared\Domain\Audit\AuditLogger;
+use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
 use App\Shared\Domain\CountryRepository;
-use App\Shared\Domain\Decimal\Money;
 use App\Shared\Domain\Exception\InvalidCountryCode;
 use App\Shared\Domain\Exception\InvalidNif;
 use App\Shared\Domain\Exception\PermissionDenied;
@@ -18,34 +18,29 @@ use App\Shared\Domain\Security\PermissionChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(bus: 'command.bus')]
-final class UpdateCompanyProfileHandler
+final class CreateSupplierHandler
 {
     public function __construct(
-        private readonly CompanyProfileRepository $profiles,
+        private readonly SupplierRepository $suppliers,
         private readonly CountryRepository $countries,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
         private readonly AuditLogger $auditLogger,
+        private readonly Clock $clock,
     ) {
     }
 
-    public function __invoke(UpdateCompanyProfile $command): void
+    public function __invoke(CreateSupplier $command): void
     {
         $companyId = $this->companyContext->companyId();
 
-        if (!$this->permissionChecker->isGranted('company.manage', $companyId)) {
+        // ADR 0002: "customers.manage — Create/edit customers and
+        // suppliers" covers both party types under one permission pair.
+        if (!$this->permissionChecker->isGranted('customers.manage', $companyId)) {
             throw new PermissionDenied();
         }
 
-        $profile = $this->profiles->find($companyId);
-
-        if (null === $profile) {
-            throw new CompanyProfileNotFound();
-        }
-
-        try {
-            $nif = Nif::fromString($command->nif);
-        } catch (\InvalidArgumentException) {
+        if ('PT' === $command->country && !Nif::isValid($command->nif)) {
             throw new InvalidNif();
         }
 
@@ -53,32 +48,29 @@ final class UpdateCompanyProfileHandler
             throw new InvalidCountryCode($command->country);
         }
 
-        $shareCapital = null === $command->shareCapital ? null : Money::fromString($command->shareCapital);
-
-        $profile->updateProfile(
-            $nif,
-            $command->legalName,
-            $command->commercialName,
+        $now = $this->clock->now();
+        $supplier = Supplier::create(
+            $command->supplierId,
+            $companyId,
+            $command->code,
+            $command->nif,
+            $command->name,
             $command->address,
             $command->postalCode,
             $command->city,
             $command->country,
-            $shareCapital,
-            $command->registryOffice,
             $command->email,
             $command->phone,
-            $command->logoKey,
-            $command->fiscalRegion,
-            $command->vatRegime,
-            $command->cashVat,
+            $command->paymentTermsDays,
+            $now,
         );
-        $this->profiles->save($profile);
+        $this->suppliers->save($supplier);
 
         $this->auditLogger->log(
-            'company.profile_updated',
-            'CompanyProfile',
-            $companyId->toString(),
-            ['legal_name' => $command->legalName, 'fiscal_region' => $command->fiscalRegion],
+            'supplier.created',
+            'Supplier',
+            $command->supplierId->toString(),
+            ['code' => $command->code, 'name' => $command->name],
             $command->actingUserId,
             null,
             $command->ip,

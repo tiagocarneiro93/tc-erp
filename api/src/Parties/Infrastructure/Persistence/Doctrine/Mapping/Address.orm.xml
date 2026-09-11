@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Parties\Domain\Address" table="addresses">
+        <id name="id" type="address_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="partyType" type="string" column="party_type" />
+        <field name="partyId" type="string" column="party_id" />
+        <field name="label" type="string" column="label" />
+        <field name="address" type="string" column="address" />
+        <field name="postalCode" type="string" column="postal_code" nullable="true" />
+        <field name="city" type="string" column="city" nullable="true" />
+        <field name="country" type="string" column="country" />
+
+        <indexes>
+            <index name="idx_addresses_company_party" columns="company_id,party_type,party_id" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

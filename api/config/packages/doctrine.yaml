@@ -13,6 +13,9 @@ doctrine:
             percentage: App\Shared\Infrastructure\Persistence\Doctrine\Type\PercentageType
             money: App\Shared\Infrastructure\Persistence\Doctrine\Type\MoneyType
             tax_rate_id: App\Tax\Infrastructure\Persistence\Doctrine\Type\TaxRateIdType
+            customer_id: App\Parties\Infrastructure\Persistence\Doctrine\Type\CustomerIdType
+            supplier_id: App\Parties\Infrastructure\Persistence\Doctrine\Type\SupplierIdType
+            address_id: App\Parties\Infrastructure\Persistence\Doctrine\Type\AddressIdType
         default_connection: default
         connections:
             # The app connects as app_runtime: no table ownership, no BYPASSRLS,
@@ -75,6 +78,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Company/Infrastructure/Persistence/Doctrine/Mapping'
                         prefix: 'App\Company\Domain'
                         alias: Company
+                    Parties:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Parties/Infrastructure/Persistence/Doctrine/Mapping'
+                        prefix: 'App\Parties\Domain'
+                        alias: Parties
             # Same mappings, but via the app_owner connection — used only by
             # the migrations CLI (config/packages/doctrine_migrations.yaml),
             # never by the running application, so `doctrine:migrations:diff`

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Company\Application\Command;
+namespace App\Parties\Application\Command;
 
-use App\Company\Domain\CompanyProfileRepository;
-use App\Company\Domain\Exception\CompanyProfileNotFound;
+use App\Parties\Domain\CustomerRepository;
+use App\Parties\Domain\Exception\CustomerNotFound;
 use App\Shared\Domain\Audit\AuditLogger;
+use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
 use App\Shared\Domain\CountryRepository;
-use App\Shared\Domain\Decimal\Money;
 use App\Shared\Domain\Exception\InvalidCountryCode;
 use App\Shared\Domain\Exception\InvalidNif;
 use App\Shared\Domain\Exception\PermissionDenied;
@@ -18,34 +18,33 @@ use App\Shared\Domain\Security\PermissionChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(bus: 'command.bus')]
-final class UpdateCompanyProfileHandler
+final class UpdateCustomerHandler
 {
     public function __construct(
-        private readonly CompanyProfileRepository $profiles,
+        private readonly CustomerRepository $customers,
         private readonly CountryRepository $countries,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
         private readonly AuditLogger $auditLogger,
+        private readonly Clock $clock,
     ) {
     }
 
-    public function __invoke(UpdateCompanyProfile $command): void
+    public function __invoke(UpdateCustomer $command): void
     {
         $companyId = $this->companyContext->companyId();
 
-        if (!$this->permissionChecker->isGranted('company.manage', $companyId)) {
+        if (!$this->permissionChecker->isGranted('customers.manage', $companyId)) {
             throw new PermissionDenied();
         }
 
-        $profile = $this->profiles->find($companyId);
+        $customer = $this->customers->find($companyId, $command->customerId);
 
-        if (null === $profile) {
-            throw new CompanyProfileNotFound();
+        if (null === $customer) {
+            throw new CustomerNotFound();
         }
 
-        try {
-            $nif = Nif::fromString($command->nif);
-        } catch (\InvalidArgumentException) {
+        if ('PT' === $command->country && !Nif::isValid($command->nif)) {
             throw new InvalidNif();
         }
 
@@ -53,32 +52,26 @@ final class UpdateCompanyProfileHandler
             throw new InvalidCountryCode($command->country);
         }
 
-        $shareCapital = null === $command->shareCapital ? null : Money::fromString($command->shareCapital);
-
-        $profile->updateProfile(
-            $nif,
-            $command->legalName,
-            $command->commercialName,
+        $customer->update(
+            $command->code,
+            $command->nif,
+            $command->name,
             $command->address,
             $command->postalCode,
             $command->city,
             $command->country,
-            $shareCapital,
-            $command->registryOffice,
             $command->email,
             $command->phone,
-            $command->logoKey,
-            $command->fiscalRegion,
-            $command->vatRegime,
-            $command->cashVat,
+            $command->paymentTermsDays,
+            $this->clock->now(),
         );
-        $this->profiles->save($profile);
+        $this->customers->save($customer);
 
         $this->auditLogger->log(
-            'company.profile_updated',
-            'CompanyProfile',
-            $companyId->toString(),
-            ['legal_name' => $command->legalName, 'fiscal_region' => $command->fiscalRegion],
+            'customer.updated',
+            'Customer',
+            $command->customerId->toString(),
+            ['code' => $command->code, 'name' => $command->name],
             $command->actingUserId,
             null,
             $command->ip,

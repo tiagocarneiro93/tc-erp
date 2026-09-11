@@ -311,6 +311,666 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/customers": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "operationId": "get_customers_list",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Customers matching the search, if any.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "nif": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "postal_code": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "country": {
+                                                        "type": "string"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "payment_terms_days": {
+                                                        "type": "integer",
+                                                        "nullable": true
+                                                    },
+                                                    "is_final_consumer": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "next_cursor": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Customers"
+                ],
+                "operationId": "post_customers_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustomerRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Customer created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the customers.manage permission."
+                    },
+                    "422": {
+                        "description": "Invalid NIF, country, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/customers/{customerId}": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "operationId": "get_customers_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The customer.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "nif": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "address": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "postal_code": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "city": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "country": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "phone": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "payment_terms_days": {
+                                            "type": "integer",
+                                            "nullable": true
+                                        },
+                                        "is_final_consumer": {
+                                            "type": "boolean"
+                                        },
+                                        "active": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such customer."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Customers"
+                ],
+                "operationId": "put_customers_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustomerRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Customer updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the customers.manage permission."
+                    },
+                    "404": {
+                        "description": "No such customer."
+                    },
+                    "422": {
+                        "description": "Invalid NIF, country, or the request payload failed validation."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Customers"
+                ],
+                "operationId": "delete_customers_deactivate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Customer deactivated (active = false; not a hard delete)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the customers.manage permission."
+                    },
+                    "404": {
+                        "description": "No such customer."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/suppliers": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "operationId": "get_suppliers_list",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Suppliers matching the search, if any.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "nif": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "postal_code": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "country": {
+                                                        "type": "string"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "payment_terms_days": {
+                                                        "type": "integer",
+                                                        "nullable": true
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "next_cursor": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "operationId": "post_suppliers_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SupplierRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the customers.manage permission."
+                    },
+                    "422": {
+                        "description": "Invalid NIF, country, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/suppliers/{supplierId}": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "operationId": "get_suppliers_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "supplierId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The supplier.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "nif": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "address": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "postal_code": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "city": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "country": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "phone": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "payment_terms_days": {
+                                            "type": "integer",
+                                            "nullable": true
+                                        },
+                                        "active": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such supplier."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "operationId": "put_suppliers_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "supplierId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SupplierRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Supplier updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the customers.manage permission."
+                    },
+                    "404": {
+                        "description": "No such supplier."
+                    },
+                    "422": {
+                        "description": "Invalid NIF, country, or the request payload failed validation."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "operationId": "delete_suppliers_deactivate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "supplierId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Supplier deactivated (active = false; not a hard delete)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the customers.manage permission."
+                    },
+                    "404": {
+                        "description": "No such supplier."
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "tags": [
@@ -1091,6 +1751,114 @@
                 },
                 "type": "object"
             },
+            "CustomerRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "nif": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "address": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "postal_code": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "city": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "country": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "payment_terms_days": {
+                        "type": "integer",
+                        "nullable": true,
+                        "default": null,
+                        "minimum": 0
+                    },
+                    "is_final_consumer": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
+            "SupplierRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "nif": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "address": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "postal_code": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "city": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "country": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "payment_terms_days": {
+                        "type": "integer",
+                        "nullable": true,
+                        "default": null,
+                        "minimum": 0
+                    }
+                },
+                "type": "object"
+            },
             "ChangePasswordRequest": {
                 "properties": {
                     "current_password": {
@@ -1173,6 +1941,12 @@
         },
         {
             "name": "Company"
+        },
+        {
+            "name": "Customers"
+        },
+        {
+            "name": "Suppliers"
         },
         {
             "name": "Auth"

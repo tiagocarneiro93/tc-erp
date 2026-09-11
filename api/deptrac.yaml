@@ -110,6 +110,23 @@ deptrac:
           collectors:
               - type: classNameRegex
                 value: '#^App\\Company\\UI\\Http\\.*#'
+
+        - name: Parties.Domain
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Parties\\Domain\\.*#'
+        - name: Parties.Application
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Parties\\Application\\.*#'
+        - name: Parties.Infrastructure
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Parties\\Infrastructure\\.*#'
+        - name: Parties.UIHttp
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Parties\\UI\\Http\\.*#'
     ruleset:
         # Domain: nothing but itself and Shared.Domain (CLAUDE.md: "Domain
         # depends on nothing outside Domain and Shared/Domain").
@@ -213,6 +230,25 @@ deptrac:
             - Company.UIHttp
             - Company.Application
             - Company.Domain
+            - Shared.Domain
+
+        Parties.Domain:
+            - Parties.Domain
+            - Shared.Domain
+        Parties.Application:
+            - Parties.Application
+            - Parties.Domain
+            - Shared.Domain
+        Parties.Infrastructure:
+            - Parties.Infrastructure
+            - Parties.Application
+            - Parties.Domain
+            - Shared.Domain
+            - Shared.Infrastructure
+        Parties.UIHttp:
+            - Parties.UIHttp
+            - Parties.Application
+            - Parties.Domain
             - Shared.Domain
 
         Shared.Domain:
