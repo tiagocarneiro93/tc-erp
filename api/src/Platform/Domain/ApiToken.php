@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Platform\Domain;
 
+use App\Shared\Domain\CompanyId;
+
 /**
  * Structure only for now (task 0.7); real issuance is Phase 1 (§9.2:
  * "company-scoped API tokens with scopes").

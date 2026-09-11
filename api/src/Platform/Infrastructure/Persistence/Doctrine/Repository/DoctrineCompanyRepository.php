@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Platform\Infrastructure\Persistence\Doctrine\Repository;
 
 use App\Platform\Domain\Company;
-use App\Platform\Domain\CompanyId;
 use App\Platform\Domain\CompanyRepository;
+use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Nif;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;

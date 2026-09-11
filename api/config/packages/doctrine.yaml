@@ -7,7 +7,7 @@ doctrine:
             nif: App\Shared\Infrastructure\Persistence\Doctrine\Type\NifType
             jsonb: App\Shared\Infrastructure\Persistence\Doctrine\Type\JsonbType
             user_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\UserIdType
-            company_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\CompanyIdType
+            company_id: App\Shared\Infrastructure\Persistence\Doctrine\Type\CompanyIdType
             api_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\ApiTokenIdType
             password_reset_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\PasswordResetTokenIdType
         default_connection: default

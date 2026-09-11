@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Shared\Domain\Id;
 
-use App\Platform\Domain\CompanyId;
 use App\Platform\Domain\UserId;
+use App\Shared\Domain\CompanyId;
 use PHPUnit\Framework\TestCase;
 
 final class AbstractUuidIdTest extends TestCase

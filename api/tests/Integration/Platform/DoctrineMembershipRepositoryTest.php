@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Platform;
 
 use App\Platform\Domain\Company;
-use App\Platform\Domain\CompanyId;
 use App\Platform\Domain\CompanyRepository;
 use App\Platform\Domain\Membership;
 use App\Platform\Domain\MembershipRepository;
 use App\Platform\Domain\User;
 use App\Platform\Domain\UserId;
 use App\Platform\Domain\UserRepository;
+use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Nif;
 
 final class DoctrineMembershipRepositoryTest extends PlatformRepositoryTestCase

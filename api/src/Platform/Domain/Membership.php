@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Platform\Domain;
 
+use App\Shared\Domain\CompanyId;
+
 /**
  * Links a user to a company with a role (technical-scope.md §6.1); the
  * primary key is the (user_id, company_id) pair, not a surrogate id.

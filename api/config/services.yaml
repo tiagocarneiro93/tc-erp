@@ -64,3 +64,34 @@ services:
     App\Platform\Application\Command\RequestPasswordResetHandler:
         arguments:
             $frontendUrl: '%app.frontend_url%'
+
+    # Company context (technical-scope.md §5.2/§5.3, CLAUDE.md task 0.9).
+    # CompanyContext is aliased non-public: DoctrineAuditLogger and the DBAL
+    # middleware already depend on it, so it is never dead code. The route
+    # listener and Messenger middleware need to *mutate* the context, so
+    # they depend on the concrete RequestCompanyContext directly.
+    # RequestCompanyContext implements ResetInterface, so autoconfigure
+    # already tags it kernel.reset; no manual tag needed (and a manual one
+    # would need an explicit reset method attribute).
+    App\Shared\Domain\Company\CompanyContext: '@App\Shared\Infrastructure\Company\RequestCompanyContext'
+
+    # Nothing consumes these yet (Phase 1 query handlers and AuditLogger
+    # callers will) — public so they are not compiled away as dead code,
+    # same reasoning as the repository aliases above.
+    App\Shared\Domain\Company\CompanyQueryRunner:
+        alias: App\Shared\Infrastructure\Persistence\Doctrine\DbalCompanyQueryRunner
+        public: true
+    App\Shared\Domain\Audit\AuditLogger:
+        alias: App\Shared\Infrastructure\Audit\DoctrineAuditLogger
+        public: true
+
+    # Scoped to the `default` connection only — `migrations` runs DDL as
+    # app_owner and never needs a company context (config/packages/doctrine.yaml).
+    # autoconfigure is disabled here because the generic `MiddlewareInterface`
+    # autoconfiguration (doctrine-bundle) would otherwise *also* tag this
+    # unscoped, applying it to every connection instead of just `default`.
+    App\Shared\Infrastructure\Persistence\Doctrine\CompanyContextMiddleware:
+        autowire: true
+        autoconfigure: false
+        tags:
+            - { name: 'doctrine.middleware', connection: default }

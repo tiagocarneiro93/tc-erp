@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Platform\Domain;
 
+use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Nif;
 
 interface CompanyRepository

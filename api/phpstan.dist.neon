@@ -8,6 +8,7 @@ parameters:
         - src
         - tests
         - tools/phpstan/src
+        - migrations
     symfony:
         containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
     doctrine:

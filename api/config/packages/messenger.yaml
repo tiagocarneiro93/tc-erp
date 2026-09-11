@@ -2,16 +2,33 @@ framework:
     messenger:
         default_bus: command.bus
         buses:
+            # RestoreCompanyContextMiddleware runs before doctrine_transaction
+            # so the company (from a CompanyStamp — technical-scope.md §5.4)
+            # is already set by the time the transaction begins and the DBAL
+            # middleware (config/services.yaml) needs to read it.
             command.bus:
                 middleware:
+                    - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
                     - doctrine_transaction
-            query.bus: ~
+            query.bus:
+                middleware:
+                    - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
             event.bus:
                 default_middleware:
                     allow_no_handlers: true
+                middleware:
+                    - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
 
         # Used from Phase 3 (AT communication outbox); not routed to yet.
         transports:
             async: '%env(MESSENGER_TRANSPORT_DSN)%'
 
         routing: {}
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                # Lets tests dispatch a message and consume it in-process,
+                # with no real broker, to exercise RestoreCompanyContextMiddleware.
+                async: 'in-memory://'

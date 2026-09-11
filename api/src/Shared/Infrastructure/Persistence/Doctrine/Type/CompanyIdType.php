@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Platform\Infrastructure\Persistence\Doctrine\Type;
+namespace App\Shared\Infrastructure\Persistence\Doctrine\Type;
 
-use App\Platform\Domain\CompanyId;
-use App\Shared\Infrastructure\Persistence\Doctrine\Type\AbstractUuidIdType;
+use App\Shared\Domain\CompanyId;
 
 final class CompanyIdType extends AbstractUuidIdType
 {
