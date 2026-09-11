@@ -27,18 +27,20 @@ This plan turns `docs/technical-scope.md` into ordered, verifiable work. It is w
 **Goal:** a running monorepo where a user can log in, create companies, switch between them, and where company isolation via PostgreSQL RLS is proven by tests. CI enforces quality and architecture from day one.
 
 ### 0.1 Monorepo skeleton
-- [ ] Create `/api`, `/web`, `/docker`, `/docs`, root `README.md`, `.editorconfig`, `.gitignore` (including `.env.local`, `var/`, `node_modules/`, `*.pem`, `docker/keys/`).
-- [ ] `Makefile` with the targets listed in `CLAUDE.md` (stubs allowed at first; each becomes real in the task that needs it).
+- [x] Create `/api`, `/web`, `/docker`, `/docs`, root `README.md`, `.editorconfig`, `.gitignore` (including `.env.local`, `var/`, `node_modules/`, `*.pem`, `docker/keys/`).
+- [x] `Makefile` with the targets listed in `CLAUDE.md` (stubs allowed at first; each becomes real in the task that needs it).
 
 **Accept:** repository structure matches `CLAUDE.md`; `make help` lists targets.
 
 ### 0.2 Docker environment
-- [ ] `docker-compose.yml` with: `php` (FrankenPHP, PHP 8.4, required extensions: intl, pdo_pgsql, bcmath, sodium, openssl, zip, opcache, xdebug optional), `postgres` (17), `redis`, `mailpit`, `minio` (S3), `node` (for `/web`).
-- [ ] Healthchecks on all services; named volumes for data.
-- [ ] `docker/postgres/init/` script creating roles: `app_owner` (owns schema, runs migrations) and `app_runtime` (login role, no ownership, no `BYPASSRLS`), plus a separate test database with the same roles.
-- [ ] Default privileges so tables created by `app_owner` grant `app_runtime` only what the scope allows (decided per table in migrations; default: `SELECT, INSERT, UPDATE, DELETE` for normal tables, restricted later for fiscal tables).
+- [x] `docker-compose.yml` with: `php` (FrankenPHP, PHP 8.4, required extensions: intl, pdo_pgsql, bcmath, sodium, openssl, zip, opcache, xdebug optional), `postgres` (17), `redis`, `mailpit`, `minio` (S3), `node` (for `/web`).
+- [x] Healthchecks on all services; named volumes for data.
+- [x] `docker/postgres/init/` script creating roles: `app_owner` (owns schema, runs migrations) and `app_runtime` (login role, no ownership, no `BYPASSRLS`), plus a separate test database with the same roles.
+- [x] Default privileges so tables created by `app_owner` grant `app_runtime` only what the scope allows (decided per table in migrations; default: `SELECT, INSERT, UPDATE, DELETE` for normal tables, restricted later for fiscal tables).
 
 **Accept:** `make up` starts everything healthy; `psql` as `app_runtime` cannot create tables; Mailpit and MinIO UIs reachable.
+
+**Note:** built and validated in a sandbox without a Docker daemon (`docker compose config` validated, `make help` verified), so `make up` itself is unverified — please confirm it starts all six services healthy on your machine before we move on. The `php` service's healthcheck is a placeholder TCP check; task 0.3 will point it at the real `/api/v1/health` endpoint.
 
 ### 0.3 Symfony application
 - [ ] Symfony 7.4 skeleton in `/api` with: ORM pack (Doctrine, migrations), Messenger, Security, Validator, Serializer, Uid, Monolog, NelmioApiDocBundle, `brick/math`, `brick/money`, Symfony Mailer, rate limiter.
