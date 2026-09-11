@@ -10,6 +10,7 @@ help: ## Show this help
 
 up: ## Start the local environment
 	$(COMPOSE) up -d --build
+	$(COMPOSE) exec php composer install --no-interaction --no-progress
 
 down: ## Stop the local environment
 	$(COMPOSE) down
