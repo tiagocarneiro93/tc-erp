@@ -13,13 +13,20 @@ use App\Platform\Domain\MembershipRepository;
 use App\Shared\Domain\Audit\AuditLogger;
 use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
+use App\Shared\Domain\Event\CompanyRegistered;
 use App\Shared\Domain\Nif;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
- * §5.5: create company row -> owner membership -> audit entry, one
- * transaction. No default settings/warehouse/series here — those modules
- * (Inventory, Fiscal) do not exist yet in Phase 0 (docs/PLAN.md task 0.10).
+ * §5.5: create company row -> owner membership -> audit entry -> a
+ * `CompanyRegistered` event, one transaction. The event (dispatched last, on
+ * `event.bus`, synchronously since nothing routes it to a transport) is how
+ * other modules seed their own company-creation defaults (a
+ * `company_profile` row from task 1.4, later a default warehouse/series)
+ * without this handler depending on them (docs/decisions/0004) — replacing
+ * the earlier "no default settings/warehouse/series here" note from task
+ * 0.10, now that a module actually needs one.
  *
  * The new company's id comes from {@see CompanyContext}, not a field on
  * this command: the controller generates it and calls
@@ -38,6 +45,7 @@ final class CreateCompanyHandler
         private readonly AuditLogger $auditLogger,
         private readonly CompanyContext $companyContext,
         private readonly Clock $clock,
+        private readonly MessageBusInterface $eventBus,
     ) {
     }
 
@@ -69,5 +77,7 @@ final class CreateCompanyHandler
             $command->ip,
             $command->userAgent,
         );
+
+        $this->eventBus->dispatch(new CompanyRegistered($companyId, $nif, $command->legalName, $now));
     }
 }

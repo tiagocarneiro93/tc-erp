@@ -25,6 +25,38 @@ import type {
 } from '@tanstack/react-query';
 
 import { httpClient } from './http-client';
+export interface UpdateAtCredentialsRequest {
+  subuser?: string;
+  password?: string;
+}
+
+export interface UpdateCompanyProfileRequest {
+  nif?: string;
+  legal_name?: string;
+  /** @nullable */
+  commercial_name?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  share_capital?: string | null;
+  /** @nullable */
+  registry_office?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  logo_key?: string | null;
+  fiscal_region?: string;
+  vat_regime?: string;
+  cash_vat?: boolean;
+}
+
 export interface ChangePasswordRequest {
   current_password?: string;
   new_password?: string;
@@ -62,6 +94,41 @@ export type GetUnitsList200ItemsItem = {
 
 export type GetUnitsList200 = {
   items?: GetUnitsList200ItemsItem[];
+};
+
+export type PostAtCredentialsTest200 = {
+  valid?: boolean;
+  /** @nullable */
+  checked_at?: string | null;
+  /** @nullable */
+  error?: string | null;
+};
+
+export type GetCompanyProfileGet200 = {
+  nif?: string;
+  legal_name?: string;
+  /** @nullable */
+  commercial_name?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  postal_code?: string | null;
+  /** @nullable */
+  city?: string | null;
+  country?: string;
+  /** @nullable */
+  share_capital?: string | null;
+  /** @nullable */
+  registry_office?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  logo_key?: string | null;
+  fiscal_region?: string;
+  vat_regime?: string;
+  cash_vat?: boolean;
 };
 
 export type GetDocumentTypesList200ItemsItem = {
@@ -304,6 +371,335 @@ export function useGetUnitsList<TData = Awaited<ReturnType<typeof getUnitsList>>
 
 
 
+
+export const getPutAtCredentialsUpdateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/at-credentials`
+}
+
+export const putAtCredentialsUpdate = async (companyId: string,
+    updateAtCredentialsRequest: UpdateAtCredentialsRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutAtCredentialsUpdateUrl(companyId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateAtCredentialsRequest)
+  }
+);}
+
+
+
+
+
+export const getPutAtCredentialsUpdateMutationKey = () => ['putAtCredentialsUpdate'] as const;
+
+export const getPutAtCredentialsUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putAtCredentialsUpdate>>, TError,PutAtCredentialsUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putAtCredentialsUpdate>>, TError,PutAtCredentialsUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPutAtCredentialsUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putAtCredentialsUpdate>>, PutAtCredentialsUpdateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  putAtCredentialsUpdate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutAtCredentialsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof putAtCredentialsUpdate>>>
+    export type PutAtCredentialsUpdateMutationBody = UpdateAtCredentialsRequest
+    export type PutAtCredentialsUpdateMutationError = void
+    export type PutAtCredentialsUpdateMutationVariables = {companyId: string;data: UpdateAtCredentialsRequest}
+
+    export const usePutAtCredentialsUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putAtCredentialsUpdate>>, TError,PutAtCredentialsUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putAtCredentialsUpdate>>,
+        TError,
+        PutAtCredentialsUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutAtCredentialsUpdateMutationOptions(options), queryClient);
+    }
+
+export const getPostAtCredentialsTestUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/at-credentials/test`
+}
+
+export const postAtCredentialsTest = async (companyId: string, options?: RequestInit): Promise<PostAtCredentialsTest200> => {
+
+  return httpClient<PostAtCredentialsTest200>(getPostAtCredentialsTestUrl(companyId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPostAtCredentialsTestMutationKey = () => ['postAtCredentialsTest'] as const;
+
+export const getPostAtCredentialsTestMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAtCredentialsTest>>, TError,PostAtCredentialsTestMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postAtCredentialsTest>>, TError,PostAtCredentialsTestMutationVariables, TContext> => {
+
+const mutationKey = getPostAtCredentialsTestMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAtCredentialsTest>>, PostAtCredentialsTestMutationVariables> = (props) => {
+          const {companyId} = props ?? {};
+
+          return  postAtCredentialsTest(companyId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAtCredentialsTestMutationResult = NonNullable<Awaited<ReturnType<typeof postAtCredentialsTest>>>
+
+    export type PostAtCredentialsTestMutationError = void
+    export type PostAtCredentialsTestMutationVariables = {companyId: string}
+
+    export const usePostAtCredentialsTest = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAtCredentialsTest>>, TError,PostAtCredentialsTestMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAtCredentialsTest>>,
+        TError,
+        PostAtCredentialsTestMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostAtCredentialsTestMutationOptions(options), queryClient);
+    }
+
+export const getGetCompanyProfileGetUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/profile`
+}
+
+export const getCompanyProfileGet = async (companyId: string, options?: RequestInit): Promise<GetCompanyProfileGet200> => {
+
+  return httpClient<GetCompanyProfileGet200>(getGetCompanyProfileGetUrl(companyId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanyProfileGetQueryKey = (companyId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/profile`
+    ] as const;
+    }
+
+
+export const getGetCompanyProfileGetQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyProfileGet>>, TError = unknown>(companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyProfileGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyProfileGetQueryKey(companyId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyProfileGet>>> = ({ signal }) => getCompanyProfileGet(companyId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyProfileGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCompanyProfileGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyProfileGet>>>
+export type GetCompanyProfileGetQueryError = unknown
+
+
+export function useGetCompanyProfileGet<TData = Awaited<ReturnType<typeof getCompanyProfileGet>>, TError = unknown>(
+ companyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyProfileGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyProfileGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyProfileGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyProfileGet<TData = Awaited<ReturnType<typeof getCompanyProfileGet>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyProfileGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyProfileGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyProfileGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyProfileGet<TData = Awaited<ReturnType<typeof getCompanyProfileGet>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyProfileGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetCompanyProfileGet<TData = Awaited<ReturnType<typeof getCompanyProfileGet>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyProfileGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCompanyProfileGetQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutCompanyProfileUpdateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/profile`
+}
+
+export const putCompanyProfileUpdate = async (companyId: string,
+    updateCompanyProfileRequest: UpdateCompanyProfileRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutCompanyProfileUpdateUrl(companyId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateCompanyProfileRequest)
+  }
+);}
+
+
+
+
+
+export const getPutCompanyProfileUpdateMutationKey = () => ['putCompanyProfileUpdate'] as const;
+
+export const getPutCompanyProfileUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCompanyProfileUpdate>>, TError,PutCompanyProfileUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putCompanyProfileUpdate>>, TError,PutCompanyProfileUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPutCompanyProfileUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putCompanyProfileUpdate>>, PutCompanyProfileUpdateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  putCompanyProfileUpdate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutCompanyProfileUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof putCompanyProfileUpdate>>>
+    export type PutCompanyProfileUpdateMutationBody = UpdateCompanyProfileRequest
+    export type PutCompanyProfileUpdateMutationError = void
+    export type PutCompanyProfileUpdateMutationVariables = {companyId: string;data: UpdateCompanyProfileRequest}
+
+    export const usePutCompanyProfileUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCompanyProfileUpdate>>, TError,PutCompanyProfileUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putCompanyProfileUpdate>>,
+        TError,
+        PutCompanyProfileUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutCompanyProfileUpdateMutationOptions(options), queryClient);
+    }
 
 export const getGetDocumentTypesListUrl = () => {
 

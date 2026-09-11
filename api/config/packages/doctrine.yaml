@@ -11,6 +11,7 @@ doctrine:
             api_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\ApiTokenIdType
             password_reset_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\PasswordResetTokenIdType
             percentage: App\Shared\Infrastructure\Persistence\Doctrine\Type\PercentageType
+            money: App\Shared\Infrastructure\Persistence\Doctrine\Type\MoneyType
             tax_rate_id: App\Tax\Infrastructure\Persistence\Doctrine\Type\TaxRateIdType
         default_connection: default
         connections:
@@ -68,6 +69,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Fiscal/Infrastructure/Persistence/Doctrine/Mapping'
                         prefix: 'App\Fiscal\Domain'
                         alias: Fiscal
+                    Company:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Company/Infrastructure/Persistence/Doctrine/Mapping'
+                        prefix: 'App\Company\Domain'
+                        alias: Company
             # Same mappings, but via the app_owner connection — used only by
             # the migrations CLI (config/packages/doctrine_migrations.yaml),
             # never by the running application, so `doctrine:migrations:diff`

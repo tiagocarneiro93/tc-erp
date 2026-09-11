@@ -45,6 +45,224 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/at-credentials": {
+            "put": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "put_at_credentials_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateAtCredentialsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Credentials stored (encrypted at rest)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the company.manage permission."
+                    },
+                    "404": {
+                        "description": "The caller is not a member of this company."
+                    },
+                    "422": {
+                        "description": "Invalid subuser format, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/at-credentials/test": {
+            "post": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "post_at_credentials_test",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stub validation result (format/round-trip only, not a real AT check).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "valid": {
+                                            "type": "boolean"
+                                        },
+                                        "checked_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "nullable": true
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the company.manage permission."
+                    },
+                    "404": {
+                        "description": "The caller is not a member of this company, or no credentials are configured yet."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/profile": {
+            "get": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "get_company_profile_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "This company's fiscal profile.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "nif": {
+                                            "type": "string"
+                                        },
+                                        "legal_name": {
+                                            "type": "string"
+                                        },
+                                        "commercial_name": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "address": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "postal_code": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "city": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "country": {
+                                            "type": "string"
+                                        },
+                                        "share_capital": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "registry_office": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "phone": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "logo_key": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "fiscal_region": {
+                                            "type": "string"
+                                        },
+                                        "vat_regime": {
+                                            "type": "string"
+                                        },
+                                        "cash_vat": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "put_company_profile_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCompanyProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Profile updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the company.manage permission."
+                    },
+                    "404": {
+                        "description": "The caller is not a member of this company."
+                    },
+                    "422": {
+                        "description": "Invalid NIF, country, fiscal region, or the request payload failed validation."
+                    }
+                }
+            }
+        },
         "/api/v1/document-types": {
             "get": {
                 "tags": [
@@ -786,6 +1004,93 @@
     },
     "components": {
         "schemas": {
+            "UpdateAtCredentialsRequest": {
+                "properties": {
+                    "subuser": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "password": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateCompanyProfileRequest": {
+                "properties": {
+                    "nif": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "legal_name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "commercial_name": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "address": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "postal_code": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "city": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "country": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "share_capital": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "registry_office": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "logo_key": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "fiscal_region": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "vat_regime": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "cash_vat": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
             "ChangePasswordRequest": {
                 "properties": {
                     "current_password": {
@@ -865,6 +1170,9 @@
     "tags": [
         {
             "name": "Reference data"
+        },
+        {
+            "name": "Company"
         },
         {
             "name": "Auth"

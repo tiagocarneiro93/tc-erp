@@ -59,6 +59,16 @@ services:
         public: true
     App\Platform\Application\Security\PermissionChecker: '@App\Platform\Infrastructure\Security\SymfonyPermissionChecker'
 
+    # Cross-module twins of the two aliases above (docs/decisions/0004): the
+    # same concrete adapters, exposed under the Shared.Domain port every
+    # other module depends on instead.
+    App\Shared\Domain\Security\PermissionChecker:
+        alias: App\Platform\Infrastructure\Security\SymfonyPermissionChecker
+        public: true
+    App\Shared\Domain\Security\CurrentActorId:
+        alias: App\Platform\Infrastructure\Security\SymfonyCurrentActorId
+        public: true
+
     App\Platform\Infrastructure\Mail\SymfonyPasswordResetMailer:
         arguments:
             $fromAddress: '%app.mailer_from_address%'
@@ -95,7 +105,11 @@ services:
     App\Shared\Domain\Idempotency\IdempotencyKeyStore:
         alias: App\Shared\Infrastructure\Persistence\Doctrine\DoctrineIdempotencyKeyStore
         public: true
-    App\Shared\Domain\Reference\CountryRepository:
+    # Was aliased under a stale `Shared\Domain\Reference\` namespace (never
+    # matching the actual interface, `Shared\Domain\CountryRepository` — the
+    # flat convention task 1.1 settled on) until task 1.4 became its first
+    # real consumer and needed the alias to resolve.
+    App\Shared\Domain\CountryRepository:
         alias: App\Shared\Infrastructure\Persistence\Doctrine\Repository\DoctrineCountryRepository
         public: true
     App\Catalog\Domain\UnitRepository:
@@ -110,6 +124,19 @@ services:
     App\Fiscal\Domain\DocumentTypeRepository:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\Repository\DoctrineDocumentTypeRepository
         public: true
+    App\Company\Domain\CompanyProfileRepository:
+        alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\DoctrineCompanyProfileRepository
+        public: true
+    App\Company\Domain\CompanySettingRepository:
+        alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\DoctrineCompanySettingRepository
+        public: true
+    App\Company\Domain\AtCredentialsRepository:
+        alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\DoctrineAtCredentialsRepository
+        public: true
+    App\Company\Domain\AtCredentialsEncryptor: '@App\Company\Infrastructure\Security\SodiumAtCredentialsEncryptor'
+    App\Company\Infrastructure\Security\SodiumAtCredentialsEncryptor:
+        arguments:
+            $base64Key: '%env(AT_CREDENTIALS_ENCRYPTION_KEY)%'
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:

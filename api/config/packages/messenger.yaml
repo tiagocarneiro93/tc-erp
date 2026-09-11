@@ -10,9 +10,21 @@ framework:
                 middleware:
                     - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
                     - doctrine_transaction
+            # doctrine_transaction here too (task 1.4): a bare EntityManager
+            # read outside any transaction never calls
+            # CompanyContextConnection::beginTransaction(), so
+            # `set_config('app.company_id', ...)` never runs and RLS-protected
+            # reads fail with "unrecognized configuration parameter" — a gap
+            # that only surfaced once a query handler first read a real
+            # RLS-protected table (`company_profile`; every earlier query
+            # touched only global tables or the RLS-exempt
+            # `memberships`/`api_tokens`, see CompanyIsolationSchemaTest).
+            # A read-only transaction is still a transaction; this changes
+            # nothing for a query that never needed one.
             query.bus:
                 middleware:
                     - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
+                    - doctrine_transaction
             event.bus:
                 default_middleware:
                     allow_no_handlers: true

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Company\Domain\CompanySetting" table="settings">
+        <id name="companyId" type="company_id" column="company_id">
+            <generator strategy="NONE" />
+        </id>
+        <id name="key" type="string" column="key">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="value" type="jsonb" column="value" />
+    </entity>
+</doctrine-mapping>
