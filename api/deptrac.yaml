@@ -1,0 +1,43 @@
+deptrac:
+    paths:
+        - ./src
+    exclude_files:
+        - '#.*Tests?\.php#'
+    layers:
+        # One layer per architectural tier, matching *any* module
+        # (App\<Module>\<Tier>\...) so a new module needs no change here.
+        # This enforces layering direction (CLAUDE.md — architecture rules)
+        # today. Per-module cross-boundary isolation ("modules communicate
+        # through application services or domain events, never by reaching
+        # into another module's repositories") needs per-module layers and
+        # is refined in task 0.5 once real modules exist.
+        - name: Domain
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\[^\\]+\\Domain\\.*#'
+        - name: Application
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\[^\\]+\\Application\\.*#'
+        - name: Infrastructure
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\[^\\]+\\Infrastructure\\.*#'
+        - name: UIHttp
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\[^\\]+\\UI\\Http\\.*#'
+    ruleset:
+        Domain:
+            - Domain
+        Application:
+            - Application
+            - Domain
+        Infrastructure:
+            - Infrastructure
+            - Application
+            - Domain
+        UIHttp:
+            - UIHttp
+            - Application
+            - Domain

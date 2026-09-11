@@ -1,0 +1,91 @@
+name: Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'api/**'
+      - '.github/workflows/backend.yml'
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tc_erp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, pdo_pgsql, bcmath, sodium, zip, opcache, redis
+          coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('api/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Set up test roles and databases
+        run: |
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f ../docker/postgres/init/01-roles.sql
+          PGPASSWORD=postgres createdb -h 127.0.0.1 -U postgres tc_erp
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d tc_erp -v ON_ERROR_STOP=1 -f ../docker/postgres/init/02-databases.sql
+
+      - name: Coding standards (PHP-CS-Fixer)
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
+
+      - name: Static analysis (PHPStan)
+        run: |
+          php bin/console cache:clear --env=dev
+          vendor/bin/phpstan analyse --no-progress --error-format=github
+
+      - name: Architecture boundaries (Deptrac)
+        run: vendor/bin/deptrac analyse --no-interaction --fail-on-uncovered=false
+
+      - name: Tests (PHPUnit)
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app_runtime:app_runtime@127.0.0.1:5432/tc_erp_test?serverVersion=17&charset=utf8
+          DATABASE_MIGRATIONS_URL: postgresql://app_owner:app_owner@127.0.0.1:5432/tc_erp_test?serverVersion=17&charset=utf8
+          REDIS_URL: redis://127.0.0.1:6379
+        run: vendor/bin/phpunit

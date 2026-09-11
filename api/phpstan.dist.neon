@@ -1,0 +1,24 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+        - tools/phpstan/src
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+    doctrine:
+        objectManagerLoader: tools/phpstan/object-manager.php
+
+services:
+    -
+        class: Tooling\PhpStan\NoFloatInDomainFunctionRule
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Tooling\PhpStan\NoFloatInDomainPropertyRule
+        tags:
+            - phpstan.rules.rule

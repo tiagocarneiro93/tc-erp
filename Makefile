@@ -20,7 +20,7 @@ api-shell: ## Shell into the PHP container
 test: test-api test-web ## Run all tests (api + web)
 
 test-api: ## Run PHPUnit
-	@echo "test-api: /api has no Symfony app yet (task 0.3)"
+	$(COMPOSE) exec php vendor/bin/phpunit
 
 test-web: ## Run Vitest
 	@echo "test-web: /web has no app yet (task 0.13)"
@@ -29,13 +29,18 @@ e2e: ## Run Playwright e2e tests
 	@echo "e2e: /web has no app yet (task 0.13)"
 
 lint: ## Run PHP-CS-Fixer (check), PHPStan, Deptrac, ESLint, tsc
-	@echo "lint: tooling not configured yet (task 0.4)"
+	$(COMPOSE) exec php vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
+	$(COMPOSE) exec php bin/console cache:clear --env=dev
+	$(COMPOSE) exec php vendor/bin/phpstan analyse
+	$(COMPOSE) exec php vendor/bin/deptrac analyse --no-interaction
+	@echo "lint (web): not available yet (task 0.13)"
 
 fix: ## Auto-fix code style
-	@echo "fix: tooling not configured yet (task 0.4)"
+	$(COMPOSE) exec php vendor/bin/php-cs-fixer fix --ansi
+	@echo "fix (web): not available yet (task 0.13)"
 
 migrate: ## Run Doctrine migrations as the migration owner role
-	@echo "migrate: /api has no Symfony app yet (task 0.3)"
+	$(COMPOSE) exec php bin/console doctrine:migrations:migrate --no-interaction
 
 openapi: ## Dump OpenAPI spec to api/openapi.json and regenerate the web client
 	@echo "openapi: not available yet (tasks 0.11, 0.13)"

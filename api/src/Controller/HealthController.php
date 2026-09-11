@@ -50,8 +50,8 @@ final class HealthController
     {
         try {
             $redis = new \Redis();
-            $host = parse_url($this->redisUrl, PHP_URL_HOST) ?: '127.0.0.1';
-            $port = parse_url($this->redisUrl, PHP_URL_PORT) ?: 6379;
+            $host = parse_url($this->redisUrl, \PHP_URL_HOST) ?: '127.0.0.1';
+            $port = parse_url($this->redisUrl, \PHP_URL_PORT) ?: 6379;
             $redis->connect($host, $port, 1.0);
 
             return $redis->ping();

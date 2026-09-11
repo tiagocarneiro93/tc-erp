@@ -8,6 +8,9 @@
 /api/var/
 /api/.phpunit.cache/
 /api/public/bundles/
+/api/.php-cs-fixer.cache
+/api/.phpunit.result.cache
+/api/.deptrac.cache
 
 # Node / web
 /web/node_modules/
