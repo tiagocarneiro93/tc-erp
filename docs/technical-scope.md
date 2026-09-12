@@ -949,15 +949,15 @@ Each decision has a recommendation; confirming the recommendation is enough to p
 | 4 | Frontend router | TanStack Router |
 | 5 | Versions and tooling | PHP 8.4, Symfony 7.4 LTS, PostgreSQL 17+, Node LTS, pnpm |
 
-### 14.2 Before the fiscal core (Phase 2)
+### 14.2 Before the fiscal core (Phase 2) — decided
 
-| # | Decision | Recommendation |
+| # | Decision | Outcome |
 |---|---|---|
 | 6 | Unit price and quantity decimals | Store 6, display 2 (more only when needed) |
-| 7 | Rounding mode | HALF_UP **[VERIFY]** |
+| 7 | Rounding mode | HALF_UP |
 | 8 | Default rounding method | Per rate group; per line available per company and per document |
 | 9 | Discount forms | Percentage + cascading percentages + fixed amount per line; global percentage |
-| 10 | Series convention | One series per document type per year (e.g. `FT 2027A`), more series allowed |
+| 10 | Series convention | One series per document type (Despacho 8632/2014 §1.8, Portaria 195/2020 Art. 2 — the AT's validation-code communication is per series-per-document-type, so a series cannot span document types); no forced year rotation — a company may run a series across multiple fiscal years (Despacho §1.6 explicitly allows "séries plurianuais", with the hash chain carrying over the year boundary per §2.1.5, rather than resetting). Companies create and manage their own series within that one constraint. |
 | 11 | Currency | EUR only in v1 (schema already has currency fields) |
 | 12 | Tax regions | Mainland, Azores and Madeira supported from v1 (data-driven, low cost) |
 | 13 | Working document types | OR, PF, NE in v1 |

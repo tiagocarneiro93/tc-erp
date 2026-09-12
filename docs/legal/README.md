@@ -8,15 +8,19 @@ Claude Code must resolve every **[VERIFY]** item from these documents (citing do
 
 | File (suggested name) | Content | Needed for | Status |
 |---|---|---|---|
-| `portaria-363-2010.pdf` | Certification of invoicing software (consolidated, with amendments) | Phase 2, 6 | |
-| `despacho-8632-2014.pdf` | Technical requirements for invoicing software (signing, access control, SAF-T rules) | Phase 0 (§8.1), 2 | ✅ DR 2.ª série n.º 126, 3 Jul 2014 |
+| `portaria-363-2010.pdf` | Certification of invoicing software; Art. 6.º defines the Hash signing string (InvoiceDate;SystemEntryDate;InvoiceNo;GrossTotal;PreviousHash, RSA, base64, 4 printed chars at positions 1/11/21/31) | Phase 2, 6 | ✅ DR 1.ª série n.º 120, 23 Jun 2010 |
+| `despacho-8632-2014.pdf` | Technical requirements for invoicing software (signing, access control, SAF-T rules, series rules, customer/product immutability once issued, credit-note/cancellation constraints) | Phase 0 (§8.1), 2 | ✅ DR 2.ª série n.º 126, 3 Jul 2014 |
 | `dl-28-2019.pdf` | Invoicing, archiving and electronic invoice rules (consolidated) | Phase 2, 3 | |
 | `oficio-circulado-30213-2019.pdf` | AT administrative instructions on DL 28/2019 (incl. electronic invoices, points 14–16) | Phase 2, 3 | |
 | `dl-198-2012.pdf` | Communication of invoice elements to the AT (art. 3) and goods in circulation | Phase 3, 4 | |
-| `atcud-qr-portaria.pdf` + `at-qrcode-spec.pdf` | ATCUD and QR code requirements and the AT's QR code technical specification | Phase 2 | |
-| `saft-pt-structure.pdf` + `saft-pt-technical-notes.pdf` + `SAFTPT1.04_01.xsd` (or current) | SAF-T (PT) structure, notes and schema | Phase 2, 3 | |
+| `portaria-195-2020-atcud-qr.pdf` | ATCUD composition (`CódigoDeValidação-NúmeroSequencial`) and the series-communication requirements to obtain it (series id, document type, start number, start date) | Phase 2 | ✅ DR n.º 157/2020, Série I, 13 Aug 2020 |
+| `at-qrcode-spec.pdf` | AT's QR code technical specification v1.0: full field table (A–S), concatenation/formatting rules, four worked examples (Fatura, Fatura simplificada, Fatura pró-forma, Guia de transporte) | Phase 2 | ✅ v1.0, Aug 2020 |
+| `SAFTPT1.04_01.xsd` | SAF-T (PT) XML schema — confirms `TaxCode` (RED/INT/NOR/ISE/OUT), `TaxCountryRegion` (PT/PT-AC/PT-MA + ISO countries), `InvoiceType` enum (no RG — receipts are a separate `Payments/Payment` structure with their own `PaymentType` RC/RG), `ATCUD` element on invoices/movements/work documents/payments | Phase 2, 3 | ✅ v1.04_01 |
+| `saft-pt-sample-instance.xml` | AT's own demo SAF-T instance (not itself a legal source — a worked example) confirming field shapes: `Hash` (172-char base64 RSA signature), `ATCUD`, `InvoiceNo` format, `DocumentStatus` | Phase 2, 3 | ℹ️ reference only, pre-dates the ATCUD mandate (2017 data, `ATCUD` shown as `0`) |
 | `at-tabela-codigos-motivo-isencao.pdf` | Official table of VAT exemption/non-liquidation reason codes (M01–M99), invoice wording and legal basis per code | Phase 1, 2 | ✅ V4.0, 18 Jun 2026 |
 | `civa-extracts.md` | CIVA art. 18 VAT rates (standard/intermediate/reduced) for mainland Portugal, Açores and Madeira, taxable base and discounts, invoice requirements | Phase 1, 2 | ⚠️ mainland resolved (owner pasted art. 18); Açores/Madeira have an owner-supplied candidate value, not yet confirmed against the regional decree — see the file's "Still open" section |
+
+**Not yet obtained, still needed:** `saft-pt-structure.pdf` / `saft-pt-technical-notes.pdf` (the prose spec alongside the XSD above — useful for field-level notes the schema alone doesn't carry, but the XSD covers the structural `[VERIFY]` items Phase 2 needs); `dl-28-2019.pdf`; `oficio-circulado-30213-2019.pdf`.
 
 ## AT webservices
 

@@ -313,22 +313,25 @@ Kit-rate mismatch, price preview and cost-estimate rendering reuse the exact fie
 
 ## Phase 2 — Fiscal core (§6.6–6.9, §7.1–7.4, §7.6, §7.9)
 
-**Blocking prerequisites:**
-- 🧑 Despacho 8632/2014, ATCUD/QR code Portaria and AT QR specification, SAF-T technical notes in `docs/legal/`.
-- 🧑 Decisions in scope §14.2 confirmed (defaults are recommended values).
-- 🧑 Owner reviews the initial pricing test vectors before the calculator is considered done.
+**Blocking prerequisites — resolved:**
+- ✅ Despacho 8632/2014, Portaria 363/2010 (Hash signing string, Art. 6.º), Portaria 195/2020 (ATCUD), the AT's QR code spec, and the SAF-T 1.04_01 XSD are all in `docs/legal/` — see its README for what each resolves. `saft-pt-structure.pdf`/`saft-pt-technical-notes.pdf` (the prose spec) are still missing but the XSD covers every structural `[VERIFY]` Phase 2 needs; fetch the prose docs opportunistically, not blocking.
+- ✅ Scope §14.2 decisions confirmed: rounding mode is **HALF_UP** (no longer `[VERIFY]`). Series convention (decision #10) is corrected below, informed by the actual legal text rather than just a recommendation.
+- 🧑 Owner reviews the initial pricing test vectors before the calculator is considered done (unchanged — happens during Phase 2, not before starting).
+- 🧑 AT series-communication webservice access (`at-ws-series.pdf`) is still Phase 3 — Phase 2's series lifecycle uses a manually-entered validation code (task 2 below), so this is not actually blocking, just noted so the ordering is deliberate, not an oversight.
+
+**Series convention — corrected from the original recommendation:** Despacho 8632/2014 §1.8 and Portaria 195/2020 Art. 2 both tie a series to exactly **one document type** (the AT's validation-code communication requires declaring the document type per series, and a series code "não pode ser repetido... para o mesmo tipo de documento"). But nothing ties a series to a calendar year — Despacho §1.6 requires a series to run at least one fiscal year but explicitly allows multi-year ("plurianual") series, with §2.1.5 specifying that the hash chain carries over the year boundary rather than resetting. So: **one series per document type, company decides how long each one runs** (not forced to rotate yearly) — companies create and manage their own series freely within that one constraint. See `docs/decisions/0005-series-scoped-to-one-document-type-no-year-limit.md`.
 
 Scope for `docs/plans/phase-2.md` (suggested order):
 1. `PriceCalculator` (test-first): net/gross modes, per-line and per-group rounding, line discounts (%, cascading %, fixed), global discount allocation (largest remainder), VAT last, precision tiers; `pricing-test-vectors.json`; `/calculate` endpoint.
-2. Series: entity, lifecycle states (without AT calls: validation code entered manually in dev), training series.
+2. Series: entity (one document type per series, no forced year rotation — see above), lifecycle states, validation code entered manually in dev (real AT communication is Phase 3), training series.
 3. Drafts: create/update/delete, `calculate`, validation rules.
-4. Fiscal tables with immutability: grants, triggers (§6.9), status events; DB integrity tests.
-5. `DocumentSigner` port + OpenSSL adapter (dev key generated locally, git-ignored); signing string exactly per Despacho (**[VERIFY]** resolved from `docs/legal/`); golden-file tests.
-6. Issuance use case (§7.1) end to end: series lock, chronology, canonical calculation, signing, ATCUD, QR payload, inserts (with customer and issuer snapshots and template version), series update, idempotency, audit; concurrency test (parallel issuance, no gaps/duplicates, valid chain).
-7. Document types FT, FS, FR, NC, ND; references for NC/ND; credit note from document.
+4. Fiscal tables with immutability: grants, triggers (§6.9), status events; DB integrity tests. Extends to **Customer/Product immutability once referenced by an issued document** (Despacho §3.3.3–3.3.5): NIF and name become locked on a customer once it has an issued document, except filling a previously-blank NIF or replacing the generic `999999990`; a product's description locks the same way. Not enforced yet — `Customer::update()` currently allows both freely, since no issued-document concept exists until this phase.
+5. `DocumentSigner` port + OpenSSL adapter (dev key generated locally, git-ignored); signing string per Portaria 363/2010 Art. 6.º: `InvoiceDate;SystemEntryDate;InvoiceNo;GrossTotal;PreviousHash`, RSA-signed, base64, chained per series/type (empty previous-hash for a series' first document); 4 printed characters at positions 1/11/21/31; golden-file tests.
+6. Issuance use case (§7.1) end to end: series lock, chronology, canonical calculation, signing, ATCUD, QR payload (full field table in `docs/legal/at-qrcode-spec.pdf`), inserts (with customer and issuer snapshots and template version), series update, idempotency, audit; concurrency test (parallel issuance, no gaps/duplicates, valid chain).
+7. Document types FT, FS, FR, NC, ND; references for NC/ND; credit note from document. Despacho §3.3.7–3.3.8: no credit note against an already-cancelled or fully-rectified document; no cancelling a document that already has a rectifying note without cancelling that note first.
 8. Working documents OR, PF, NE (§6.8) and conversions (full and partial) with pending quantities.
-9. Receipts (RG) with allocations to open invoices.
-10. Cancellation (status `A`) with legal conditions (**[VERIFY]**), compensating entries prepared for stock/accounts (wired in Phase 5).
+9. Receipts (RG) with allocations to open invoices. **Not a variant of the invoice path**: the SAF-T XSD puts receipts under `Payments/Payment` (its own `PaymentType` enum `RC`/`RG`, its own line shape allocating to originating invoices via `OriginatingON`), not `SalesInvoices/Invoice` — RG isn't even a valid `InvoiceType` value. Unsigned (Despacho §2.2.3): prints "Emitido por programa certificado n.º XXXX/AT", not the signed variant's 4-char hash snippet.
+10. Cancellation (status `A`) with legal conditions resolved from Despacho §3.3.7–3.3.8 above; compensating entries prepared for stock/accounts (wired in Phase 5).
 11. Web: document editor (keyboard-friendly lines, net/gross switch, live server totals), document list and detail, conversion and credit-note actions, receipts, on-screen draft preview (not printable).
 
 Exit: all fiscal test families green (golden, concurrency, integrity, vectors); no document can be modified after issuance by any path; 🧑 owner review of the signing and calculation code.
