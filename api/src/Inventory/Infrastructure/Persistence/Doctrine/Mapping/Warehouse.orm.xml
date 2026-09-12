@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Inventory\Domain\Warehouse" table="warehouses">
+        <id name="id" type="warehouse_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="code" type="string" column="code" />
+        <field name="name" type="string" column="name" />
+        <field name="address" type="string" column="address" nullable="true" />
+        <field name="isDefault" type="boolean" column="is_default" />
+        <field name="active" type="boolean" column="active" />
+
+        <indexes>
+            <index name="idx_warehouses_company_code" columns="company_id,code" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

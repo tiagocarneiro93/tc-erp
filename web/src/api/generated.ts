@@ -99,6 +99,14 @@ export interface UpdateCompanyProfileRequest {
   cash_vat?: boolean;
 }
 
+export interface WarehouseRequest {
+  code?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  is_default?: boolean;
+}
+
 export interface CustomerRequest {
   code?: string;
   nif?: string;
@@ -351,6 +359,34 @@ export type GetDocumentTypesList200ItemsItem = {
 
 export type GetDocumentTypesList200 = {
   items?: GetDocumentTypesList200ItemsItem[];
+};
+
+export type GetWarehousesList200ItemsItem = {
+  id?: string;
+  code?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  is_default?: boolean;
+  active?: boolean;
+};
+
+export type GetWarehousesList200 = {
+  items?: GetWarehousesList200ItemsItem[];
+};
+
+export type PostWarehousesCreate201 = {
+  id?: string;
+};
+
+export type GetWarehousesGet200 = {
+  id?: string;
+  code?: string;
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  is_default?: boolean;
+  active?: boolean;
 };
 
 export type GetCustomersListParams = {
@@ -2551,6 +2587,442 @@ export function useGetDocumentTypesList<TData = Awaited<ReturnType<typeof getDoc
 
 
 
+
+export const getGetWarehousesListUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/warehouses`
+}
+
+export const getWarehousesList = async (companyId: string, options?: RequestInit): Promise<GetWarehousesList200> => {
+
+  return httpClient<GetWarehousesList200>(getGetWarehousesListUrl(companyId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWarehousesListQueryKey = (companyId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/warehouses`
+    ] as const;
+    }
+
+
+export const getGetWarehousesListQueryOptions = <TData = Awaited<ReturnType<typeof getWarehousesList>>, TError = unknown>(companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWarehousesListQueryKey(companyId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWarehousesList>>> = ({ signal }) => getWarehousesList(companyId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWarehousesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWarehousesListQueryResult = NonNullable<Awaited<ReturnType<typeof getWarehousesList>>>
+export type GetWarehousesListQueryError = unknown
+
+
+export function useGetWarehousesList<TData = Awaited<ReturnType<typeof getWarehousesList>>, TError = unknown>(
+ companyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWarehousesList>>,
+          TError,
+          Awaited<ReturnType<typeof getWarehousesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWarehousesList<TData = Awaited<ReturnType<typeof getWarehousesList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWarehousesList>>,
+          TError,
+          Awaited<ReturnType<typeof getWarehousesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWarehousesList<TData = Awaited<ReturnType<typeof getWarehousesList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetWarehousesList<TData = Awaited<ReturnType<typeof getWarehousesList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWarehousesListQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostWarehousesCreateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/warehouses`
+}
+
+export const postWarehousesCreate = async (companyId: string,
+    warehouseRequest: WarehouseRequest, options?: RequestInit): Promise<PostWarehousesCreate201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostWarehousesCreate201>(getPostWarehousesCreateUrl(companyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(warehouseRequest)
+  }
+);}
+
+
+
+
+
+export const getPostWarehousesCreateMutationKey = () => ['postWarehousesCreate'] as const;
+
+export const getPostWarehousesCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postWarehousesCreate>>, TError,PostWarehousesCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postWarehousesCreate>>, TError,PostWarehousesCreateMutationVariables, TContext> => {
+
+const mutationKey = getPostWarehousesCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postWarehousesCreate>>, PostWarehousesCreateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  postWarehousesCreate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostWarehousesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof postWarehousesCreate>>>
+    export type PostWarehousesCreateMutationBody = WarehouseRequest
+    export type PostWarehousesCreateMutationError = void
+    export type PostWarehousesCreateMutationVariables = {companyId: string;data: WarehouseRequest}
+
+    export const usePostWarehousesCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postWarehousesCreate>>, TError,PostWarehousesCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postWarehousesCreate>>,
+        TError,
+        PostWarehousesCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostWarehousesCreateMutationOptions(options), queryClient);
+    }
+
+export const getGetWarehousesGetUrl = (companyId: string,
+    warehouseId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/warehouses/${warehouseId}`
+}
+
+export const getWarehousesGet = async (companyId: string,
+    warehouseId: string, options?: RequestInit): Promise<GetWarehousesGet200> => {
+
+  return httpClient<GetWarehousesGet200>(getGetWarehousesGetUrl(companyId,warehouseId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWarehousesGetQueryKey = (companyId: string,
+    warehouseId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/warehouses/${warehouseId}`
+    ] as const;
+    }
+
+
+export const getGetWarehousesGetQueryOptions = <TData = Awaited<ReturnType<typeof getWarehousesGet>>, TError = void>(companyId: string,
+    warehouseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWarehousesGetQueryKey(companyId,warehouseId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWarehousesGet>>> = ({ signal }) => getWarehousesGet(companyId,warehouseId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined && warehouseId !== null && warehouseId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWarehousesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWarehousesGetQueryResult = NonNullable<Awaited<ReturnType<typeof getWarehousesGet>>>
+export type GetWarehousesGetQueryError = void
+
+
+export function useGetWarehousesGet<TData = Awaited<ReturnType<typeof getWarehousesGet>>, TError = void>(
+ companyId: string,
+    warehouseId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWarehousesGet>>,
+          TError,
+          Awaited<ReturnType<typeof getWarehousesGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWarehousesGet<TData = Awaited<ReturnType<typeof getWarehousesGet>>, TError = void>(
+ companyId: string,
+    warehouseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWarehousesGet>>,
+          TError,
+          Awaited<ReturnType<typeof getWarehousesGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWarehousesGet<TData = Awaited<ReturnType<typeof getWarehousesGet>>, TError = void>(
+ companyId: string,
+    warehouseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetWarehousesGet<TData = Awaited<ReturnType<typeof getWarehousesGet>>, TError = void>(
+ companyId: string,
+    warehouseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWarehousesGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWarehousesGetQueryOptions(companyId,warehouseId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutWarehousesUpdateUrl = (companyId: string,
+    warehouseId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/warehouses/${warehouseId}`
+}
+
+export const putWarehousesUpdate = async (companyId: string,
+    warehouseId: string,
+    warehouseRequest: WarehouseRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutWarehousesUpdateUrl(companyId,warehouseId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(warehouseRequest)
+  }
+);}
+
+
+
+
+
+export const getPutWarehousesUpdateMutationKey = () => ['putWarehousesUpdate'] as const;
+
+export const getPutWarehousesUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putWarehousesUpdate>>, TError,PutWarehousesUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putWarehousesUpdate>>, TError,PutWarehousesUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPutWarehousesUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putWarehousesUpdate>>, PutWarehousesUpdateMutationVariables> = (props) => {
+          const {companyId,warehouseId,data} = props ?? {};
+
+          return  putWarehousesUpdate(companyId,warehouseId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutWarehousesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof putWarehousesUpdate>>>
+    export type PutWarehousesUpdateMutationBody = WarehouseRequest
+    export type PutWarehousesUpdateMutationError = void
+    export type PutWarehousesUpdateMutationVariables = {companyId: string;warehouseId: string;data: WarehouseRequest}
+
+    export const usePutWarehousesUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putWarehousesUpdate>>, TError,PutWarehousesUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putWarehousesUpdate>>,
+        TError,
+        PutWarehousesUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutWarehousesUpdateMutationOptions(options), queryClient);
+    }
+
+export const getDeleteWarehousesDeactivateUrl = (companyId: string,
+    warehouseId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/warehouses/${warehouseId}`
+}
+
+export const deleteWarehousesDeactivate = async (companyId: string,
+    warehouseId: string, options?: RequestInit): Promise<void> => {
+
+  return httpClient<void>(getDeleteWarehousesDeactivateUrl(companyId,warehouseId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteWarehousesDeactivateMutationKey = () => ['deleteWarehousesDeactivate'] as const;
+
+export const getDeleteWarehousesDeactivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWarehousesDeactivate>>, TError,DeleteWarehousesDeactivateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWarehousesDeactivate>>, TError,DeleteWarehousesDeactivateMutationVariables, TContext> => {
+
+const mutationKey = getDeleteWarehousesDeactivateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWarehousesDeactivate>>, DeleteWarehousesDeactivateMutationVariables> = (props) => {
+          const {companyId,warehouseId} = props ?? {};
+
+          return  deleteWarehousesDeactivate(companyId,warehouseId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWarehousesDeactivateMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWarehousesDeactivate>>>
+
+    export type DeleteWarehousesDeactivateMutationError = void
+    export type DeleteWarehousesDeactivateMutationVariables = {companyId: string;warehouseId: string}
+
+    export const useDeleteWarehousesDeactivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWarehousesDeactivate>>, TError,DeleteWarehousesDeactivateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWarehousesDeactivate>>,
+        TError,
+        DeleteWarehousesDeactivateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteWarehousesDeactivateMutationOptions(options), queryClient);
+    }
 
 export const getGetCustomersListUrl = (companyId: string,
     params?: GetCustomersListParams,) => {

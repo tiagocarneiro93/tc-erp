@@ -1285,6 +1285,262 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/warehouses": {
+            "get": {
+                "tags": [
+                    "Warehouses"
+                ],
+                "operationId": "get_warehouses_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every warehouse for this company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "is_default": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Warehouses"
+                ],
+                "operationId": "post_warehouses_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WarehouseRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Warehouse created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the stock.manage permission."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/warehouses/{warehouseId}": {
+            "get": {
+                "tags": [
+                    "Warehouses"
+                ],
+                "operationId": "get_warehouses_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "warehouseId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The warehouse.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "address": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "is_default": {
+                                            "type": "boolean"
+                                        },
+                                        "active": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such warehouse."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Warehouses"
+                ],
+                "operationId": "put_warehouses_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "warehouseId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WarehouseRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Warehouse updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the stock.manage permission."
+                    },
+                    "404": {
+                        "description": "No such warehouse."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Warehouses"
+                ],
+                "operationId": "delete_warehouses_deactivate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "warehouseId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Warehouse deactivated (active = false; not a hard delete)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the stock.manage permission."
+                    },
+                    "404": {
+                        "description": "No such warehouse."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/customers": {
             "get": {
                 "tags": [
@@ -2839,6 +3095,28 @@
                 },
                 "type": "object"
             },
+            "WarehouseRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "address": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "is_default": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
             "CustomerRequest": {
                 "properties": {
                     "code": {
@@ -3032,6 +3310,9 @@
         },
         {
             "name": "Company"
+        },
+        {
+            "name": "Warehouses"
         },
         {
             "name": "Customers"

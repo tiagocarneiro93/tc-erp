@@ -20,6 +20,7 @@ doctrine:
             product_family_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductFamilyIdType
             product_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductIdType
             price_list_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\PriceListIdType
+            warehouse_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\WarehouseIdType
         default_connection: default
         connections:
             # The app connects as app_runtime: no table ownership, no BYPASSRLS,
@@ -88,6 +89,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Parties/Infrastructure/Persistence/Doctrine/Mapping'
                         prefix: 'App\Parties\Domain'
                         alias: Parties
+                    Inventory:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Inventory/Infrastructure/Persistence/Doctrine/Mapping'
+                        prefix: 'App\Inventory\Domain'
+                        alias: Inventory
             # Same mappings, but via the app_owner connection — used only by
             # the migrations CLI (config/packages/doctrine_migrations.yaml),
             # never by the running application, so `doctrine:migrations:diff`
