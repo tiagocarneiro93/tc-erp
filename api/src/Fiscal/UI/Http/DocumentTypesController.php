@@ -32,6 +32,7 @@ final class DocumentTypesController
     #[OA\Response(response: 200, description: 'All fiscal document types.', content: new OA\JsonContent(properties: [
         new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [
             new OA\Property(property: 'code', type: 'string'),
+            new OA\Property(property: 'name', type: 'string'),
             new OA\Property(property: 'saft_section', type: 'string'),
             new OA\Property(property: 'signed', type: 'boolean'),
             new OA\Property(property: 'stock_effect', type: 'string'),
@@ -46,6 +47,7 @@ final class DocumentTypesController
 
         return new JsonResponse(['items' => array_map(static fn (DocumentType $t) => [
             'code' => $t->code(),
+            'name' => $t->name(),
             'saft_section' => $t->saftSection(),
             'signed' => $t->isSigned(),
             'stock_effect' => $t->stockEffect(),

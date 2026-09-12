@@ -94,6 +94,7 @@ function ReferenceDataPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Código</TableHead>
+                <TableHead>Nome</TableHead>
                 <TableHead>Secção SAF-T</TableHead>
                 <TableHead>Assinado</TableHead>
                 <TableHead>Efeito em stock</TableHead>
@@ -104,6 +105,7 @@ function ReferenceDataPage() {
               {documentTypes.data?.items?.map((type) => (
                 <TableRow key={type.code}>
                   <TableCell>{type.code}</TableCell>
+                  <TableCell>{type.name}</TableCell>
                   <TableCell>{type.saft_section}</TableCell>
                   <TableCell>{type.signed ? <Badge variant="outline">Sim</Badge> : 'Não'}</TableCell>
                   <TableCell>{type.stock_effect}</TableCell>

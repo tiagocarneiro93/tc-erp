@@ -9,6 +9,7 @@
             <generator strategy="NONE" />
         </id>
 
+        <field name="name" type="string" column="name" />
         <field name="saftSection" type="string" column="saft_section" />
         <field name="signed" type="boolean" column="signed" />
         <field name="stockEffect" type="string" column="stock_effect" />

@@ -12,6 +12,7 @@ final class DocumentType
 {
     public function __construct(
         private readonly string $code,
+        private readonly string $name,
         private readonly string $saftSection,
         private readonly bool $signed,
         private readonly string $stockEffect,
@@ -26,6 +27,15 @@ final class DocumentType
     public function code(): string
     {
         return $this->code;
+    }
+
+    /**
+     * User-facing pt-PT name (e.g. "Fatura" for FT) — the official SAF-T PT
+     * document-type name, not a fiscal value in itself.
+     */
+    public function name(): string
+    {
+        return $this->name;
     }
 
     /**

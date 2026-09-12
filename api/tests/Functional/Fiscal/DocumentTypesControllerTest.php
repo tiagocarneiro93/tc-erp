@@ -36,17 +36,19 @@ final class DocumentTypesControllerTest extends WebTestCase
         $client->request('GET', '/api/v1/document-types', server: self::HEADERS);
         self::assertResponseIsSuccessful();
 
-        /** @var array{items: list<array{code: string, saft_section: string, signed: bool, stock_effect: string, account_effect: string, requires_at_prior_communication: bool}>} $body */
+        /** @var array{items: list<array{code: string, name: string, saft_section: string, signed: bool, stock_effect: string, account_effect: string, requires_at_prior_communication: bool}>} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
         self::assertCount(12, $body['items']);
 
         $byCode = [];
         foreach ($body['items'] as $item) {
             $byCode[$item['code']] = $item;
+            self::assertNotSame('', $item['name'], \sprintf('%s should have a user-facing name.', $item['code']));
         }
 
         self::assertFalse($byCode['RG']['signed'], 'Receipts are not signed (Despacho 8632/2014 §1.1).');
         self::assertTrue($byCode['FT']['signed']);
+        self::assertSame('Fatura', $byCode['FT']['name']);
         self::assertSame('MovementOfGoods', $byCode['GT']['saft_section']);
         self::assertTrue($byCode['GT']['requires_at_prior_communication']);
         self::assertFalse($byCode['FT']['requires_at_prior_communication']);
