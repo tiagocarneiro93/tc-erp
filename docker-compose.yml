@@ -92,6 +92,11 @@ services:
     working_dir: /app
     volumes:
       - ./web:/app
+      # orval.config.ts reads the spec via a relative `../api/openapi.json`
+      # (from /app, i.e. this container's `/api`) — without this mount,
+      # `make openapi`/`pnpm generate-client` fails with an ENOENT on
+      # /api/openapi.json since only ./web was ever visible in here.
+      - ./api:/api
     environment:
       # The web/vite.config.ts proxy target defaults to localhost:8080, which
       # inside this container is itself, not the php service.
