@@ -6,10 +6,21 @@ framework:
     # Cookie flags per CLAUDE.md task 0.8: httpOnly, Secure, SameSite=Lax.
     # cookie_secure: auto means "secure only when the request is HTTPS", so
     # local http:// dev still works; every real environment terminates TLS.
+    #
+    # handler_id: Redis, not PHP's default `files` handler. Every request
+    # under /api/v1 is IS_AUTHENTICATED_FULLY, so the security firewall
+    # reads the session on every single one — with the `files` handler
+    # that's an flock() held for the whole request, which serializes any
+    # concurrent requests sharing one browser session (e.g. a form opening
+    # and firing several reference-data GETs at once). Session data here
+    # is only ever written by login/logout, never by ordinary authenticated
+    # requests, so the lock buys nothing and Redis's handler doesn't
+    # impose one.
     session:
         cookie_httponly: true
         cookie_secure: auto
         cookie_samesite: lax
+        handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
 
     # snake_case JSON in and out (CLAUDE.md, technical-scope.md §9.1)
     # applies to every #[MapRequestPayload]/#[MapQueryString] DTO: a PHP

@@ -28,6 +28,17 @@ services:
     # DateTimeImmutable()` directly (CLAUDE.md — architecture rules).
     App\Shared\Domain\Clock\Clock: '@App\Shared\Infrastructure\Clock\SystemClock'
 
+    # config/packages/framework.yaml's session.handler_id. Reuses REDIS_URL
+    # (already the Messenger transport DSN) rather than a second Redis
+    # config surface.
+    session.redis_connection:
+        class: Redis
+        factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
+        arguments: ['%env(REDIS_URL)%']
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
+        arguments:
+            $redis: '@session.redis_connection'
+
     # Repository ports (Domain) -> Doctrine adapters (Infrastructure). Public
     # so integration tests can fetch them directly before anything in the
     # app itself consumes them (tasks 0.8/0.10 will); otherwise Symfony's
@@ -132,6 +143,12 @@ services:
         public: true
     App\Company\Domain\AtCredentialsRepository:
         alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\DoctrineAtCredentialsRepository
+        public: true
+    App\Company\Domain\PaymentTermsRepository:
+        alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\DoctrinePaymentTermsRepository
+        public: true
+    App\Shared\Domain\PaymentTermsExistenceChecker:
+        alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\DoctrinePaymentTermsRepository
         public: true
     App\Company\Domain\AtCredentialsEncryptor: '@App\Company\Infrastructure\Security\SodiumAtCredentialsEncryptor'
     App\Company\Infrastructure\Security\SodiumAtCredentialsEncryptor:
