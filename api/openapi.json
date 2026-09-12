@@ -106,6 +106,175 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/products/{kitProductId}/components/{componentProductId}": {
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "put_product_components_set",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kitProductId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "componentProductId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductComponentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Component added or updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "No such kit product, or no such component product."
+                    },
+                    "422": {
+                        "description": "The kit product is not kind=kit, the component is itself a kit (nesting is not supported), an invalid quantity, or the request payload failed validation."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "delete_product_components_remove",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kitProductId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "componentProductId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Component removed from the kit."
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "No such component on this kit."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/products/{kitProductId}/components": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "get_product_components_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kitProductId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "This kit's components, with an informational VAT-rate-mismatch flag per line and an estimated cost preview (null until Phase 5 populates average_cost).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "component_product_id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "quantity": {
+                                                        "type": "string"
+                                                    },
+                                                    "sort_order": {
+                                                        "type": "integer"
+                                                    },
+                                                    "vat_rate_mismatch": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "estimated_cost": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such product."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/product-families": {
             "get": {
                 "tags": [
@@ -2478,6 +2647,19 @@
                     "default_includes_vat": {
                         "type": "boolean",
                         "default": false
+                    }
+                },
+                "type": "object"
+            },
+            "ProductComponentRequest": {
+                "properties": {
+                    "quantity": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "default": 0
                     }
                 },
                 "type": "object"

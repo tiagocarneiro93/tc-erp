@@ -167,6 +167,9 @@ services:
     App\Catalog\Domain\ProductPriceRepository:
         alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineProductPriceRepository
         public: true
+    App\Catalog\Domain\ProductComponentRepository:
+        alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineProductComponentRepository
+        public: true
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:

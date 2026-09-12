@@ -12,6 +12,7 @@ doctrine:
             password_reset_token_id: App\Platform\Infrastructure\Persistence\Doctrine\Type\PasswordResetTokenIdType
             percentage: App\Shared\Infrastructure\Persistence\Doctrine\Type\PercentageType
             money: App\Shared\Infrastructure\Persistence\Doctrine\Type\MoneyType
+            quantity: App\Shared\Infrastructure\Persistence\Doctrine\Type\QuantityType
             tax_rate_id: App\Tax\Infrastructure\Persistence\Doctrine\Type\TaxRateIdType
             customer_id: App\Parties\Infrastructure\Persistence\Doctrine\Type\CustomerIdType
             supplier_id: App\Parties\Infrastructure\Persistence\Doctrine\Type\SupplierIdType

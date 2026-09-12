@@ -8,6 +8,8 @@ use App\Catalog\Domain\PriceList;
 use App\Catalog\Domain\PriceListId;
 use App\Catalog\Domain\PriceListRepository;
 use App\Catalog\Domain\Product;
+use App\Catalog\Domain\ProductComponent;
+use App\Catalog\Domain\ProductComponentRepository;
 use App\Catalog\Domain\ProductFamily;
 use App\Catalog\Domain\ProductFamilyId;
 use App\Catalog\Domain\ProductFamilyRepository;
@@ -16,17 +18,18 @@ use App\Catalog\Domain\ProductPrice;
 use App\Catalog\Domain\ProductPriceRepository;
 use App\Catalog\Domain\ProductRepository;
 use App\Shared\Domain\CompanyId;
+use App\Shared\Domain\Decimal\Quantity;
 use App\Shared\Infrastructure\Company\RequestCompanyContext;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * technical-scope.md §5.2/§5.3, docs/plans/phase-1.md tasks 1.6/1.7: proves
- * RLS isolates `products`, `product_families`, `price_lists` and
- * `product_prices` through the same repositories the application uses. See
- * `CompanyModuleIsolationTest` (task 1.4) for why the EntityManager's
- * identity map is cleared between company contexts.
+ * technical-scope.md §5.2/§5.3, docs/plans/phase-1.md tasks 1.6/1.7/1.8:
+ * proves RLS isolates `products`, `product_families`, `price_lists`,
+ * `product_prices` and `product_components` through the same repositories
+ * the application uses. See `CompanyModuleIsolationTest` (task 1.4) for why
+ * the EntityManager's identity map is cleared between company contexts.
  */
 final class CatalogIsolationTest extends KernelTestCase
 {
@@ -37,6 +40,7 @@ final class CatalogIsolationTest extends KernelTestCase
     private ProductFamilyRepository $families;
     private PriceListRepository $priceLists;
     private ProductPriceRepository $prices;
+    private ProductComponentRepository $components;
 
     /** @var list<CompanyId> */
     private array $companiesToCleanUp = [];
@@ -66,6 +70,9 @@ final class CatalogIsolationTest extends KernelTestCase
         /** @var ProductPriceRepository $prices */
         $prices = self::getContainer()->get(ProductPriceRepository::class);
         $this->prices = $prices;
+        /** @var ProductComponentRepository $components */
+        $components = self::getContainer()->get(ProductComponentRepository::class);
+        $this->components = $components;
     }
 
     protected function tearDown(): void
@@ -75,6 +82,7 @@ final class CatalogIsolationTest extends KernelTestCase
         foreach ($this->companiesToCleanUp as $companyId) {
             $this->companyContext->set($companyId);
             $this->connection->beginTransaction();
+            $this->connection->executeStatement('DELETE FROM product_components WHERE company_id = :id', ['id' => $companyId->toString()]);
             $this->connection->executeStatement('DELETE FROM product_prices WHERE company_id = :id', ['id' => $companyId->toString()]);
             $this->connection->executeStatement('DELETE FROM price_lists WHERE company_id = :id', ['id' => $companyId->toString()]);
             $this->connection->executeStatement('DELETE FROM products WHERE company_id = :id', ['id' => $companyId->toString()]);
@@ -185,6 +193,31 @@ final class CatalogIsolationTest extends KernelTestCase
         $this->companyContext->clear();
 
         self::assertSame([], $seenAsB, 'Company B must not see company A\'s product price.');
+    }
+
+    public function testACompanyCannotReadAnotherCompanysProductComponent(): void
+    {
+        $companyA = $this->newCompany();
+        $companyB = $this->newCompany();
+
+        $this->companyContext->set($companyA);
+        $this->connection->beginTransaction();
+        $kitId = ProductId::generate();
+        $componentId = ProductId::generate();
+        $this->products->save(Product::create($kitId, $companyA, 'A-KIT', 'Company A kit', 'P', 'kit', 'UN', null, null, 'a-tax-rate-id', null, false));
+        $this->products->save(Product::create($componentId, $companyA, 'A-COMP', 'Company A component', 'P', 'simple', 'UN', null, null, 'a-tax-rate-id', null, false));
+        $this->components->save(ProductComponent::set($companyA, $kitId, $componentId, Quantity::fromString('1'), 0));
+        $this->connection->commit();
+        $this->companyContext->clear();
+
+        $this->entityManager->clear();
+        $this->companyContext->set($companyB);
+        $this->connection->beginTransaction();
+        $seenAsB = $this->components->findAllForKit($companyB, $kitId);
+        $this->connection->commit();
+        $this->companyContext->clear();
+
+        self::assertSame([], $seenAsB, 'Company B must not see company A\'s product component.');
     }
 
     private function newCompany(): CompanyId

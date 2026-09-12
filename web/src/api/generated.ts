@@ -30,6 +30,11 @@ export interface PriceListRequest {
   default_includes_vat?: boolean;
 }
 
+export interface ProductComponentRequest {
+  quantity?: string;
+  sort_order?: number;
+}
+
 export interface ProductFamilyRequest {
   name?: string;
   /** @nullable */
@@ -180,6 +185,19 @@ export type GetPriceListsList200 = {
 
 export type PostPriceListsCreate201 = {
   id?: string;
+};
+
+export type GetProductComponentsList200ItemsItem = {
+  component_product_id?: string;
+  quantity?: string;
+  sort_order?: number;
+  vat_rate_mismatch?: boolean;
+};
+
+export type GetProductComponentsList200 = {
+  items?: GetProductComponentsList200ItemsItem[];
+  /** @nullable */
+  estimated_cost?: string | null;
 };
 
 export type GetProductFamiliesList200ItemsItem = {
@@ -763,6 +781,268 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getPostPriceListsCreateMutationOptions(options), queryClient);
     }
+
+export const getPutProductComponentsSetUrl = (companyId: string,
+    kitProductId: string,
+    componentProductId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/products/${kitProductId}/components/${componentProductId}`
+}
+
+export const putProductComponentsSet = async (companyId: string,
+    kitProductId: string,
+    componentProductId: string,
+    productComponentRequest: ProductComponentRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutProductComponentsSetUrl(companyId,kitProductId,componentProductId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(productComponentRequest)
+  }
+);}
+
+
+
+
+
+export const getPutProductComponentsSetMutationKey = () => ['putProductComponentsSet'] as const;
+
+export const getPutProductComponentsSetMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putProductComponentsSet>>, TError,PutProductComponentsSetMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putProductComponentsSet>>, TError,PutProductComponentsSetMutationVariables, TContext> => {
+
+const mutationKey = getPutProductComponentsSetMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putProductComponentsSet>>, PutProductComponentsSetMutationVariables> = (props) => {
+          const {companyId,kitProductId,componentProductId,data} = props ?? {};
+
+          return  putProductComponentsSet(companyId,kitProductId,componentProductId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutProductComponentsSetMutationResult = NonNullable<Awaited<ReturnType<typeof putProductComponentsSet>>>
+    export type PutProductComponentsSetMutationBody = ProductComponentRequest
+    export type PutProductComponentsSetMutationError = void
+    export type PutProductComponentsSetMutationVariables = {companyId: string;kitProductId: string;componentProductId: string;data: ProductComponentRequest}
+
+    export const usePutProductComponentsSet = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putProductComponentsSet>>, TError,PutProductComponentsSetMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putProductComponentsSet>>,
+        TError,
+        PutProductComponentsSetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutProductComponentsSetMutationOptions(options), queryClient);
+    }
+
+export const getDeleteProductComponentsRemoveUrl = (companyId: string,
+    kitProductId: string,
+    componentProductId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/products/${kitProductId}/components/${componentProductId}`
+}
+
+export const deleteProductComponentsRemove = async (companyId: string,
+    kitProductId: string,
+    componentProductId: string, options?: RequestInit): Promise<void> => {
+
+  return httpClient<void>(getDeleteProductComponentsRemoveUrl(companyId,kitProductId,componentProductId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteProductComponentsRemoveMutationKey = () => ['deleteProductComponentsRemove'] as const;
+
+export const getDeleteProductComponentsRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProductComponentsRemove>>, TError,DeleteProductComponentsRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProductComponentsRemove>>, TError,DeleteProductComponentsRemoveMutationVariables, TContext> => {
+
+const mutationKey = getDeleteProductComponentsRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProductComponentsRemove>>, DeleteProductComponentsRemoveMutationVariables> = (props) => {
+          const {companyId,kitProductId,componentProductId} = props ?? {};
+
+          return  deleteProductComponentsRemove(companyId,kitProductId,componentProductId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProductComponentsRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProductComponentsRemove>>>
+
+    export type DeleteProductComponentsRemoveMutationError = void
+    export type DeleteProductComponentsRemoveMutationVariables = {companyId: string;kitProductId: string;componentProductId: string}
+
+    export const useDeleteProductComponentsRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProductComponentsRemove>>, TError,DeleteProductComponentsRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProductComponentsRemove>>,
+        TError,
+        DeleteProductComponentsRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteProductComponentsRemoveMutationOptions(options), queryClient);
+    }
+
+export const getGetProductComponentsListUrl = (companyId: string,
+    kitProductId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/products/${kitProductId}/components`
+}
+
+export const getProductComponentsList = async (companyId: string,
+    kitProductId: string, options?: RequestInit): Promise<GetProductComponentsList200> => {
+
+  return httpClient<GetProductComponentsList200>(getGetProductComponentsListUrl(companyId,kitProductId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProductComponentsListQueryKey = (companyId: string,
+    kitProductId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/products/${kitProductId}/components`
+    ] as const;
+    }
+
+
+export const getGetProductComponentsListQueryOptions = <TData = Awaited<ReturnType<typeof getProductComponentsList>>, TError = void>(companyId: string,
+    kitProductId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductComponentsList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProductComponentsListQueryKey(companyId,kitProductId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProductComponentsList>>> = ({ signal }) => getProductComponentsList(companyId,kitProductId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined && kitProductId !== null && kitProductId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProductComponentsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProductComponentsListQueryResult = NonNullable<Awaited<ReturnType<typeof getProductComponentsList>>>
+export type GetProductComponentsListQueryError = void
+
+
+export function useGetProductComponentsList<TData = Awaited<ReturnType<typeof getProductComponentsList>>, TError = void>(
+ companyId: string,
+    kitProductId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductComponentsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProductComponentsList>>,
+          TError,
+          Awaited<ReturnType<typeof getProductComponentsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProductComponentsList<TData = Awaited<ReturnType<typeof getProductComponentsList>>, TError = void>(
+ companyId: string,
+    kitProductId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductComponentsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProductComponentsList>>,
+          TError,
+          Awaited<ReturnType<typeof getProductComponentsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProductComponentsList<TData = Awaited<ReturnType<typeof getProductComponentsList>>, TError = void>(
+ companyId: string,
+    kitProductId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductComponentsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetProductComponentsList<TData = Awaited<ReturnType<typeof getProductComponentsList>>, TError = void>(
+ companyId: string,
+    kitProductId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductComponentsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProductComponentsListQueryOptions(companyId,kitProductId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetProductFamiliesListUrl = (companyId: string,) => {
 
