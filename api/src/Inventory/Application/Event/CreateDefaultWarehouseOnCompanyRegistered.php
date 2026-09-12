@@ -16,6 +16,10 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * `CompanyRegistered` — same event-driven pattern as Company's own
  * default-profile seeding and Parties' "Consumidor final" customer
  * (docs/decisions/0004).
+ *
+ * Idempotent: `app:seed` backfills companies that predate this listener by
+ * re-dispatching `CompanyRegistered` rather than depending on this module's
+ * domain directly, which Deptrac forbids from `Platform\Infrastructure`.
  */
 #[AsMessageHandler(bus: 'event.bus')]
 final class CreateDefaultWarehouseOnCompanyRegistered
@@ -29,6 +33,10 @@ final class CreateDefaultWarehouseOnCompanyRegistered
 
     public function __invoke(CompanyRegistered $event): void
     {
+        if (null !== $this->warehouses->findDefault($event->companyId)) {
+            return;
+        }
+
         $this->warehouses->save(Warehouse::create(
             WarehouseId::generate(),
             $event->companyId,

@@ -23,8 +23,7 @@ final class CustomerRequest
         #[Assert\Email]
         public readonly ?string $email = null,
         public readonly ?string $phone = null,
-        #[Assert\PositiveOrZero]
-        public readonly ?int $payment_terms_days = null,
+        public readonly ?string $payment_terms_id = null,
         // Create-only: fixed once the customer exists, ignored by the
         // update endpoint (Customer::update() has no such parameter).
         public readonly bool $is_final_consumer = false,

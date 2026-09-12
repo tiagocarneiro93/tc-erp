@@ -6,6 +6,7 @@ namespace App\Parties\Application\Command;
 
 use App\Parties\Domain\CustomerRepository;
 use App\Parties\Domain\Exception\CustomerNotFound;
+use App\Parties\Domain\Exception\InvalidPaymentTermsId;
 use App\Shared\Domain\Audit\AuditLogger;
 use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
@@ -14,6 +15,7 @@ use App\Shared\Domain\Exception\InvalidCountryCode;
 use App\Shared\Domain\Exception\InvalidNif;
 use App\Shared\Domain\Exception\PermissionDenied;
 use App\Shared\Domain\Nif;
+use App\Shared\Domain\PaymentTermsExistenceChecker;
 use App\Shared\Domain\Security\PermissionChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -23,6 +25,7 @@ final class UpdateCustomerHandler
     public function __construct(
         private readonly CustomerRepository $customers,
         private readonly CountryRepository $countries,
+        private readonly PaymentTermsExistenceChecker $paymentTerms,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
         private readonly AuditLogger $auditLogger,
@@ -52,6 +55,10 @@ final class UpdateCustomerHandler
             throw new InvalidCountryCode($command->country);
         }
 
+        if (null !== $command->paymentTermsId && !$this->paymentTerms->exists($companyId, $command->paymentTermsId)) {
+            throw new InvalidPaymentTermsId($command->paymentTermsId);
+        }
+
         $customer->update(
             $command->code,
             $command->nif,
@@ -62,7 +69,7 @@ final class UpdateCustomerHandler
             $command->country,
             $command->email,
             $command->phone,
-            $command->paymentTermsDays,
+            $command->paymentTermsId,
             $this->clock->now(),
         );
         $this->customers->save($customer);

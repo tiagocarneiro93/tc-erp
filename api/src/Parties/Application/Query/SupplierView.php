@@ -19,7 +19,7 @@ final class SupplierView
         public readonly string $country,
         public readonly ?string $email,
         public readonly ?string $phone,
-        public readonly ?int $paymentTermsDays,
+        public readonly ?string $paymentTermsId,
         public readonly bool $active,
     ) {
     }
@@ -37,7 +37,7 @@ final class SupplierView
             $supplier->country(),
             $supplier->email(),
             $supplier->phone(),
-            $supplier->paymentTermsDays(),
+            $supplier->paymentTermsId(),
             $supplier->active(),
         );
     }

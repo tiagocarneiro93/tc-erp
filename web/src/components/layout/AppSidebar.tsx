@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import {
   BookOpenIcon,
   BoxesIcon,
+  CalendarClockIcon,
   ContactIcon,
   FolderTreeIcon,
   LayoutDashboardIcon,
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { to: '/c/$companyId/product-families', label: 'Famílias', icon: FolderTreeIcon, exact: false },
   { to: '/c/$companyId/price-lists', label: 'Tabelas de preços', icon: TagsIcon, exact: false },
   { to: '/c/$companyId/warehouses', label: 'Armazéns', icon: WarehouseIcon, exact: false },
+  { to: '/c/$companyId/payment-terms', label: 'Prazos de pagamento', icon: CalendarClockIcon, exact: false },
   { to: '/c/$companyId/reference-data', label: 'Dados de referência', icon: BookOpenIcon, exact: false },
   { to: '/c/$companyId/members', label: 'Membros', icon: UsersIcon, exact: false },
   { to: '/c/$companyId/settings', label: 'Definições', icon: SettingsIcon, exact: false },

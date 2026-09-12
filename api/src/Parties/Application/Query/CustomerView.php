@@ -19,7 +19,7 @@ final class CustomerView
         public readonly string $country,
         public readonly ?string $email,
         public readonly ?string $phone,
-        public readonly ?int $paymentTermsDays,
+        public readonly ?string $paymentTermsId,
         public readonly bool $isFinalConsumer,
         public readonly bool $active,
     ) {
@@ -38,7 +38,7 @@ final class CustomerView
             $customer->country(),
             $customer->email(),
             $customer->phone(),
-            $customer->paymentTermsDays(),
+            $customer->paymentTermsId(),
             $customer->isFinalConsumer(),
             $customer->active(),
         );

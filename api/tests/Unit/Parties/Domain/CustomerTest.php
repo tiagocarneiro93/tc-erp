@@ -27,11 +27,11 @@ final class CustomerTest extends TestCase
         $customer = $this->customer($createdAt);
 
         $updatedAt = new \DateTimeImmutable('2026-02-01');
-        $customer->update('C002', '502757191', 'New Name', 'New Address', '2000-000', 'Lisboa', 'PT', 'new@example.test', '+351210000000', 15, $updatedAt);
+        $customer->update('C002', '502757191', 'New Name', 'New Address', '2000-000', 'Lisboa', 'PT', 'new@example.test', '+351210000000', 'a-payment-terms-id', $updatedAt);
 
         self::assertSame('C002', $customer->code());
         self::assertSame('New Name', $customer->name());
-        self::assertSame(15, $customer->paymentTermsDays());
+        self::assertSame('a-payment-terms-id', $customer->paymentTermsId());
         self::assertEquals($createdAt, $customer->createdAt());
         self::assertEquals($updatedAt, $customer->updatedAt());
     }

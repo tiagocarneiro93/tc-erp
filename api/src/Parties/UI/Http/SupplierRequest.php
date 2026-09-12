@@ -23,8 +23,7 @@ final class SupplierRequest
         #[Assert\Email]
         public readonly ?string $email = null,
         public readonly ?string $phone = null,
-        #[Assert\PositiveOrZero]
-        public readonly ?int $payment_terms_days = null,
+        public readonly ?string $payment_terms_id = null,
     ) {
     }
 }

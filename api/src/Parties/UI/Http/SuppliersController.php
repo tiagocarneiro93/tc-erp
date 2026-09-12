@@ -65,7 +65,7 @@ final class SuppliersController
             $request->country,
             $request->email,
             $request->phone,
-            $request->payment_terms_days,
+            $request->payment_terms_id,
             $httpRequest->getClientIp() ?? '',
             $httpRequest->headers->get('User-Agent', ''),
         ));
@@ -89,7 +89,7 @@ final class SuppliersController
             new OA\Property(property: 'country', type: 'string'),
             new OA\Property(property: 'email', type: 'string', nullable: true),
             new OA\Property(property: 'phone', type: 'string', nullable: true),
-            new OA\Property(property: 'payment_terms_days', type: 'integer', nullable: true),
+            new OA\Property(property: 'payment_terms_id', type: 'string', format: 'uuid', nullable: true),
             new OA\Property(property: 'active', type: 'boolean'),
         ], type: 'object')),
         new OA\Property(property: 'next_cursor', type: 'string', nullable: true),
@@ -124,7 +124,7 @@ final class SuppliersController
         new OA\Property(property: 'country', type: 'string'),
         new OA\Property(property: 'email', type: 'string', nullable: true),
         new OA\Property(property: 'phone', type: 'string', nullable: true),
-        new OA\Property(property: 'payment_terms_days', type: 'integer', nullable: true),
+        new OA\Property(property: 'payment_terms_id', type: 'string', format: 'uuid', nullable: true),
         new OA\Property(property: 'active', type: 'boolean'),
     ]))]
     #[OA\Response(response: 404, description: 'No such supplier.')]
@@ -155,7 +155,7 @@ final class SuppliersController
             $request->country,
             $request->email,
             $request->phone,
-            $request->payment_terms_days,
+            $request->payment_terms_id,
             $httpRequest->getClientIp() ?? '',
             $httpRequest->headers->get('User-Agent', ''),
         ));
@@ -180,7 +180,7 @@ final class SuppliersController
     }
 
     /**
-     * @return array{id: string, code: string, nif: string, name: string, address: ?string, postal_code: ?string, city: ?string, country: string, email: ?string, phone: ?string, payment_terms_days: ?int, active: bool}
+     * @return array{id: string, code: string, nif: string, name: string, address: ?string, postal_code: ?string, city: ?string, country: string, email: ?string, phone: ?string, payment_terms_id: ?string, active: bool}
      */
     private static function toArray(SupplierView $supplier): array
     {
@@ -195,7 +195,7 @@ final class SuppliersController
             'country' => $supplier->country,
             'email' => $supplier->email,
             'phone' => $supplier->phone,
-            'payment_terms_days' => $supplier->paymentTermsDays,
+            'payment_terms_id' => $supplier->paymentTermsId,
             'active' => $supplier->active,
         ];
     }

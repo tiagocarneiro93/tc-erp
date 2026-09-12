@@ -21,6 +21,7 @@ doctrine:
             product_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductIdType
             price_list_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\PriceListIdType
             warehouse_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\WarehouseIdType
+            payment_terms_id: App\Company\Infrastructure\Persistence\Doctrine\Type\PaymentTermsIdType
         default_connection: default
         connections:
             # The app connects as app_runtime: no table ownership, no BYPASSRLS,

@@ -10,6 +10,9 @@ use App\Company\Domain\CompanyProfile;
 use App\Company\Domain\CompanyProfileRepository;
 use App\Company\Domain\CompanySetting;
 use App\Company\Domain\CompanySettingRepository;
+use App\Company\Domain\PaymentTerms;
+use App\Company\Domain\PaymentTermsId;
+use App\Company\Domain\PaymentTermsRepository;
 use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Nif;
 use App\Shared\Infrastructure\Company\RequestCompanyContext;
@@ -38,6 +41,7 @@ final class CompanyModuleIsolationTest extends KernelTestCase
     private CompanyProfileRepository $profiles;
     private CompanySettingRepository $settings;
     private AtCredentialsRepository $credentials;
+    private PaymentTermsRepository $paymentTerms;
 
     /** @var list<CompanyId> */
     private array $companiesToCleanUp = [];
@@ -64,6 +68,9 @@ final class CompanyModuleIsolationTest extends KernelTestCase
         /** @var AtCredentialsRepository $credentials */
         $credentials = self::getContainer()->get(AtCredentialsRepository::class);
         $this->credentials = $credentials;
+        /** @var PaymentTermsRepository $paymentTerms */
+        $paymentTerms = self::getContainer()->get(PaymentTermsRepository::class);
+        $this->paymentTerms = $paymentTerms;
     }
 
     protected function tearDown(): void
@@ -76,6 +83,7 @@ final class CompanyModuleIsolationTest extends KernelTestCase
             $this->connection->executeStatement('DELETE FROM company_profile WHERE company_id = :id', ['id' => $companyId->toString()]);
             $this->connection->executeStatement('DELETE FROM settings WHERE company_id = :id', ['id' => $companyId->toString()]);
             $this->connection->executeStatement('DELETE FROM at_credentials WHERE company_id = :id', ['id' => $companyId->toString()]);
+            $this->connection->executeStatement('DELETE FROM payment_terms WHERE company_id = :id', ['id' => $companyId->toString()]);
             $this->connection->commit();
             $this->companyContext->clear();
         }
@@ -171,6 +179,27 @@ final class CompanyModuleIsolationTest extends KernelTestCase
         $this->companyContext->clear();
 
         self::assertNull($seenAsB, 'Company B must not see company A\'s setting row.');
+    }
+
+    public function testACompanyCannotReadAnotherCompanysPaymentTerms(): void
+    {
+        $companyA = $this->newCompany();
+        $companyB = $this->newCompany();
+
+        $this->companyContext->set($companyA);
+        $this->connection->beginTransaction();
+        $this->paymentTerms->save(PaymentTerms::create(PaymentTermsId::generate(), $companyA, 'Pronto Pagamento', 0, true));
+        $this->connection->commit();
+        $this->companyContext->clear();
+
+        $this->entityManager->clear();
+        $this->companyContext->set($companyB);
+        $this->connection->beginTransaction();
+        $seenAsB = $this->paymentTerms->findDefault($companyA);
+        $this->connection->commit();
+        $this->companyContext->clear();
+
+        self::assertNull($seenAsB, 'Company B must not see company A\'s payment terms.');
     }
 
     private function newCompany(): CompanyId

@@ -99,6 +99,13 @@ export interface UpdateCompanyProfileRequest {
   cash_vat?: boolean;
 }
 
+export interface PaymentTermsRequest {
+  name?: string;
+  /** @minimum 0 */
+  days?: number;
+  is_default?: boolean;
+}
+
 export interface WarehouseRequest {
   code?: string;
   name?: string;
@@ -122,11 +129,8 @@ export interface CustomerRequest {
   email?: string | null;
   /** @nullable */
   phone?: string | null;
-  /**
-     * @minimum 0
-     * @nullable
-     */
-  payment_terms_days?: number | null;
+  /** @nullable */
+  payment_terms_id?: string | null;
   is_final_consumer?: boolean;
 }
 
@@ -145,11 +149,8 @@ export interface SupplierRequest {
   email?: string | null;
   /** @nullable */
   phone?: string | null;
-  /**
-     * @minimum 0
-     * @nullable
-     */
-  payment_terms_days?: number | null;
+  /** @nullable */
+  payment_terms_id?: string | null;
 }
 
 export interface ChangePasswordRequest {
@@ -348,8 +349,25 @@ export type GetCompanyProfileGet200 = {
   cash_vat?: boolean;
 };
 
+export type GetPaymentTermsList200ItemsItem = {
+  id?: string;
+  name?: string;
+  days?: number;
+  is_default?: boolean;
+  active?: boolean;
+};
+
+export type GetPaymentTermsList200 = {
+  items?: GetPaymentTermsList200ItemsItem[];
+};
+
+export type PostPaymentTermsCreate201 = {
+  id?: string;
+};
+
 export type GetDocumentTypesList200ItemsItem = {
   code?: string;
+  name?: string;
   saft_section?: string;
   signed?: boolean;
   stock_effect?: string;
@@ -412,7 +430,7 @@ export type GetCustomersList200ItemsItem = {
   /** @nullable */
   phone?: string | null;
   /** @nullable */
-  payment_terms_days?: number | null;
+  payment_terms_id?: string | null;
   is_final_consumer?: boolean;
   active?: boolean;
 };
@@ -444,7 +462,7 @@ export type GetCustomersGet200 = {
   /** @nullable */
   phone?: string | null;
   /** @nullable */
-  payment_terms_days?: number | null;
+  payment_terms_id?: string | null;
   is_final_consumer?: boolean;
   active?: boolean;
 };
@@ -472,7 +490,7 @@ export type GetSuppliersList200ItemsItem = {
   /** @nullable */
   phone?: string | null;
   /** @nullable */
-  payment_terms_days?: number | null;
+  payment_terms_id?: string | null;
   active?: boolean;
 };
 
@@ -503,7 +521,7 @@ export type GetSuppliersGet200 = {
   /** @nullable */
   phone?: string | null;
   /** @nullable */
-  payment_terms_days?: number | null;
+  payment_terms_id?: string | null;
   active?: boolean;
 };
 
@@ -2491,6 +2509,339 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPutCompanyProfileUpdateMutationOptions(options), queryClient);
+    }
+
+export const getGetPaymentTermsListUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/payment-terms`
+}
+
+export const getPaymentTermsList = async (companyId: string, options?: RequestInit): Promise<GetPaymentTermsList200> => {
+
+  return httpClient<GetPaymentTermsList200>(getGetPaymentTermsListUrl(companyId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPaymentTermsListQueryKey = (companyId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/payment-terms`
+    ] as const;
+    }
+
+
+export const getGetPaymentTermsListQueryOptions = <TData = Awaited<ReturnType<typeof getPaymentTermsList>>, TError = unknown>(companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPaymentTermsList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPaymentTermsListQueryKey(companyId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPaymentTermsList>>> = ({ signal }) => getPaymentTermsList(companyId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPaymentTermsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPaymentTermsListQueryResult = NonNullable<Awaited<ReturnType<typeof getPaymentTermsList>>>
+export type GetPaymentTermsListQueryError = unknown
+
+
+export function useGetPaymentTermsList<TData = Awaited<ReturnType<typeof getPaymentTermsList>>, TError = unknown>(
+ companyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPaymentTermsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPaymentTermsList>>,
+          TError,
+          Awaited<ReturnType<typeof getPaymentTermsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPaymentTermsList<TData = Awaited<ReturnType<typeof getPaymentTermsList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPaymentTermsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPaymentTermsList>>,
+          TError,
+          Awaited<ReturnType<typeof getPaymentTermsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPaymentTermsList<TData = Awaited<ReturnType<typeof getPaymentTermsList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPaymentTermsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetPaymentTermsList<TData = Awaited<ReturnType<typeof getPaymentTermsList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPaymentTermsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPaymentTermsListQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostPaymentTermsCreateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/payment-terms`
+}
+
+export const postPaymentTermsCreate = async (companyId: string,
+    paymentTermsRequest: PaymentTermsRequest, options?: RequestInit): Promise<PostPaymentTermsCreate201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostPaymentTermsCreate201>(getPostPaymentTermsCreateUrl(companyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(paymentTermsRequest)
+  }
+);}
+
+
+
+
+
+export const getPostPaymentTermsCreateMutationKey = () => ['postPaymentTermsCreate'] as const;
+
+export const getPostPaymentTermsCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPaymentTermsCreate>>, TError,PostPaymentTermsCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postPaymentTermsCreate>>, TError,PostPaymentTermsCreateMutationVariables, TContext> => {
+
+const mutationKey = getPostPaymentTermsCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postPaymentTermsCreate>>, PostPaymentTermsCreateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  postPaymentTermsCreate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostPaymentTermsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof postPaymentTermsCreate>>>
+    export type PostPaymentTermsCreateMutationBody = PaymentTermsRequest
+    export type PostPaymentTermsCreateMutationError = void
+    export type PostPaymentTermsCreateMutationVariables = {companyId: string;data: PaymentTermsRequest}
+
+    export const usePostPaymentTermsCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPaymentTermsCreate>>, TError,PostPaymentTermsCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postPaymentTermsCreate>>,
+        TError,
+        PostPaymentTermsCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostPaymentTermsCreateMutationOptions(options), queryClient);
+    }
+
+export const getPutPaymentTermsUpdateUrl = (companyId: string,
+    paymentTermsId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/payment-terms/${paymentTermsId}`
+}
+
+export const putPaymentTermsUpdate = async (companyId: string,
+    paymentTermsId: string,
+    paymentTermsRequest: PaymentTermsRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutPaymentTermsUpdateUrl(companyId,paymentTermsId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(paymentTermsRequest)
+  }
+);}
+
+
+
+
+
+export const getPutPaymentTermsUpdateMutationKey = () => ['putPaymentTermsUpdate'] as const;
+
+export const getPutPaymentTermsUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putPaymentTermsUpdate>>, TError,PutPaymentTermsUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putPaymentTermsUpdate>>, TError,PutPaymentTermsUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPutPaymentTermsUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putPaymentTermsUpdate>>, PutPaymentTermsUpdateMutationVariables> = (props) => {
+          const {companyId,paymentTermsId,data} = props ?? {};
+
+          return  putPaymentTermsUpdate(companyId,paymentTermsId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutPaymentTermsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof putPaymentTermsUpdate>>>
+    export type PutPaymentTermsUpdateMutationBody = PaymentTermsRequest
+    export type PutPaymentTermsUpdateMutationError = void
+    export type PutPaymentTermsUpdateMutationVariables = {companyId: string;paymentTermsId: string;data: PaymentTermsRequest}
+
+    export const usePutPaymentTermsUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putPaymentTermsUpdate>>, TError,PutPaymentTermsUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putPaymentTermsUpdate>>,
+        TError,
+        PutPaymentTermsUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutPaymentTermsUpdateMutationOptions(options), queryClient);
+    }
+
+export const getDeletePaymentTermsDeactivateUrl = (companyId: string,
+    paymentTermsId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/payment-terms/${paymentTermsId}`
+}
+
+export const deletePaymentTermsDeactivate = async (companyId: string,
+    paymentTermsId: string, options?: RequestInit): Promise<void> => {
+
+  return httpClient<void>(getDeletePaymentTermsDeactivateUrl(companyId,paymentTermsId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePaymentTermsDeactivateMutationKey = () => ['deletePaymentTermsDeactivate'] as const;
+
+export const getDeletePaymentTermsDeactivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePaymentTermsDeactivate>>, TError,DeletePaymentTermsDeactivateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deletePaymentTermsDeactivate>>, TError,DeletePaymentTermsDeactivateMutationVariables, TContext> => {
+
+const mutationKey = getDeletePaymentTermsDeactivateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePaymentTermsDeactivate>>, DeletePaymentTermsDeactivateMutationVariables> = (props) => {
+          const {companyId,paymentTermsId} = props ?? {};
+
+          return  deletePaymentTermsDeactivate(companyId,paymentTermsId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePaymentTermsDeactivateMutationResult = NonNullable<Awaited<ReturnType<typeof deletePaymentTermsDeactivate>>>
+
+    export type DeletePaymentTermsDeactivateMutationError = void
+    export type DeletePaymentTermsDeactivateMutationVariables = {companyId: string;paymentTermsId: string}
+
+    export const useDeletePaymentTermsDeactivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePaymentTermsDeactivate>>, TError,DeletePaymentTermsDeactivateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deletePaymentTermsDeactivate>>,
+        TError,
+        DeletePaymentTermsDeactivateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeletePaymentTermsDeactivateMutationOptions(options), queryClient);
     }
 
 export const getGetDocumentTypesListUrl = () => {

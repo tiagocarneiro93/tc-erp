@@ -7,6 +7,7 @@ import { ApiError } from '@/api/http-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PaymentTermsSelect } from '@/features/payment-terms/PaymentTermsSelect'
 import { CountrySelect } from '@/features/reference-data/CountrySelect'
 import { apiErrorMessage } from '@/lib/api-error'
 import { blankToNull } from '@/lib/forms'
@@ -21,7 +22,7 @@ const schema = z.object({
   country: z.string().min(1, 'Escolha o país'),
   email: z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
   phone: z.string().optional(),
-  payment_terms_days: z.string().optional(),
+  payment_terms_id: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -50,7 +51,7 @@ export function SupplierForm({ companyId, supplier, onSuccess }: SupplierFormPro
       country: supplier?.country ?? 'PT',
       email: supplier?.email ?? '',
       phone: supplier?.phone ?? '',
-      payment_terms_days: supplier?.payment_terms_days?.toString() ?? '',
+      payment_terms_id: supplier?.payment_terms_id ?? '',
     },
   })
 
@@ -69,7 +70,7 @@ export function SupplierForm({ companyId, supplier, onSuccess }: SupplierFormPro
       country: values.country,
       email: blankToNull(values.email),
       phone: blankToNull(values.phone),
-      payment_terms_days: values.payment_terms_days ? Number(values.payment_terms_days) : null,
+      payment_terms_id: blankToNull(values.payment_terms_id),
     }
 
     if (supplier) {
@@ -135,8 +136,14 @@ export function SupplierForm({ companyId, supplier, onSuccess }: SupplierFormPro
           <Input id="supplier-phone" {...register('phone')} />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="supplier-payment-terms">Prazo de pagamento (dias)</Label>
-          <Input id="supplier-payment-terms" type="number" min={0} {...register('payment_terms_days')} />
+          <Label htmlFor="supplier-payment-terms">Prazo de pagamento</Label>
+          <Controller
+            control={control}
+            name="payment_terms_id"
+            render={({ field }) => (
+              <PaymentTermsSelect id="supplier-payment-terms" companyId={companyId} value={field.value ?? ''} onValueChange={field.onChange} />
+            )}
+          />
         </div>
       </div>
 

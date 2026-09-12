@@ -25,7 +25,7 @@ final class Supplier
         private string $country,
         private ?string $email,
         private ?string $phone,
-        private ?int $paymentTermsDays,
+        private ?string $paymentTermsId,
         private bool $active,
         private readonly \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt,
@@ -44,7 +44,7 @@ final class Supplier
         string $country,
         ?string $email,
         ?string $phone,
-        ?int $paymentTermsDays,
+        ?string $paymentTermsId,
         \DateTimeImmutable $now,
     ): self {
         return new self(
@@ -59,7 +59,7 @@ final class Supplier
             $country,
             $email,
             $phone,
-            $paymentTermsDays,
+            $paymentTermsId,
             true,
             $now,
             $now,
@@ -76,7 +76,7 @@ final class Supplier
         string $country,
         ?string $email,
         ?string $phone,
-        ?int $paymentTermsDays,
+        ?string $paymentTermsId,
         \DateTimeImmutable $now,
     ): void {
         $this->code = $code;
@@ -88,7 +88,7 @@ final class Supplier
         $this->country = $country;
         $this->email = $email;
         $this->phone = $phone;
-        $this->paymentTermsDays = $paymentTermsDays;
+        $this->paymentTermsId = $paymentTermsId;
         $this->updatedAt = $now;
     }
 
@@ -153,9 +153,9 @@ final class Supplier
         return $this->phone;
     }
 
-    public function paymentTermsDays(): ?int
+    public function paymentTermsId(): ?string
     {
-        return $this->paymentTermsDays;
+        return $this->paymentTermsId;
     }
 
     public function active(): bool

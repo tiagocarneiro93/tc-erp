@@ -51,7 +51,7 @@ final class SuppliersControllerTest extends WebTestCase
             'nif' => $nif,
             'name' => 'Fornecedor Um',
             'country' => 'PT',
-            'payment_terms_days' => 60,
+            'payment_terms_id' => $this->aKnownPaymentTermsId($client, $companyId),
         ], \JSON_THROW_ON_ERROR));
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
         /** @var array{id: string} $created */
@@ -103,6 +103,26 @@ final class SuppliersControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
     }
 
+    public function testCreatingWithAnUnknownPaymentTermsIdIsRejected(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/suppliers", server: self::HEADERS, content: json_encode([
+            'code' => 'F003',
+            'nif' => $this->uniqueNif(),
+            'name' => 'Fornecedor',
+            'country' => 'PT',
+            'payment_terms_id' => '00000000-0000-7000-8000-000000000000',
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{type: string} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('https://tc-erp.example/problems/invalid-payment-terms-id', $body['type']);
+    }
+
     public function testGettingAnUnknownSupplierIsNotFound(): void
     {
         $client = static::createClient();
@@ -124,6 +144,17 @@ final class SuppliersControllerTest extends WebTestCase
         $created = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
 
         return $created['id'];
+    }
+
+    private function aKnownPaymentTermsId(KernelBrowser $client, string $companyId): string
+    {
+        $client->request('GET', "/api/v1/companies/{$companyId}/payment-terms", server: self::HEADERS);
+        self::assertResponseIsSuccessful();
+        /** @var array{items: list<array{id: string}>} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertNotEmpty($body['items'], 'Expected the default "Pronto Pagamento" payment terms seeded on company creation to exist.');
+
+        return $body['items'][0]['id'];
     }
 
     private function registerAndLogIn(KernelBrowser $client, string $email, string $password): UserId

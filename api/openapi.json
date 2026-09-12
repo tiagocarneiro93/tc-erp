@@ -1237,6 +1237,197 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/payment-terms": {
+            "get": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "get_payment_terms_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every payment term for this company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "is_default": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "post_payment_terms_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentTermsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Payment terms created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the company.manage permission."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/payment-terms/{paymentTermsId}": {
+            "put": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "put_payment_terms_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentTermsId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentTermsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Payment terms updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the company.manage permission."
+                    },
+                    "404": {
+                        "description": "No such payment terms."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Company"
+                ],
+                "operationId": "delete_payment_terms_deactivate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentTermsId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Payment terms deactivated (active = false; not a hard delete)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the company.manage permission."
+                    },
+                    "404": {
+                        "description": "No such payment terms."
+                    }
+                }
+            }
+        },
         "/api/v1/document-types": {
             "get": {
                 "tags": [
@@ -1255,6 +1446,9 @@
                                             "items": {
                                                 "properties": {
                                                     "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
                                                         "type": "string"
                                                     },
                                                     "saft_section": {
@@ -1625,8 +1819,9 @@
                                                         "type": "string",
                                                         "nullable": true
                                                     },
-                                                    "payment_terms_days": {
-                                                        "type": "integer",
+                                                    "payment_terms_id": {
+                                                        "type": "string",
+                                                        "format": "uuid",
                                                         "nullable": true
                                                     },
                                                     "is_final_consumer": {
@@ -1769,8 +1964,9 @@
                                             "type": "string",
                                             "nullable": true
                                         },
-                                        "payment_terms_days": {
-                                            "type": "integer",
+                                        "payment_terms_id": {
+                                            "type": "string",
+                                            "format": "uuid",
                                             "nullable": true
                                         },
                                         "is_final_consumer": {
@@ -1958,8 +2154,9 @@
                                                         "type": "string",
                                                         "nullable": true
                                                     },
-                                                    "payment_terms_days": {
-                                                        "type": "integer",
+                                                    "payment_terms_id": {
+                                                        "type": "string",
+                                                        "format": "uuid",
                                                         "nullable": true
                                                     },
                                                     "active": {
@@ -2099,8 +2296,9 @@
                                             "type": "string",
                                             "nullable": true
                                         },
-                                        "payment_terms_days": {
-                                            "type": "integer",
+                                        "payment_terms_id": {
+                                            "type": "string",
+                                            "format": "uuid",
                                             "nullable": true
                                         },
                                         "active": {
@@ -3095,6 +3293,24 @@
                 },
                 "type": "object"
             },
+            "PaymentTermsRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "days": {
+                        "type": "integer",
+                        "default": 0,
+                        "minimum": 0
+                    },
+                    "is_default": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
             "WarehouseRequest": {
                 "properties": {
                     "code": {
@@ -3160,11 +3376,10 @@
                         "nullable": true,
                         "default": null
                     },
-                    "payment_terms_days": {
-                        "type": "integer",
+                    "payment_terms_id": {
+                        "type": "string",
                         "nullable": true,
-                        "default": null,
-                        "minimum": 0
+                        "default": null
                     },
                     "is_final_consumer": {
                         "type": "boolean",
@@ -3216,11 +3431,10 @@
                         "nullable": true,
                         "default": null
                     },
-                    "payment_terms_days": {
-                        "type": "integer",
+                    "payment_terms_id": {
+                        "type": "string",
                         "nullable": true,
-                        "default": null,
-                        "minimum": 0
+                        "default": null
                     }
                 },
                 "type": "object"

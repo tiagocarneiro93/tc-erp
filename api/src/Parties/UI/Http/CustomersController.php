@@ -65,7 +65,7 @@ final class CustomersController
             $request->country,
             $request->email,
             $request->phone,
-            $request->payment_terms_days,
+            $request->payment_terms_id,
             $request->is_final_consumer,
             $httpRequest->getClientIp() ?? '',
             $httpRequest->headers->get('User-Agent', ''),
@@ -90,7 +90,7 @@ final class CustomersController
             new OA\Property(property: 'country', type: 'string'),
             new OA\Property(property: 'email', type: 'string', nullable: true),
             new OA\Property(property: 'phone', type: 'string', nullable: true),
-            new OA\Property(property: 'payment_terms_days', type: 'integer', nullable: true),
+            new OA\Property(property: 'payment_terms_id', type: 'string', format: 'uuid', nullable: true),
             new OA\Property(property: 'is_final_consumer', type: 'boolean'),
             new OA\Property(property: 'active', type: 'boolean'),
         ], type: 'object')),
@@ -126,7 +126,7 @@ final class CustomersController
         new OA\Property(property: 'country', type: 'string'),
         new OA\Property(property: 'email', type: 'string', nullable: true),
         new OA\Property(property: 'phone', type: 'string', nullable: true),
-        new OA\Property(property: 'payment_terms_days', type: 'integer', nullable: true),
+        new OA\Property(property: 'payment_terms_id', type: 'string', format: 'uuid', nullable: true),
         new OA\Property(property: 'is_final_consumer', type: 'boolean'),
         new OA\Property(property: 'active', type: 'boolean'),
     ]))]
@@ -158,7 +158,7 @@ final class CustomersController
             $request->country,
             $request->email,
             $request->phone,
-            $request->payment_terms_days,
+            $request->payment_terms_id,
             $httpRequest->getClientIp() ?? '',
             $httpRequest->headers->get('User-Agent', ''),
         ));
@@ -183,7 +183,7 @@ final class CustomersController
     }
 
     /**
-     * @return array{id: string, code: string, nif: string, name: string, address: ?string, postal_code: ?string, city: ?string, country: string, email: ?string, phone: ?string, payment_terms_days: ?int, is_final_consumer: bool, active: bool}
+     * @return array{id: string, code: string, nif: string, name: string, address: ?string, postal_code: ?string, city: ?string, country: string, email: ?string, phone: ?string, payment_terms_id: ?string, is_final_consumer: bool, active: bool}
      */
     private static function toArray(CustomerView $customer): array
     {
@@ -198,7 +198,7 @@ final class CustomersController
             'country' => $customer->country,
             'email' => $customer->email,
             'phone' => $customer->phone,
-            'payment_terms_days' => $customer->paymentTermsDays,
+            'payment_terms_id' => $customer->paymentTermsId,
             'is_final_consumer' => $customer->isFinalConsumer,
             'active' => $customer->active,
         ];

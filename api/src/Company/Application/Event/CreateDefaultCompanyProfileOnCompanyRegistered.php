@@ -24,6 +24,10 @@ final class CreateDefaultCompanyProfileOnCompanyRegistered
 
     public function __invoke(CompanyRegistered $event): void
     {
+        if (null !== $this->profiles->find($event->companyId)) {
+            return;
+        }
+
         $this->profiles->save(CompanyProfile::createDefault($event->companyId, $event->nif, $event->legalName));
     }
 }

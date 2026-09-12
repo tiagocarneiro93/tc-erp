@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Company\Domain\PaymentTerms" table="payment_terms">
+        <id name="id" type="payment_terms_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="name" type="string" column="name" />
+        <field name="days" type="integer" column="days" />
+        <field name="isDefault" type="boolean" column="is_default" />
+        <field name="active" type="boolean" column="active" />
+
+        <indexes>
+            <index name="idx_payment_terms_company_id" columns="company_id" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

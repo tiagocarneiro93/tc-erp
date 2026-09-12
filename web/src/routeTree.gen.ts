@@ -20,6 +20,7 @@ import { Route as AuthenticatedCCompanyIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCCompanyIdIndexRouteImport } from './routes/_authenticated.c.$companyId.index'
 import { Route as AuthenticatedCCompanyIdCustomersRouteImport } from './routes/_authenticated.c.$companyId.customers'
 import { Route as AuthenticatedCCompanyIdMembersRouteImport } from './routes/_authenticated.c.$companyId.members'
+import { Route as AuthenticatedCCompanyIdPaymentTermsRouteImport } from './routes/_authenticated.c.$companyId.payment-terms'
 import { Route as AuthenticatedCCompanyIdPriceListsRouteImport } from './routes/_authenticated.c.$companyId.price-lists'
 import { Route as AuthenticatedCCompanyIdProductFamiliesRouteImport } from './routes/_authenticated.c.$companyId.product-families'
 import { Route as AuthenticatedCCompanyIdProductsRouteImport } from './routes/_authenticated.c.$companyId.products'
@@ -88,6 +89,12 @@ const AuthenticatedCCompanyIdMembersRoute =
     path: '/members',
     getParentRoute: () => AuthenticatedCCompanyIdRoute,
   } as any)
+const AuthenticatedCCompanyIdPaymentTermsRoute =
+  AuthenticatedCCompanyIdPaymentTermsRouteImport.update({
+    id: '/payment-terms',
+    path: '/payment-terms',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
 const AuthenticatedCCompanyIdPriceListsRoute =
   AuthenticatedCCompanyIdPriceListsRouteImport.update({
     id: '/price-lists',
@@ -153,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/c/$companyId': typeof AuthenticatedCCompanyIdRouteWithChildren
   '/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
   '/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
+  '/c/$companyId/payment-terms': typeof AuthenticatedCCompanyIdPaymentTermsRoute
   '/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
   '/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
   '/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsRouteWithChildren
@@ -173,6 +181,7 @@ export interface FileRoutesByTo {
   '/companies': typeof AuthenticatedCompaniesRoute
   '/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
   '/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
+  '/c/$companyId/payment-terms': typeof AuthenticatedCCompanyIdPaymentTermsRoute
   '/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
   '/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
   '/c/$companyId/reference-data': typeof AuthenticatedCCompanyIdReferenceDataRoute
@@ -195,6 +204,7 @@ export interface FileRoutesById {
   '/_authenticated/c/$companyId': typeof AuthenticatedCCompanyIdRouteWithChildren
   '/_authenticated/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
   '/_authenticated/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
+  '/_authenticated/c/$companyId/payment-terms': typeof AuthenticatedCCompanyIdPaymentTermsRoute
   '/_authenticated/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
   '/_authenticated/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
   '/_authenticated/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsRouteWithChildren
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/c/$companyId'
     | '/c/$companyId/customers'
     | '/c/$companyId/members'
+    | '/c/$companyId/payment-terms'
     | '/c/$companyId/price-lists'
     | '/c/$companyId/product-families'
     | '/c/$companyId/products'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/companies'
     | '/c/$companyId/customers'
     | '/c/$companyId/members'
+    | '/c/$companyId/payment-terms'
     | '/c/$companyId/price-lists'
     | '/c/$companyId/product-families'
     | '/c/$companyId/reference-data'
@@ -259,6 +271,7 @@ export interface FileRouteTypes {
     | '/_authenticated/c/$companyId'
     | '/_authenticated/c/$companyId/customers'
     | '/_authenticated/c/$companyId/members'
+    | '/_authenticated/c/$companyId/payment-terms'
     | '/_authenticated/c/$companyId/price-lists'
     | '/_authenticated/c/$companyId/product-families'
     | '/_authenticated/c/$companyId/products'
@@ -358,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCCompanyIdMembersRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdRoute
     }
+    '/_authenticated/c/$companyId/payment-terms': {
+      id: '/_authenticated/c/$companyId/payment-terms'
+      path: '/payment-terms'
+      fullPath: '/c/$companyId/payment-terms'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdPaymentTermsRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
     '/_authenticated/c/$companyId/price-lists': {
       id: '/_authenticated/c/$companyId/price-lists'
       path: '/price-lists'
@@ -445,6 +465,7 @@ const AuthenticatedCCompanyIdProductsRouteWithChildren =
 interface AuthenticatedCCompanyIdRouteChildren {
   AuthenticatedCCompanyIdCustomersRoute: typeof AuthenticatedCCompanyIdCustomersRoute
   AuthenticatedCCompanyIdMembersRoute: typeof AuthenticatedCCompanyIdMembersRoute
+  AuthenticatedCCompanyIdPaymentTermsRoute: typeof AuthenticatedCCompanyIdPaymentTermsRoute
   AuthenticatedCCompanyIdPriceListsRoute: typeof AuthenticatedCCompanyIdPriceListsRoute
   AuthenticatedCCompanyIdProductFamiliesRoute: typeof AuthenticatedCCompanyIdProductFamiliesRoute
   AuthenticatedCCompanyIdProductsRoute: typeof AuthenticatedCCompanyIdProductsRouteWithChildren
@@ -460,6 +481,8 @@ const AuthenticatedCCompanyIdRouteChildren: AuthenticatedCCompanyIdRouteChildren
     AuthenticatedCCompanyIdCustomersRoute:
       AuthenticatedCCompanyIdCustomersRoute,
     AuthenticatedCCompanyIdMembersRoute: AuthenticatedCCompanyIdMembersRoute,
+    AuthenticatedCCompanyIdPaymentTermsRoute:
+      AuthenticatedCCompanyIdPaymentTermsRoute,
     AuthenticatedCCompanyIdPriceListsRoute:
       AuthenticatedCCompanyIdPriceListsRoute,
     AuthenticatedCCompanyIdProductFamiliesRoute:

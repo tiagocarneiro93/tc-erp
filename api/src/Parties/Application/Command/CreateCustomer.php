@@ -20,7 +20,7 @@ final class CreateCustomer
         public readonly string $country,
         public readonly ?string $email,
         public readonly ?string $phone,
-        public readonly ?int $paymentTermsDays,
+        public readonly ?string $paymentTermsId,
         public readonly bool $isFinalConsumer,
         public readonly string $ip,
         public readonly string $userAgent,

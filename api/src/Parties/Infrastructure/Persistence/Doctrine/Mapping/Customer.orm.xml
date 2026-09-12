@@ -19,7 +19,7 @@
         <field name="country" type="string" column="country" />
         <field name="email" type="string" column="email" nullable="true" />
         <field name="phone" type="string" column="phone" nullable="true" />
-        <field name="paymentTermsDays" type="integer" column="payment_terms_days" nullable="true" />
+        <field name="paymentTermsId" type="string" column="payment_terms_id" nullable="true" />
         <field name="priceListId" type="string" column="price_list_id" nullable="true" />
         <field name="isFinalConsumer" type="boolean" column="is_final_consumer" />
         <field name="active" type="boolean" column="active" />

@@ -19,7 +19,7 @@
         <field name="country" type="string" column="country" />
         <field name="email" type="string" column="email" nullable="true" />
         <field name="phone" type="string" column="phone" nullable="true" />
-        <field name="paymentTermsDays" type="integer" column="payment_terms_days" nullable="true" />
+        <field name="paymentTermsId" type="string" column="payment_terms_id" nullable="true" />
         <field name="active" type="boolean" column="active" />
         <field name="createdAt" type="datetimetz_immutable" column="created_at" />
         <field name="updatedAt" type="datetimetz_immutable" column="updated_at" />

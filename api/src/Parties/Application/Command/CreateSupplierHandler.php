@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Parties\Application\Command;
 
+use App\Parties\Domain\Exception\InvalidPaymentTermsId;
 use App\Parties\Domain\Supplier;
 use App\Parties\Domain\SupplierRepository;
 use App\Shared\Domain\Audit\AuditLogger;
@@ -14,6 +15,7 @@ use App\Shared\Domain\Exception\InvalidCountryCode;
 use App\Shared\Domain\Exception\InvalidNif;
 use App\Shared\Domain\Exception\PermissionDenied;
 use App\Shared\Domain\Nif;
+use App\Shared\Domain\PaymentTermsExistenceChecker;
 use App\Shared\Domain\Security\PermissionChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -23,6 +25,7 @@ final class CreateSupplierHandler
     public function __construct(
         private readonly SupplierRepository $suppliers,
         private readonly CountryRepository $countries,
+        private readonly PaymentTermsExistenceChecker $paymentTerms,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
         private readonly AuditLogger $auditLogger,
@@ -48,6 +51,10 @@ final class CreateSupplierHandler
             throw new InvalidCountryCode($command->country);
         }
 
+        if (null !== $command->paymentTermsId && !$this->paymentTerms->exists($companyId, $command->paymentTermsId)) {
+            throw new InvalidPaymentTermsId($command->paymentTermsId);
+        }
+
         $now = $this->clock->now();
         $supplier = Supplier::create(
             $command->supplierId,
@@ -61,7 +68,7 @@ final class CreateSupplierHandler
             $command->country,
             $command->email,
             $command->phone,
-            $command->paymentTermsDays,
+            $command->paymentTermsId,
             $now,
         );
         $this->suppliers->save($supplier);

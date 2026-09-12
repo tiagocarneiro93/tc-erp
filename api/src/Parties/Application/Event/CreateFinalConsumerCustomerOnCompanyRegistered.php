@@ -19,6 +19,10 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * Phase 2 issuance concern — this only seeds the record
  * (docs/plans/phase-1.md task 1.5). Same event-driven pattern as
  * Company's own default-profile seeding (docs/decisions/0004).
+ *
+ * Idempotent: `app:seed` backfills companies that predate this listener by
+ * re-dispatching `CompanyRegistered` rather than depending on this module's
+ * domain directly, which Deptrac forbids from `Platform\Infrastructure`.
  */
 #[AsMessageHandler(bus: 'event.bus')]
 final class CreateFinalConsumerCustomerOnCompanyRegistered
@@ -33,6 +37,12 @@ final class CreateFinalConsumerCustomerOnCompanyRegistered
 
     public function __invoke(CompanyRegistered $event): void
     {
+        foreach ($this->customers->search($event->companyId, self::FINAL_CONSUMER_CODE) as $existing) {
+            if (self::FINAL_CONSUMER_CODE === $existing->code()) {
+                return;
+            }
+        }
+
         $this->customers->save(Customer::create(
             CustomerId::generate(),
             $event->companyId,

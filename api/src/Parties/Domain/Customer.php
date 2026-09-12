@@ -29,7 +29,7 @@ final class Customer
         private string $country,
         private ?string $email,
         private ?string $phone,
-        private ?int $paymentTermsDays,
+        private ?string $paymentTermsId,
         private ?string $priceListId,
         private bool $isFinalConsumer,
         private bool $active,
@@ -50,7 +50,7 @@ final class Customer
         string $country,
         ?string $email,
         ?string $phone,
-        ?int $paymentTermsDays,
+        ?string $paymentTermsId,
         bool $isFinalConsumer,
         \DateTimeImmutable $now,
     ): self {
@@ -66,7 +66,7 @@ final class Customer
             $country,
             $email,
             $phone,
-            $paymentTermsDays,
+            $paymentTermsId,
             null,
             $isFinalConsumer,
             true,
@@ -85,7 +85,7 @@ final class Customer
         string $country,
         ?string $email,
         ?string $phone,
-        ?int $paymentTermsDays,
+        ?string $paymentTermsId,
         \DateTimeImmutable $now,
     ): void {
         $this->code = $code;
@@ -97,7 +97,7 @@ final class Customer
         $this->country = $country;
         $this->email = $email;
         $this->phone = $phone;
-        $this->paymentTermsDays = $paymentTermsDays;
+        $this->paymentTermsId = $paymentTermsId;
         $this->updatedAt = $now;
     }
 
@@ -162,9 +162,9 @@ final class Customer
         return $this->phone;
     }
 
-    public function paymentTermsDays(): ?int
+    public function paymentTermsId(): ?string
     {
-        return $this->paymentTermsDays;
+        return $this->paymentTermsId;
     }
 
     /**
