@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Catalog\Application\Command;
 
+use App\Catalog\Domain\Exception\ExemptionReasonRequired;
 use App\Catalog\Domain\Exception\InvalidExemptionReasonCode;
 use App\Catalog\Domain\Exception\InvalidProductKind;
 use App\Catalog\Domain\Exception\InvalidProductType;
@@ -19,6 +20,7 @@ use App\Shared\Domain\Company\CompanyContext;
 use App\Shared\Domain\Exception\PermissionDenied;
 use App\Shared\Domain\Security\PermissionChecker;
 use App\Shared\Domain\Tax\ExemptionReasonExistenceChecker;
+use App\Shared\Domain\Tax\TaxRateExemptionChecker;
 use App\Shared\Domain\Tax\TaxRateExistenceChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -30,6 +32,7 @@ final class CreateProductHandler
         private readonly ProductFamilyRepository $families,
         private readonly UnitRepository $units,
         private readonly TaxRateExistenceChecker $taxRates,
+        private readonly TaxRateExemptionChecker $taxRateExemption,
         private readonly ExemptionReasonExistenceChecker $exemptionReasons,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
@@ -67,6 +70,10 @@ final class CreateProductHandler
 
         if (null !== $command->exemptionReasonCode && !$this->exemptionReasons->exists($command->exemptionReasonCode)) {
             throw new InvalidExemptionReasonCode($command->exemptionReasonCode);
+        }
+
+        if (null === $command->exemptionReasonCode && $this->taxRateExemption->isExempt($command->taxRateId)) {
+            throw new ExemptionReasonRequired();
         }
 
         $this->products->save(Product::create(

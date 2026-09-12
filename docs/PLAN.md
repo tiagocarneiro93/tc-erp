@@ -299,6 +299,12 @@ Kit-rate mismatch, price preview and cost-estimate rendering reuse the exact fie
 
 **Notes:** every criterion this session can verify mechanically is green; the two 🧑 items are the owner's own to close — Phase 2 does not start until they are. `onboarding.spec.ts`'s pre-existing non-idempotency (noted under task 1.10) is a test-environment gap the owner may want tracked separately, not a Phase 1 blocker.
 
+**Fixes from owner testing (post-1.10):**
+- `tax_rates` was missing the exempt (`ISE`, SAF-T TaxCode) row entirely — only `RED`/`INT`/`NOR` were seeded in task 1.2. Added via an additive migration (`Version20260912100000`, never editing the committed one): 0% for every region. 0% for an exemption isn't a legally variable figure the way the disputed PT-AC/PT-MA percentages are, so this carries no `[VERIFY]`.
+- Selecting the exempt rate on a product without an `exemption_reason_code` is now rejected server-side (`ExemptionReasonRequired`, 422) — a new `TaxRateExemptionChecker` cross-module port (ADR 0004's pattern again), checked in both `CreateProductHandler` and `UpdateProductHandler`. The web form mirrors this: the tax-rate list only offers Isento/Reduzida/Intermédia/Normal (never `OUT`) filtered to the company's own `fiscal_region` (read from `GET /company-profile`, defaulting to `PT`), and the exemption-reason field is marked required and validated client-side before submit when Isento is selected — the source of truth is still the backend rejection, this is only UX.
+- Added a short (uncited) caption under "Tipo (SAF-T)" explaining the five letters — flagged in-code as not yet sourced from a `docs/legal/` document, per CLAUDE.md's rule on AT formats; verify against the official SAF-T PT technical spec before treating it as authoritative.
+- The web app's own `node` Docker service never mounted `api/`, so `orval.config.ts`'s relative `../api/openapi.json` resolved to nothing inside the container — `make openapi` failed with an ENOENT on a real (non-sandbox) Docker Compose setup. Fixed by adding `./api:/api` alongside the existing `./web:/app` mount. Never caught earlier because this session's own sandbox has no Docker daemon; every prior verification ran the two `make openapi` steps directly on the host instead.
+
 ---
 
 ## Phase 2 — Fiscal core (§6.6–6.9, §7.1–7.4, §7.6, §7.9)

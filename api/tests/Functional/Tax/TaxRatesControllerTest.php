@@ -38,7 +38,8 @@ final class TaxRatesControllerTest extends WebTestCase
 
         /** @var array{items: list<array{region: string, code: string, percentage: string}>} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertCount(9, $body['items']);
+        // 9 RED/INT/NOR rows (task 1.2) + 3 ISE (exempt) rows, one per region.
+        self::assertCount(12, $body['items']);
     }
 
     public function testFiltersByRegion(): void
@@ -51,7 +52,7 @@ final class TaxRatesControllerTest extends WebTestCase
 
         /** @var array{items: list<array{region: string, code: string, percentage: string}>} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertCount(3, $body['items']);
+        self::assertCount(4, $body['items']);
 
         $byCode = [];
         foreach ($body['items'] as $item) {
@@ -61,6 +62,7 @@ final class TaxRatesControllerTest extends WebTestCase
         self::assertSame('23.00', $byCode['NOR']);
         self::assertSame('13.00', $byCode['INT']);
         self::assertSame('6.00', $byCode['RED']);
+        self::assertSame('0.00', $byCode['ISE']);
     }
 
     public function testFiltersByAsOfDate(): void

@@ -152,6 +152,9 @@ services:
     App\Shared\Domain\Tax\TaxRateConverter:
         alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineTaxRateRepository
         public: true
+    App\Shared\Domain\Tax\TaxRateExemptionChecker:
+        alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineTaxRateRepository
+        public: true
     App\Shared\Domain\Tax\ExemptionReasonExistenceChecker:
         alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineExemptionReasonRepository
         public: true

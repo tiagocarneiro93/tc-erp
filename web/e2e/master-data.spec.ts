@@ -72,7 +72,7 @@ test('customers, products with prices, kits, warehouses, and company isolation',
     await page.getByLabel('Unidade').click()
     await page.getByRole('option', { name: 'UN' }).click()
     await page.getByLabel('Taxa de IVA').click()
-    await page.getByRole('option').first().click()
+    await page.getByRole('option', { name: 'Normal' }).click()
     await page.getByRole('button', { name: 'Criar produto' }).click()
     await expect(page.getByText(description)).toBeVisible()
   }

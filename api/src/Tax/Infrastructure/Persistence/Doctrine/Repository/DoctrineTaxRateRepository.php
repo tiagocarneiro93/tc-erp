@@ -6,6 +6,7 @@ namespace App\Tax\Infrastructure\Persistence\Doctrine\Repository;
 
 use App\Shared\Domain\Decimal\Decimal;
 use App\Shared\Domain\Tax\TaxRateConverter;
+use App\Shared\Domain\Tax\TaxRateExemptionChecker;
 use App\Shared\Domain\Tax\TaxRateExistenceChecker;
 use App\Tax\Domain\TaxRate;
 use App\Tax\Domain\TaxRateId;
@@ -14,7 +15,7 @@ use App\Tax\Domain\VatConversion;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class DoctrineTaxRateRepository implements TaxRateRepository, TaxRateExistenceChecker, TaxRateConverter
+final class DoctrineTaxRateRepository implements TaxRateRepository, TaxRateExistenceChecker, TaxRateConverter, TaxRateExemptionChecker
 {
     public function __construct(
         #[Autowire(service: 'doctrine.orm.default_entity_manager')]
@@ -65,6 +66,11 @@ final class DoctrineTaxRateRepository implements TaxRateRepository, TaxRateExist
     public function exists(string $taxRateId): bool
     {
         return null !== $this->findById($taxRateId);
+    }
+
+    public function isExempt(string $taxRateId): bool
+    {
+        return 'ISE' === $this->findById($taxRateId)?->code();
     }
 
     public function convertToOtherMode(string $taxRateId, string $amount, bool $includesVat): ?string

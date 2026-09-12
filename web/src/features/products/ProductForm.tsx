@@ -3,6 +3,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import {
+  useGetCompanyProfileGet,
   useGetExemptionReasonsList,
   useGetProductFamiliesList,
   useGetTaxRatesList,
@@ -10,6 +11,7 @@ import {
   usePostProductsCreate,
   usePutProductsUpdate,
   type GetProductsGet200,
+  type GetTaxRatesList200ItemsItem,
 } from '@/api/generated'
 import { ApiError } from '@/api/http-client'
 import { Button } from '@/components/ui/button'
@@ -21,6 +23,15 @@ import { blankToNull } from '@/lib/forms'
 
 const PRODUCT_TYPES = ['P', 'S', 'O', 'E', 'I'] as const
 const NONE = '__none__'
+const EXEMPT_CODE = 'ISE'
+
+// A product only ever needs one of the four VAT categories that apply to
+// sales — never SAF-T's `OUT` (out of scope of VAT, used elsewhere, not on
+// a product's own master data). Ordered the way a user thinks about them,
+// least to most taxed, exempt first since it needs the extra "motivo"
+// field right next to it.
+const SELECTABLE_TAX_CODES = ['ISE', 'RED', 'INT', 'NOR'] as const
+const TAX_CODE_LABELS: Record<string, string> = { ISE: 'Isento', RED: 'Reduzida', INT: 'Intermédia', NOR: 'Normal' }
 
 const schema = z.object({
   code: z.string().min(1, 'Introduza o código'),
@@ -45,14 +56,31 @@ interface ProductFormProps {
 
 export function ProductForm({ companyId, product, onSuccess }: ProductFormProps) {
   const { data: families } = useGetProductFamiliesList(companyId)
-  const { data: taxRates } = useGetTaxRatesList()
+  const { data: companyProfile } = useGetCompanyProfileGet(companyId)
+  const fiscalRegion = companyProfile?.fiscal_region ?? 'PT'
+  const { data: taxRatesResponse } = useGetTaxRatesList({ region: fiscalRegion })
   const { data: exemptionReasons } = useGetExemptionReasonsList()
   const { data: units } = useGetUnitsList()
+
+  // Only this company's own region, and only the four VAT categories a
+  // product can carry — never every region's rows at once, and never
+  // SAF-T's `OUT`.
+  const taxRates = (taxRatesResponse?.items ?? [])
+    .filter((rate): rate is GetTaxRatesList200ItemsItem & { code: string } =>
+      (SELECTABLE_TAX_CODES as readonly string[]).includes(rate.code ?? ''),
+    )
+    .sort(
+      (a, b) =>
+        (SELECTABLE_TAX_CODES as readonly string[]).indexOf(a.code) -
+        (SELECTABLE_TAX_CODES as readonly string[]).indexOf(b.code),
+    )
 
   const {
     register,
     control,
     handleSubmit,
+    setError,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -74,7 +102,16 @@ export function ProductForm({ companyId, product, onSuccess }: ProductFormProps)
   const update = usePutProductsUpdate<ApiError>()
   const mutation = product ? update : create
 
+  const selectedTaxRateId = watch('tax_rate_id')
+  const isExempt = taxRates.some((rate) => rate.id === selectedTaxRateId && EXEMPT_CODE === rate.code)
+
   const onSubmit = handleSubmit((values) => {
+    if (isExempt && NONE === values.exemption_reason_code) {
+      setError('exemption_reason_code', { message: 'Obrigatório quando a taxa é Isento.' })
+
+      return
+    }
+
     const data = {
       code: values.code,
       description: values.description,
@@ -131,6 +168,14 @@ export function ProductForm({ companyId, product, onSuccess }: ProductFormProps)
               </Select>
             )}
           />
+          {/* CLAUDE.md: never guess AT formats. These letter->meaning glosses are
+              well-known SAF-T PT terminology but are NOT yet cited from a
+              docs/legal/ source — verify against the official SAF-T PT
+              technical spec before treating this caption as authoritative. */}
+          <p className="text-muted-foreground text-xs">
+            Classificação SAF-T do artigo: P = produto, S = serviço, O = outro, E = imposto especial de consumo, I =
+            outro imposto/taxa.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -207,7 +252,7 @@ export function ProductForm({ companyId, product, onSuccess }: ProductFormProps)
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="product-tax-rate">Taxa de IVA</Label>
+          <Label htmlFor="product-tax-rate">Taxa de IVA ({fiscalRegion})</Label>
           <Controller
             control={control}
             name="tax_rate_id"
@@ -217,9 +262,9 @@ export function ProductForm({ companyId, product, onSuccess }: ProductFormProps)
                   <SelectValue placeholder="Escolha a taxa" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(taxRates?.items ?? []).map((rate) => (
+                  {taxRates.map((rate) => (
                     <SelectItem key={rate.id} value={rate.id ?? ''}>
-                      {rate.region} {rate.code} — {rate.percentage}%
+                      {TAX_CODE_LABELS[rate.code] ?? rate.code} — {rate.percentage}%
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -230,17 +275,17 @@ export function ProductForm({ companyId, product, onSuccess }: ProductFormProps)
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="product-exemption-reason">Motivo de isenção</Label>
+          <Label htmlFor="product-exemption-reason">Motivo de isenção{isExempt && ' (obrigatório)'}</Label>
           <Controller
             control={control}
             name="exemption_reason_code"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger id="product-exemption-reason">
+                <SelectTrigger id="product-exemption-reason" aria-invalid={!!errors.exemption_reason_code}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NONE}>Nenhum</SelectItem>
+                  {!isExempt && <SelectItem value={NONE}>Nenhum</SelectItem>}
                   {(exemptionReasons?.items ?? []).map((reason) => (
                     <SelectItem key={reason.code} value={reason.code ?? ''}>
                       {reason.code} — {reason.description}
@@ -250,6 +295,9 @@ export function ProductForm({ companyId, product, onSuccess }: ProductFormProps)
               </Select>
             )}
           />
+          {errors.exemption_reason_code && (
+            <p className="text-destructive text-sm">{errors.exemption_reason_code.message}</p>
+          )}
         </div>
       </div>
 

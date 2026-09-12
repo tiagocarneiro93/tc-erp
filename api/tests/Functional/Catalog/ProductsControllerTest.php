@@ -193,6 +193,75 @@ final class ProductsControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
     }
 
+    public function testCreatingWithTheExemptRateAndNoExemptionReasonIsRejected(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/products", server: self::HEADERS, content: json_encode([
+            'code' => 'P007',
+            'description' => 'Exempt, no reason',
+            'type' => 'P',
+            'kind' => 'simple',
+            'unit_code' => 'UN',
+            'tax_rate_id' => $this->anExemptTaxRateId(),
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{type: string} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('https://tc-erp.example/problems/exemption-reason-required', $body['type']);
+    }
+
+    public function testCreatingWithTheExemptRateAndAnExemptionReasonSucceeds(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/products", server: self::HEADERS, content: json_encode([
+            'code' => 'P008',
+            'description' => 'Exempt, with reason',
+            'type' => 'P',
+            'kind' => 'simple',
+            'unit_code' => 'UN',
+            'tax_rate_id' => $this->anExemptTaxRateId(),
+            'exemption_reason_code' => 'M04',
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+    }
+
+    public function testUpdatingToTheExemptRateWithoutAnExemptionReasonIsRejected(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/products", server: self::HEADERS, content: json_encode([
+            'code' => 'P009',
+            'description' => 'Normal, then exempt',
+            'type' => 'P',
+            'kind' => 'simple',
+            'unit_code' => 'UN',
+            'tax_rate_id' => $this->aKnownTaxRateId(),
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $created */
+        $created = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        $client->request('PUT', "/api/v1/companies/{$companyId}/products/{$created['id']}", server: self::HEADERS, content: json_encode([
+            'code' => 'P009',
+            'description' => 'Normal, then exempt',
+            'type' => 'P',
+            'unit_code' => 'UN',
+            'tax_rate_id' => $this->anExemptTaxRateId(),
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(422);
+    }
+
     public function testFilteringByFamilyActiveAndTrackStock(): void
     {
         $client = static::createClient();
@@ -267,6 +336,19 @@ final class ProductsControllerTest extends WebTestCase
         self::assertNotEmpty($rates, 'Expected the PT tax rates seeded by task 1.2 to exist.');
 
         return $rates[0]->id()->toString();
+    }
+
+    private function anExemptTaxRateId(): string
+    {
+        /** @var TaxRateRepository $taxRates */
+        $taxRates = static::getContainer()->get(TaxRateRepository::class);
+        foreach ($taxRates->findAll('PT', null) as $rate) {
+            if ('ISE' === $rate->code()) {
+                return $rate->id()->toString();
+            }
+        }
+
+        self::fail('Expected the PT/ISE (0%) exempt tax rate to exist.');
     }
 
     private function createCompany(KernelBrowser $client, string $legalName = 'A Company Lda'): string
