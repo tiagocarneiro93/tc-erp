@@ -287,6 +287,18 @@ Kit-rate mismatch, price preview and cost-estimate rendering reuse the exact fie
 
 `onboarding.spec.ts` (task 0.13) is unrelated and untouched; it was observed failing on a *second* local run in this sandbox because it creates a company with a hardcoded, non-unique name against a dev database with no per-run reset — an existing environmental gap in that test, not a regression from this task (confirmed by inspection; `master-data.spec.ts` avoids the same trap with a `Date.now()`-suffixed company name). Sidebar (`AppSidebar.tsx`) gained one nav entry per new screen. 22 Vitest tests, 2 e2e specs (both passing individually); ESLint/tsc/`vite build` all clean.
 
+### Phase 1 exit verification
+- [x] Full CRUD via API and web for customers, suppliers, products, product families, price lists, warehouses.
+- [x] Reference data (countries, units, tax rates, exemption reasons, document types) browsable read-only in API and web.
+- [x] Isolation test for every new company-scoped table (`CatalogIsolationTest`, `InventoryIsolationTest`, and Parties'/Company's own from 1.4/1.5); `CompanyIsolationSchemaTest` (the CI schema check — every `company_id` table has an RLS policy) green.
+- [x] `make openapi` run; `api/openapi.json` and the regenerated web client committed; `OpenApiSpecIsUpToDateTest` green.
+- [x] `make lint` and `make test` green, re-verified as one final pass across the whole of Phase 1 (not just per-task): 236 PHPUnit tests/846 assertions, PHPStan, Deptrac and PHP-CS-Fixer clean on the API; ESLint (0 errors), `tsc -b`, `vite build` and 22 Vitest tests clean on the web app.
+- [x] Playwright e2e from task 1.10 (`master-data.spec.ts`) passes.
+- [ ] 🧑 **Owner action required:** confirm the mainland tax-rate/exemption-reason seed data (task 1.2) and confirm or correct the candidate PT-AC/PT-MA rates against the actual regional decree, before Phase 2 needs them.
+- [ ] 🧑 **Owner action required:** review Phase 1 (this plan, the resulting code, and the two items above) before Phase 2 starts.
+
+**Notes:** every criterion this session can verify mechanically is green; the two 🧑 items are the owner's own to close — Phase 2 does not start until they are. `onboarding.spec.ts`'s pre-existing non-idempotency (noted under task 1.10) is a test-environment gap the owner may want tracked separately, not a Phase 1 blocker.
+
 ---
 
 ## Phase 2 — Fiscal core (§6.6–6.9, §7.1–7.4, §7.6, §7.9)
