@@ -6,6 +6,106 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/v1/companies/{companyId}/price-lists": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "get_price_lists_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every price list for this company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "default_includes_vat": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "post_price_lists_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PriceListRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Price list created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/product-families": {
             "get": {
                 "tags": [
@@ -157,6 +257,193 @@
                     },
                     "422": {
                         "description": "This would make the family tree cyclic, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/products/{productId}/prices/{priceListId}": {
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "put_product_prices_set",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "priceListId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductPriceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Price set (stored exactly as entered \u2014 never a converted value)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the products.manage permission."
+                    },
+                    "404": {
+                        "description": "No such product, or no such price list."
+                    },
+                    "422": {
+                        "description": "Invalid amount, or the request payload failed validation."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/products/{productId}/prices": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "get_product_prices_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "This product's price in every price list it has one in.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "price_list_id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "amount": {
+                                                        "type": "string"
+                                                    },
+                                                    "includes_vat": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such product."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/products/{productId}/prices/calculate": {
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "operationId": "post_product_prices_calculate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PriceConversionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The other-mode value for the given amount (display only, not persisted).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "amount": {
+                                            "type": "string"
+                                        },
+                                        "includes_vat": {
+                                            "type": "boolean"
+                                        },
+                                        "converted_amount": {
+                                            "type": "string"
+                                        },
+                                        "converted_includes_vat": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such product."
+                    },
+                    "422": {
+                        "description": "Invalid amount, or the request payload failed validation."
                     }
                 }
             }
@@ -2182,6 +2469,19 @@
     },
     "components": {
         "schemas": {
+            "PriceListRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "default_includes_vat": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
             "ProductFamilyRequest": {
                 "properties": {
                     "name": {
@@ -2192,6 +2492,32 @@
                         "type": "string",
                         "nullable": true,
                         "default": null
+                    }
+                },
+                "type": "object"
+            },
+            "ProductPriceRequest": {
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "includes_vat": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
+            "PriceConversionRequest": {
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "includes_vat": {
+                        "type": "boolean",
+                        "default": false
                     }
                 },
                 "type": "object"

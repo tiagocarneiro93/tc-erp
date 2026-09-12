@@ -25,10 +25,25 @@ import type {
 } from '@tanstack/react-query';
 
 import { httpClient } from './http-client';
+export interface PriceListRequest {
+  name?: string;
+  default_includes_vat?: boolean;
+}
+
 export interface ProductFamilyRequest {
   name?: string;
   /** @nullable */
   parent_id?: string | null;
+}
+
+export interface ProductPriceRequest {
+  amount?: string;
+  includes_vat?: boolean;
+}
+
+export interface PriceConversionRequest {
+  amount?: string;
+  includes_vat?: boolean;
 }
 
 export interface ProductRequest {
@@ -153,6 +168,20 @@ export interface ChangeMemberRoleRequest {
   role?: string;
 }
 
+export type GetPriceListsList200ItemsItem = {
+  id?: string;
+  name?: string;
+  default_includes_vat?: boolean;
+};
+
+export type GetPriceListsList200 = {
+  items?: GetPriceListsList200ItemsItem[];
+};
+
+export type PostPriceListsCreate201 = {
+  id?: string;
+};
+
 export type GetProductFamiliesList200ItemsItem = {
   id?: string;
   name?: string;
@@ -166,6 +195,23 @@ export type GetProductFamiliesList200 = {
 
 export type PostProductFamiliesCreate201 = {
   id?: string;
+};
+
+export type GetProductPricesList200ItemsItem = {
+  price_list_id?: string;
+  amount?: string;
+  includes_vat?: boolean;
+};
+
+export type GetProductPricesList200 = {
+  items?: GetProductPricesList200ItemsItem[];
+};
+
+export type PostProductPricesCalculate200 = {
+  amount?: string;
+  includes_vat?: boolean;
+  converted_amount?: string;
+  converted_includes_vat?: boolean;
 };
 
 export type GetProductsListParams = {
@@ -540,6 +586,184 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export const getGetPriceListsListUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/price-lists`
+}
+
+export const getPriceListsList = async (companyId: string, options?: RequestInit): Promise<GetPriceListsList200> => {
+
+  return httpClient<GetPriceListsList200>(getGetPriceListsListUrl(companyId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPriceListsListQueryKey = (companyId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/price-lists`
+    ] as const;
+    }
+
+
+export const getGetPriceListsListQueryOptions = <TData = Awaited<ReturnType<typeof getPriceListsList>>, TError = unknown>(companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPriceListsList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPriceListsListQueryKey(companyId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPriceListsList>>> = ({ signal }) => getPriceListsList(companyId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPriceListsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPriceListsListQueryResult = NonNullable<Awaited<ReturnType<typeof getPriceListsList>>>
+export type GetPriceListsListQueryError = unknown
+
+
+export function useGetPriceListsList<TData = Awaited<ReturnType<typeof getPriceListsList>>, TError = unknown>(
+ companyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPriceListsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPriceListsList>>,
+          TError,
+          Awaited<ReturnType<typeof getPriceListsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPriceListsList<TData = Awaited<ReturnType<typeof getPriceListsList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPriceListsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPriceListsList>>,
+          TError,
+          Awaited<ReturnType<typeof getPriceListsList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPriceListsList<TData = Awaited<ReturnType<typeof getPriceListsList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPriceListsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetPriceListsList<TData = Awaited<ReturnType<typeof getPriceListsList>>, TError = unknown>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPriceListsList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPriceListsListQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostPriceListsCreateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/price-lists`
+}
+
+export const postPriceListsCreate = async (companyId: string,
+    priceListRequest: PriceListRequest, options?: RequestInit): Promise<PostPriceListsCreate201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostPriceListsCreate201>(getPostPriceListsCreateUrl(companyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(priceListRequest)
+  }
+);}
+
+
+
+
+
+export const getPostPriceListsCreateMutationKey = () => ['postPriceListsCreate'] as const;
+
+export const getPostPriceListsCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPriceListsCreate>>, TError,PostPriceListsCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postPriceListsCreate>>, TError,PostPriceListsCreateMutationVariables, TContext> => {
+
+const mutationKey = getPostPriceListsCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postPriceListsCreate>>, PostPriceListsCreateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  postPriceListsCreate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostPriceListsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof postPriceListsCreate>>>
+    export type PostPriceListsCreateMutationBody = PriceListRequest
+    export type PostPriceListsCreateMutationError = void
+    export type PostPriceListsCreateMutationVariables = {companyId: string;data: PriceListRequest}
+
+    export const usePostPriceListsCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPriceListsCreate>>, TError,PostPriceListsCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postPriceListsCreate>>,
+        TError,
+        PostPriceListsCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostPriceListsCreateMutationOptions(options), queryClient);
+    }
+
 export const getGetProductFamiliesListUrl = (companyId: string,) => {
 
 
@@ -801,6 +1025,281 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPutProductFamiliesUpdateMutationOptions(options), queryClient);
+    }
+
+export const getPutProductPricesSetUrl = (companyId: string,
+    productId: string,
+    priceListId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/products/${productId}/prices/${priceListId}`
+}
+
+export const putProductPricesSet = async (companyId: string,
+    productId: string,
+    priceListId: string,
+    productPriceRequest: ProductPriceRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPutProductPricesSetUrl(companyId,productId,priceListId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(productPriceRequest)
+  }
+);}
+
+
+
+
+
+export const getPutProductPricesSetMutationKey = () => ['putProductPricesSet'] as const;
+
+export const getPutProductPricesSetMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putProductPricesSet>>, TError,PutProductPricesSetMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putProductPricesSet>>, TError,PutProductPricesSetMutationVariables, TContext> => {
+
+const mutationKey = getPutProductPricesSetMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putProductPricesSet>>, PutProductPricesSetMutationVariables> = (props) => {
+          const {companyId,productId,priceListId,data} = props ?? {};
+
+          return  putProductPricesSet(companyId,productId,priceListId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutProductPricesSetMutationResult = NonNullable<Awaited<ReturnType<typeof putProductPricesSet>>>
+    export type PutProductPricesSetMutationBody = ProductPriceRequest
+    export type PutProductPricesSetMutationError = void
+    export type PutProductPricesSetMutationVariables = {companyId: string;productId: string;priceListId: string;data: ProductPriceRequest}
+
+    export const usePutProductPricesSet = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putProductPricesSet>>, TError,PutProductPricesSetMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putProductPricesSet>>,
+        TError,
+        PutProductPricesSetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutProductPricesSetMutationOptions(options), queryClient);
+    }
+
+export const getGetProductPricesListUrl = (companyId: string,
+    productId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/products/${productId}/prices`
+}
+
+export const getProductPricesList = async (companyId: string,
+    productId: string, options?: RequestInit): Promise<GetProductPricesList200> => {
+
+  return httpClient<GetProductPricesList200>(getGetProductPricesListUrl(companyId,productId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProductPricesListQueryKey = (companyId: string,
+    productId: string,) => {
+    return [
+    `/api/v1/companies/${companyId}/products/${productId}/prices`
+    ] as const;
+    }
+
+
+export const getGetProductPricesListQueryOptions = <TData = Awaited<ReturnType<typeof getProductPricesList>>, TError = void>(companyId: string,
+    productId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductPricesList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProductPricesListQueryKey(companyId,productId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProductPricesList>>> = ({ signal }) => getProductPricesList(companyId,productId, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined && productId !== null && productId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProductPricesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProductPricesListQueryResult = NonNullable<Awaited<ReturnType<typeof getProductPricesList>>>
+export type GetProductPricesListQueryError = void
+
+
+export function useGetProductPricesList<TData = Awaited<ReturnType<typeof getProductPricesList>>, TError = void>(
+ companyId: string,
+    productId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductPricesList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProductPricesList>>,
+          TError,
+          Awaited<ReturnType<typeof getProductPricesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProductPricesList<TData = Awaited<ReturnType<typeof getProductPricesList>>, TError = void>(
+ companyId: string,
+    productId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductPricesList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProductPricesList>>,
+          TError,
+          Awaited<ReturnType<typeof getProductPricesList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProductPricesList<TData = Awaited<ReturnType<typeof getProductPricesList>>, TError = void>(
+ companyId: string,
+    productId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductPricesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetProductPricesList<TData = Awaited<ReturnType<typeof getProductPricesList>>, TError = void>(
+ companyId: string,
+    productId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductPricesList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProductPricesListQueryOptions(companyId,productId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostProductPricesCalculateUrl = (companyId: string,
+    productId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/products/${productId}/prices/calculate`
+}
+
+export const postProductPricesCalculate = async (companyId: string,
+    productId: string,
+    priceConversionRequest: PriceConversionRequest, options?: RequestInit): Promise<PostProductPricesCalculate200> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostProductPricesCalculate200>(getPostProductPricesCalculateUrl(companyId,productId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(priceConversionRequest)
+  }
+);}
+
+
+
+
+
+export const getPostProductPricesCalculateMutationKey = () => ['postProductPricesCalculate'] as const;
+
+export const getPostProductPricesCalculateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postProductPricesCalculate>>, TError,PostProductPricesCalculateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postProductPricesCalculate>>, TError,PostProductPricesCalculateMutationVariables, TContext> => {
+
+const mutationKey = getPostProductPricesCalculateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postProductPricesCalculate>>, PostProductPricesCalculateMutationVariables> = (props) => {
+          const {companyId,productId,data} = props ?? {};
+
+          return  postProductPricesCalculate(companyId,productId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostProductPricesCalculateMutationResult = NonNullable<Awaited<ReturnType<typeof postProductPricesCalculate>>>
+    export type PostProductPricesCalculateMutationBody = PriceConversionRequest
+    export type PostProductPricesCalculateMutationError = void
+    export type PostProductPricesCalculateMutationVariables = {companyId: string;productId: string;data: PriceConversionRequest}
+
+    export const usePostProductPricesCalculate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postProductPricesCalculate>>, TError,PostProductPricesCalculateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postProductPricesCalculate>>,
+        TError,
+        PostProductPricesCalculateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostProductPricesCalculateMutationOptions(options), queryClient);
     }
 
 export const getGetProductsListUrl = (companyId: string,

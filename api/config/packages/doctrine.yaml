@@ -18,6 +18,7 @@ doctrine:
             address_id: App\Parties\Infrastructure\Persistence\Doctrine\Type\AddressIdType
             product_family_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductFamilyIdType
             product_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductIdType
+            price_list_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\PriceListIdType
         default_connection: default
         connections:
             # The app connects as app_runtime: no table ownership, no BYPASSRLS,

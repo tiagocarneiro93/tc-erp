@@ -82,6 +82,15 @@ once in Shared, implemented wherever the concrete knowledge lives).
   Shared, implemented by the same `DoctrineTaxRateRepository`/
   `DoctrineExemptionReasonRepository` classes (one class, two interfaces,
   same as `SymfonyPermissionChecker`).
+- Task 1.7 added a fourth: `App\Shared\Domain\Tax\TaxRateConverter` lets
+  Catalog's `POST /products/{id}/prices/calculate` (docs/plans/phase-1.md
+  decision 2) convert a price between VAT-inclusive/-exclusive using a
+  `tax_rate_id`'s percentage, without depending on `Tax\Domain\VatConversion`
+  directly (also explicitly assigned to Tax by that same decision, as the
+  first building block of Phase 2's `PriceCalculator`). Same adapter again
+  (`DoctrineTaxRateRepository` now implements three Shared/Tax interfaces
+  plus its own `TaxRateRepository`) — the pattern needs no new plumbing per
+  addition, only a new interface and method.
 
 Both new ports are aliased in `config/services.yaml` to the same Platform
 Infrastructure classes as before (`SymfonyPermissionChecker`,

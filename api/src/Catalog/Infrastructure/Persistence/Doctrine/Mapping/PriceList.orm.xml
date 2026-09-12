@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Catalog\Domain\PriceList" table="price_lists">
+        <id name="id" type="price_list_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="name" type="string" column="name" />
+        <field name="defaultIncludesVat" type="boolean" column="default_includes_vat" />
+    </entity>
+</doctrine-mapping>

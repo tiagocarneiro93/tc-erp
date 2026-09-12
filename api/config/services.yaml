@@ -149,6 +149,9 @@ services:
     App\Shared\Domain\Tax\TaxRateExistenceChecker:
         alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineTaxRateRepository
         public: true
+    App\Shared\Domain\Tax\TaxRateConverter:
+        alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineTaxRateRepository
+        public: true
     App\Shared\Domain\Tax\ExemptionReasonExistenceChecker:
         alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineExemptionReasonRepository
         public: true
@@ -157,6 +160,12 @@ services:
         public: true
     App\Catalog\Domain\ProductRepository:
         alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineProductRepository
+        public: true
+    App\Catalog\Domain\PriceListRepository:
+        alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrinePriceListRepository
+        public: true
+    App\Catalog\Domain\ProductPriceRepository:
+        alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineProductPriceRepository
         public: true
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.

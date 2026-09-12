@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tax\Infrastructure\Persistence\Doctrine\Repository;
 
+use App\Shared\Domain\Decimal\Decimal;
+use App\Shared\Domain\Tax\TaxRateConverter;
 use App\Shared\Domain\Tax\TaxRateExistenceChecker;
 use App\Tax\Domain\TaxRate;
 use App\Tax\Domain\TaxRateId;
 use App\Tax\Domain\TaxRateRepository;
+use App\Tax\Domain\VatConversion;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class DoctrineTaxRateRepository implements TaxRateRepository, TaxRateExistenceChecker
+final class DoctrineTaxRateRepository implements TaxRateRepository, TaxRateExistenceChecker, TaxRateConverter
 {
     public function __construct(
         #[Autowire(service: 'doctrine.orm.default_entity_manager')]
@@ -61,12 +64,35 @@ final class DoctrineTaxRateRepository implements TaxRateRepository, TaxRateExist
 
     public function exists(string $taxRateId): bool
     {
+        return null !== $this->findById($taxRateId);
+    }
+
+    public function convertToOtherMode(string $taxRateId, string $amount, bool $includesVat): ?string
+    {
+        $taxRate = $this->findById($taxRateId);
+
+        if (null === $taxRate) {
+            return null;
+        }
+
+        $decimalAmount = Decimal::fromString($amount);
+        $converted = $includesVat
+            ? VatConversion::toNet($decimalAmount, $taxRate->percentage())
+            : VatConversion::toGross($decimalAmount, $taxRate->percentage());
+
+        return $converted->toString();
+    }
+
+    private function findById(string $taxRateId): ?TaxRate
+    {
         try {
             $id = TaxRateId::fromString($taxRateId);
         } catch (\InvalidArgumentException) {
-            return false;
+            return null;
         }
 
-        return null !== $this->entityManager->find(TaxRate::class, $id);
+        $taxRate = $this->entityManager->find(TaxRate::class, $id);
+
+        return $taxRate instanceof TaxRate ? $taxRate : null;
     }
 }
