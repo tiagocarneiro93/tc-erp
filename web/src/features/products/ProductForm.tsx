@@ -22,6 +22,18 @@ import { apiErrorMessage } from '@/lib/api-error'
 import { blankToNull } from '@/lib/forms'
 
 const PRODUCT_TYPES = ['P', 'S', 'O', 'E', 'I'] as const
+
+// CLAUDE.md: never guess AT formats. These letter->meaning glosses are
+// well-known SAF-T PT terminology but are NOT yet cited from a
+// docs/legal/ source — verify against the official SAF-T PT technical
+// spec before treating these labels as authoritative.
+const PRODUCT_TYPE_LABELS: Record<(typeof PRODUCT_TYPES)[number], string> = {
+  P: 'Produto',
+  S: 'Serviço',
+  O: 'Outro',
+  E: 'Imposto especial de consumo',
+  I: 'Outro imposto/taxa',
+}
 const NONE = '__none__'
 const EXEMPT_CODE = 'ISE'
 
@@ -161,21 +173,13 @@ export function ProductForm({ companyId, product, onSuccess }: ProductFormProps)
                 <SelectContent>
                   {PRODUCT_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type}
+                      {type} - {PRODUCT_TYPE_LABELS[type]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
           />
-          {/* CLAUDE.md: never guess AT formats. These letter->meaning glosses are
-              well-known SAF-T PT terminology but are NOT yet cited from a
-              docs/legal/ source — verify against the official SAF-T PT
-              technical spec before treating this caption as authoritative. */}
-          <p className="text-muted-foreground text-xs">
-            Classificação SAF-T do artigo: P = produto, S = serviço, O = outro, E = imposto especial de consumo, I =
-            outro imposto/taxa.
-          </p>
         </div>
 
         <div className="flex flex-col gap-2">
