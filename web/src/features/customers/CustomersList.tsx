@@ -39,7 +39,9 @@ export function CustomersList({ companyId }: { companyId: string }) {
       id: 'status',
       header: 'Estado',
       cell: ({ row }) =>
-        row.original.active ? (
+        row.original.is_final_consumer ? (
+          <Badge>Consumidor final</Badge>
+        ) : row.original.active ? (
           <Badge variant="outline">Ativo</Badge>
         ) : (
           <Badge variant="secondary">Inativo</Badge>
@@ -48,26 +50,27 @@ export function CustomersList({ companyId }: { companyId: string }) {
     {
       id: 'actions',
       header: '',
-      cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setEditing(row.original)}>
-            Editar
-          </Button>
-          {row.original.active && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (row.original.id) {
-                  deactivate.mutate({ companyId, customerId: row.original.id }, { onSuccess: invalidate })
-                }
-              }}
-            >
-              Desativar
+      cell: ({ row }) =>
+        row.original.is_final_consumer ? null : (
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setEditing(row.original)}>
+              Editar
             </Button>
-          )}
-        </div>
-      ),
+            {row.original.active && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (row.original.id) {
+                    deactivate.mutate({ companyId, customerId: row.original.id }, { onSuccess: invalidate })
+                  }
+                }}
+              >
+                Desativar
+              </Button>
+            )}
+          </div>
+        ),
     },
   ]
 

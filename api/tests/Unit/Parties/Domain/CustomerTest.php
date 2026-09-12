@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Parties\Domain;
 
 use App\Parties\Domain\Customer;
 use App\Parties\Domain\CustomerId;
+use App\Parties\Domain\Exception\FinalConsumerCustomerIsProtected;
 use App\Shared\Domain\CompanyId;
 use PHPUnit\Framework\TestCase;
 
@@ -47,6 +48,24 @@ final class CustomerTest extends TestCase
         self::assertEquals($deactivatedAt, $customer->updatedAt());
     }
 
+    public function testUpdatingTheFinalConsumerCustomerIsRejected(): void
+    {
+        $customer = $this->finalConsumer(new \DateTimeImmutable('2026-01-01'));
+
+        $this->expectException(FinalConsumerCustomerIsProtected::class);
+
+        $customer->update('CF', '999999990', 'Renamed', null, null, null, 'PT', null, null, null, new \DateTimeImmutable('2026-02-01'));
+    }
+
+    public function testDeactivatingTheFinalConsumerCustomerIsRejected(): void
+    {
+        $customer = $this->finalConsumer(new \DateTimeImmutable('2026-01-01'));
+
+        $this->expectException(FinalConsumerCustomerIsProtected::class);
+
+        $customer->deactivate(new \DateTimeImmutable('2026-02-01'));
+    }
+
     private function customer(\DateTimeImmutable $now): Customer
     {
         return Customer::create(
@@ -63,6 +82,26 @@ final class CustomerTest extends TestCase
             null,
             null,
             false,
+            $now,
+        );
+    }
+
+    private function finalConsumer(\DateTimeImmutable $now): Customer
+    {
+        return Customer::create(
+            CustomerId::generate(),
+            CompanyId::generate(),
+            'CF',
+            '999999990',
+            'Consumidor final',
+            null,
+            null,
+            null,
+            'PT',
+            null,
+            null,
+            null,
+            true,
             $now,
         );
     }

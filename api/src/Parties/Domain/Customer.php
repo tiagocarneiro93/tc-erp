@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Parties\Domain;
 
+use App\Parties\Domain\Exception\FinalConsumerCustomerIsProtected;
 use App\Shared\Domain\CompanyId;
 
 /**
@@ -88,6 +89,10 @@ final class Customer
         ?string $paymentTermsId,
         \DateTimeImmutable $now,
     ): void {
+        if ($this->isFinalConsumer) {
+            throw new FinalConsumerCustomerIsProtected();
+        }
+
         $this->code = $code;
         $this->nif = $nif;
         $this->name = $name;
@@ -103,6 +108,10 @@ final class Customer
 
     public function deactivate(\DateTimeImmutable $now): void
     {
+        if ($this->isFinalConsumer) {
+            throw new FinalConsumerCustomerIsProtected();
+        }
+
         $this->active = false;
         $this->updatedAt = $now;
     }

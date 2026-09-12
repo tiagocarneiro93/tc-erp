@@ -48,6 +48,35 @@ final class CustomersControllerTest extends WebTestCase
         self::assertTrue($body['items'][0]['is_final_consumer']);
     }
 
+    public function testTheFinalConsumerCustomerCannotBeUpdatedOrDeactivated(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+
+        $client->request('GET', "/api/v1/companies/{$companyId}/customers", server: self::HEADERS);
+        /** @var array{items: list<array{id: string}>} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        $finalConsumerId = $body['items'][0]['id'];
+
+        $client->request('PUT', "/api/v1/companies/{$companyId}/customers/{$finalConsumerId}", server: self::HEADERS, content: json_encode([
+            'code' => 'CF',
+            'nif' => '999999990',
+            'name' => 'Renamed',
+            'country' => 'PT',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{type: string} $updateBody */
+        $updateBody = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('https://tc-erp.example/problems/final-consumer-customer-is-protected', $updateBody['type']);
+
+        $client->request('DELETE', "/api/v1/companies/{$companyId}/customers/{$finalConsumerId}", server: self::HEADERS);
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{type: string} $deactivateBody */
+        $deactivateBody = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('https://tc-erp.example/problems/final-consumer-customer-is-protected', $deactivateBody['type']);
+    }
+
     public function testCreatingReadingUpdatingAndDeactivatingACustomer(): void
     {
         $client = static::createClient();
