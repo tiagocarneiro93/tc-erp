@@ -18,7 +18,17 @@ import { Route as AuthenticatedChangePasswordRouteImport } from './routes/_authe
 import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated.companies'
 import { Route as AuthenticatedCCompanyIdRouteImport } from './routes/_authenticated.c.$companyId'
 import { Route as AuthenticatedCCompanyIdIndexRouteImport } from './routes/_authenticated.c.$companyId.index'
+import { Route as AuthenticatedCCompanyIdCustomersRouteImport } from './routes/_authenticated.c.$companyId.customers'
 import { Route as AuthenticatedCCompanyIdMembersRouteImport } from './routes/_authenticated.c.$companyId.members'
+import { Route as AuthenticatedCCompanyIdPriceListsRouteImport } from './routes/_authenticated.c.$companyId.price-lists'
+import { Route as AuthenticatedCCompanyIdProductFamiliesRouteImport } from './routes/_authenticated.c.$companyId.product-families'
+import { Route as AuthenticatedCCompanyIdProductsRouteImport } from './routes/_authenticated.c.$companyId.products'
+import { Route as AuthenticatedCCompanyIdReferenceDataRouteImport } from './routes/_authenticated.c.$companyId.reference-data'
+import { Route as AuthenticatedCCompanyIdSettingsRouteImport } from './routes/_authenticated.c.$companyId.settings'
+import { Route as AuthenticatedCCompanyIdSuppliersRouteImport } from './routes/_authenticated.c.$companyId.suppliers'
+import { Route as AuthenticatedCCompanyIdWarehousesRouteImport } from './routes/_authenticated.c.$companyId.warehouses'
+import { Route as AuthenticatedCCompanyIdProductsIndexRouteImport } from './routes/_authenticated.c.$companyId.products.index'
+import { Route as AuthenticatedCCompanyIdProductsProductIdRouteImport } from './routes/_authenticated.c.$companyId.products.$productId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -66,11 +76,71 @@ const AuthenticatedCCompanyIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedCCompanyIdRoute,
   } as any)
+const AuthenticatedCCompanyIdCustomersRoute =
+  AuthenticatedCCompanyIdCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
 const AuthenticatedCCompanyIdMembersRoute =
   AuthenticatedCCompanyIdMembersRouteImport.update({
     id: '/members',
     path: '/members',
     getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdPriceListsRoute =
+  AuthenticatedCCompanyIdPriceListsRouteImport.update({
+    id: '/price-lists',
+    path: '/price-lists',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdProductFamiliesRoute =
+  AuthenticatedCCompanyIdProductFamiliesRouteImport.update({
+    id: '/product-families',
+    path: '/product-families',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdProductsRoute =
+  AuthenticatedCCompanyIdProductsRouteImport.update({
+    id: '/products',
+    path: '/products',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdReferenceDataRoute =
+  AuthenticatedCCompanyIdReferenceDataRouteImport.update({
+    id: '/reference-data',
+    path: '/reference-data',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdSettingsRoute =
+  AuthenticatedCCompanyIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdSuppliersRoute =
+  AuthenticatedCCompanyIdSuppliersRouteImport.update({
+    id: '/suppliers',
+    path: '/suppliers',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdWarehousesRoute =
+  AuthenticatedCCompanyIdWarehousesRouteImport.update({
+    id: '/warehouses',
+    path: '/warehouses',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdProductsIndexRoute =
+  AuthenticatedCCompanyIdProductsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCCompanyIdProductsRoute,
+  } as any)
+const AuthenticatedCCompanyIdProductsProductIdRoute =
+  AuthenticatedCCompanyIdProductsProductIdRouteImport.update({
+    id: '/$productId',
+    path: '/$productId',
+    getParentRoute: () => AuthenticatedCCompanyIdProductsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -81,8 +151,18 @@ export interface FileRoutesByFullPath {
   '/change-password': typeof AuthenticatedChangePasswordRoute
   '/companies': typeof AuthenticatedCompaniesRoute
   '/c/$companyId': typeof AuthenticatedCCompanyIdRouteWithChildren
+  '/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
   '/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
+  '/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
+  '/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
+  '/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsRouteWithChildren
+  '/c/$companyId/reference-data': typeof AuthenticatedCCompanyIdReferenceDataRoute
+  '/c/$companyId/settings': typeof AuthenticatedCCompanyIdSettingsRoute
+  '/c/$companyId/suppliers': typeof AuthenticatedCCompanyIdSuppliersRoute
+  '/c/$companyId/warehouses': typeof AuthenticatedCCompanyIdWarehousesRoute
   '/c/$companyId/': typeof AuthenticatedCCompanyIdIndexRoute
+  '/c/$companyId/products/$productId': typeof AuthenticatedCCompanyIdProductsProductIdRoute
+  '/c/$companyId/products/': typeof AuthenticatedCCompanyIdProductsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,8 +171,17 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/change-password': typeof AuthenticatedChangePasswordRoute
   '/companies': typeof AuthenticatedCompaniesRoute
+  '/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
   '/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
+  '/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
+  '/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
+  '/c/$companyId/reference-data': typeof AuthenticatedCCompanyIdReferenceDataRoute
+  '/c/$companyId/settings': typeof AuthenticatedCCompanyIdSettingsRoute
+  '/c/$companyId/suppliers': typeof AuthenticatedCCompanyIdSuppliersRoute
+  '/c/$companyId/warehouses': typeof AuthenticatedCCompanyIdWarehousesRoute
   '/c/$companyId': typeof AuthenticatedCCompanyIdIndexRoute
+  '/c/$companyId/products/$productId': typeof AuthenticatedCCompanyIdProductsProductIdRoute
+  '/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,8 +193,18 @@ export interface FileRoutesById {
   '/_authenticated/change-password': typeof AuthenticatedChangePasswordRoute
   '/_authenticated/companies': typeof AuthenticatedCompaniesRoute
   '/_authenticated/c/$companyId': typeof AuthenticatedCCompanyIdRouteWithChildren
+  '/_authenticated/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
   '/_authenticated/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
+  '/_authenticated/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
+  '/_authenticated/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
+  '/_authenticated/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsRouteWithChildren
+  '/_authenticated/c/$companyId/reference-data': typeof AuthenticatedCCompanyIdReferenceDataRoute
+  '/_authenticated/c/$companyId/settings': typeof AuthenticatedCCompanyIdSettingsRoute
+  '/_authenticated/c/$companyId/suppliers': typeof AuthenticatedCCompanyIdSuppliersRoute
+  '/_authenticated/c/$companyId/warehouses': typeof AuthenticatedCCompanyIdWarehousesRoute
   '/_authenticated/c/$companyId/': typeof AuthenticatedCCompanyIdIndexRoute
+  '/_authenticated/c/$companyId/products/$productId': typeof AuthenticatedCCompanyIdProductsProductIdRoute
+  '/_authenticated/c/$companyId/products/': typeof AuthenticatedCCompanyIdProductsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,8 +216,18 @@ export interface FileRouteTypes {
     | '/change-password'
     | '/companies'
     | '/c/$companyId'
+    | '/c/$companyId/customers'
     | '/c/$companyId/members'
+    | '/c/$companyId/price-lists'
+    | '/c/$companyId/product-families'
+    | '/c/$companyId/products'
+    | '/c/$companyId/reference-data'
+    | '/c/$companyId/settings'
+    | '/c/$companyId/suppliers'
+    | '/c/$companyId/warehouses'
     | '/c/$companyId/'
+    | '/c/$companyId/products/$productId'
+    | '/c/$companyId/products/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -127,8 +236,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/change-password'
     | '/companies'
+    | '/c/$companyId/customers'
     | '/c/$companyId/members'
+    | '/c/$companyId/price-lists'
+    | '/c/$companyId/product-families'
+    | '/c/$companyId/reference-data'
+    | '/c/$companyId/settings'
+    | '/c/$companyId/suppliers'
+    | '/c/$companyId/warehouses'
     | '/c/$companyId'
+    | '/c/$companyId/products/$productId'
+    | '/c/$companyId/products'
   id:
     | '__root__'
     | '/'
@@ -139,8 +257,18 @@ export interface FileRouteTypes {
     | '/_authenticated/change-password'
     | '/_authenticated/companies'
     | '/_authenticated/c/$companyId'
+    | '/_authenticated/c/$companyId/customers'
     | '/_authenticated/c/$companyId/members'
+    | '/_authenticated/c/$companyId/price-lists'
+    | '/_authenticated/c/$companyId/product-families'
+    | '/_authenticated/c/$companyId/products'
+    | '/_authenticated/c/$companyId/reference-data'
+    | '/_authenticated/c/$companyId/settings'
+    | '/_authenticated/c/$companyId/suppliers'
+    | '/_authenticated/c/$companyId/warehouses'
     | '/_authenticated/c/$companyId/'
+    | '/_authenticated/c/$companyId/products/$productId'
+    | '/_authenticated/c/$companyId/products/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -216,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCCompanyIdIndexRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdRoute
     }
+    '/_authenticated/c/$companyId/customers': {
+      id: '/_authenticated/c/$companyId/customers'
+      path: '/customers'
+      fullPath: '/c/$companyId/customers'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdCustomersRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
     '/_authenticated/c/$companyId/members': {
       id: '/_authenticated/c/$companyId/members'
       path: '/members'
@@ -223,17 +358,121 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCCompanyIdMembersRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdRoute
     }
+    '/_authenticated/c/$companyId/price-lists': {
+      id: '/_authenticated/c/$companyId/price-lists'
+      path: '/price-lists'
+      fullPath: '/c/$companyId/price-lists'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdPriceListsRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/product-families': {
+      id: '/_authenticated/c/$companyId/product-families'
+      path: '/product-families'
+      fullPath: '/c/$companyId/product-families'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdProductFamiliesRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/products': {
+      id: '/_authenticated/c/$companyId/products'
+      path: '/products'
+      fullPath: '/c/$companyId/products'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdProductsRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/reference-data': {
+      id: '/_authenticated/c/$companyId/reference-data'
+      path: '/reference-data'
+      fullPath: '/c/$companyId/reference-data'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdReferenceDataRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/settings': {
+      id: '/_authenticated/c/$companyId/settings'
+      path: '/settings'
+      fullPath: '/c/$companyId/settings'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdSettingsRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/suppliers': {
+      id: '/_authenticated/c/$companyId/suppliers'
+      path: '/suppliers'
+      fullPath: '/c/$companyId/suppliers'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdSuppliersRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/warehouses': {
+      id: '/_authenticated/c/$companyId/warehouses'
+      path: '/warehouses'
+      fullPath: '/c/$companyId/warehouses'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdWarehousesRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/products/': {
+      id: '/_authenticated/c/$companyId/products/'
+      path: '/'
+      fullPath: '/c/$companyId/products/'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdProductsIndexRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdProductsRoute
+    }
+    '/_authenticated/c/$companyId/products/$productId': {
+      id: '/_authenticated/c/$companyId/products/$productId'
+      path: '/$productId'
+      fullPath: '/c/$companyId/products/$productId'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdProductsProductIdRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdProductsRoute
+    }
   }
 }
 
+interface AuthenticatedCCompanyIdProductsRouteChildren {
+  AuthenticatedCCompanyIdProductsProductIdRoute: typeof AuthenticatedCCompanyIdProductsProductIdRoute
+  AuthenticatedCCompanyIdProductsIndexRoute: typeof AuthenticatedCCompanyIdProductsIndexRoute
+}
+
+const AuthenticatedCCompanyIdProductsRouteChildren: AuthenticatedCCompanyIdProductsRouteChildren =
+  {
+    AuthenticatedCCompanyIdProductsProductIdRoute:
+      AuthenticatedCCompanyIdProductsProductIdRoute,
+    AuthenticatedCCompanyIdProductsIndexRoute:
+      AuthenticatedCCompanyIdProductsIndexRoute,
+  }
+
+const AuthenticatedCCompanyIdProductsRouteWithChildren =
+  AuthenticatedCCompanyIdProductsRoute._addFileChildren(
+    AuthenticatedCCompanyIdProductsRouteChildren,
+  )
+
 interface AuthenticatedCCompanyIdRouteChildren {
+  AuthenticatedCCompanyIdCustomersRoute: typeof AuthenticatedCCompanyIdCustomersRoute
   AuthenticatedCCompanyIdMembersRoute: typeof AuthenticatedCCompanyIdMembersRoute
+  AuthenticatedCCompanyIdPriceListsRoute: typeof AuthenticatedCCompanyIdPriceListsRoute
+  AuthenticatedCCompanyIdProductFamiliesRoute: typeof AuthenticatedCCompanyIdProductFamiliesRoute
+  AuthenticatedCCompanyIdProductsRoute: typeof AuthenticatedCCompanyIdProductsRouteWithChildren
+  AuthenticatedCCompanyIdReferenceDataRoute: typeof AuthenticatedCCompanyIdReferenceDataRoute
+  AuthenticatedCCompanyIdSettingsRoute: typeof AuthenticatedCCompanyIdSettingsRoute
+  AuthenticatedCCompanyIdSuppliersRoute: typeof AuthenticatedCCompanyIdSuppliersRoute
+  AuthenticatedCCompanyIdWarehousesRoute: typeof AuthenticatedCCompanyIdWarehousesRoute
   AuthenticatedCCompanyIdIndexRoute: typeof AuthenticatedCCompanyIdIndexRoute
 }
 
 const AuthenticatedCCompanyIdRouteChildren: AuthenticatedCCompanyIdRouteChildren =
   {
+    AuthenticatedCCompanyIdCustomersRoute:
+      AuthenticatedCCompanyIdCustomersRoute,
     AuthenticatedCCompanyIdMembersRoute: AuthenticatedCCompanyIdMembersRoute,
+    AuthenticatedCCompanyIdPriceListsRoute:
+      AuthenticatedCCompanyIdPriceListsRoute,
+    AuthenticatedCCompanyIdProductFamiliesRoute:
+      AuthenticatedCCompanyIdProductFamiliesRoute,
+    AuthenticatedCCompanyIdProductsRoute:
+      AuthenticatedCCompanyIdProductsRouteWithChildren,
+    AuthenticatedCCompanyIdReferenceDataRoute:
+      AuthenticatedCCompanyIdReferenceDataRoute,
+    AuthenticatedCCompanyIdSettingsRoute: AuthenticatedCCompanyIdSettingsRoute,
+    AuthenticatedCCompanyIdSuppliersRoute:
+      AuthenticatedCCompanyIdSuppliersRoute,
+    AuthenticatedCCompanyIdWarehousesRoute:
+      AuthenticatedCCompanyIdWarehousesRoute,
     AuthenticatedCCompanyIdIndexRoute: AuthenticatedCCompanyIdIndexRoute,
   }
 
