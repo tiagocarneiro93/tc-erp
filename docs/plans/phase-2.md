@@ -292,15 +292,18 @@ too, on its own series.
 
 - Status `A` (§7.4). Legal conditions beyond the ordering rules already
   resolved (task 2.7's §3.3.7–3.3.8) are still `[VERIFY]` — `dl-28-2019.pdf`
-  (not yet in `docs/legal/`) is the likely source for exactly when an
-  already-delivered invoice may be cancelled versus requiring a credit
-  note instead. Until that's resolved: cancellation is only allowed before
-  the document has been communicated to the AT (`at_communications.status`
-  still `pending`, never `sent`/`accepted`) — the one condition we can state
-  with confidence from what's already in `docs/legal/` (Despacho's
-  ordering rules presuppose a pre-communication window) — and this
-  restriction is flagged in code and in this file as provisional pending
-  `dl-28-2019.pdf`.
+  is now in `docs/legal/` but does **not** resolve this: it only requires
+  that cancelled documents be logged (Art. 7.º §5), not what makes a
+  cancellation legal in the first place. The substantive rule most likely
+  lives in **CIVA Art. 29.º §7** itself (cited by Despacho 8632/2014
+  §2.2.6, but not reproduced in DL 28/2019's text since that decree only
+  redlines the paragraphs it actually changes). Until CIVA's own text is
+  obtained: cancellation is only allowed before the document has been
+  communicated to the AT (`at_communications.status` still `pending`,
+  never `sent`/`accepted`) — the one condition we can state with
+  confidence from what's already in `docs/legal/` (Despacho's ordering
+  rules presuppose a pre-communication window) — and this restriction is
+  flagged in code and in this file as provisional pending CIVA Art. 29.º.
 - Writes a `document_status_events` row; reverses stock/account effects
   with new compensating entries (never deleting) — stubbed the same way
   task 2.6 stubs them, real wiring in Phase 5.
@@ -349,6 +352,7 @@ document and convert it, issue a receipt allocated across two invoices.
 - 🧑 Owner reviews `pricing-test-vectors.json` (decision/task 2.1) before
   the calculator is considered done, not only at phase end.
 - 🧑 Owner confirms the provisional cancellation-window rule (task 2.10) or
-  supplies `dl-28-2019.pdf` so it can be replaced with the actual legal
-  conditions before Phase 3 (AT communication) makes the distinction
-  between "communicated" and "not yet communicated" load-bearing.
+  supplies CIVA Art. 29.º's own text (DL 28/2019 doesn't reproduce it) so
+  it can be replaced with the actual legal conditions before Phase 3 (AT
+  communication) makes the distinction between "communicated" and "not
+  yet communicated" load-bearing.

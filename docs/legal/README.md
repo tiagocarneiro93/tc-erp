@@ -10,7 +10,7 @@ Claude Code must resolve every **[VERIFY]** item from these documents (citing do
 |---|---|---|---|
 | `portaria-363-2010.pdf` | Certification of invoicing software; Art. 6.º defines the Hash signing string (InvoiceDate;SystemEntryDate;InvoiceNo;GrossTotal;PreviousHash, RSA, base64, 4 printed chars at positions 1/11/21/31) | Phase 2, 6 | ✅ DR 1.ª série n.º 120, 23 Jun 2010 |
 | `despacho-8632-2014.pdf` | Technical requirements for invoicing software (signing, access control, SAF-T rules, series rules, customer/product immutability once issued, credit-note/cancellation constraints) | Phase 0 (§8.1), 2 | ✅ DR 2.ª série n.º 126, 3 Jul 2014 |
-| `dl-28-2019.pdf` | Invoicing, archiving and electronic invoice rules (consolidated) | Phase 2, 3 | |
+| `dl-28-2019.pdf` | Invoicing, archiving and electronic invoice rules. Art. 7.º §3 is the statutory basis for the QR/ATCUD mandate; Art. 7.º §4 states the "series run at least one fiscal year" rule in primary law (not just Despacho 8632/2014's gloss on it); Art. 4.º sets the AT-certification threshold (>€50k prior-year turnover, superseding Portaria 363/2010's old phased thresholds — Art. 44.º revokes that Portaria's Arts. 1/2/8/9, leaves Arts. 6/7 intact); Chapter V (Arts. 19–30) is the 10-year archiving regime, incl. Art. 27.º §2's requirement that originals and backups sit in physically/logically distinct locations. **Does not** state the legal conditions for cancelling an already-issued document — only logs that cancelled documents exist (Art. 7.º §5); that rule likely lives in CIVA Art. 29.º §7 itself, not reproduced here since this decree only redlines the paragraphs it changes | Phase 2, 3 | ✅ DR 1.ª série n.º 33, 15 Feb 2019 |
 | `oficio-circulado-30213-2019.pdf` | AT administrative instructions on DL 28/2019 (incl. electronic invoices, points 14–16) | Phase 2, 3 | |
 | `dl-198-2012.pdf` | Communication of invoice elements to the AT (art. 3) and goods in circulation | Phase 3, 4 | |
 | `portaria-195-2020-atcud-qr.pdf` | ATCUD composition (`CódigoDeValidação-NúmeroSequencial`) and the series-communication requirements to obtain it (series id, document type, start number, start date) | Phase 2 | ✅ DR n.º 157/2020, Série I, 13 Aug 2020 |
@@ -20,7 +20,7 @@ Claude Code must resolve every **[VERIFY]** item from these documents (citing do
 | `at-tabela-codigos-motivo-isencao.pdf` | Official table of VAT exemption/non-liquidation reason codes (M01–M99), invoice wording and legal basis per code | Phase 1, 2 | ✅ V4.0, 18 Jun 2026 |
 | `civa-extracts.md` | CIVA art. 18 VAT rates (standard/intermediate/reduced) for mainland Portugal, Açores and Madeira, taxable base and discounts, invoice requirements | Phase 1, 2 | ⚠️ mainland resolved (owner pasted art. 18); Açores/Madeira have an owner-supplied candidate value, not yet confirmed against the regional decree — see the file's "Still open" section |
 
-**Not yet obtained, still needed:** `saft-pt-structure.pdf` / `saft-pt-technical-notes.pdf` (the prose spec alongside the XSD above — useful for field-level notes the schema alone doesn't carry, but the XSD covers the structural `[VERIFY]` items Phase 2 needs); `dl-28-2019.pdf`; `oficio-circulado-30213-2019.pdf`.
+**Not yet obtained, still needed:** `saft-pt-structure.pdf` / `saft-pt-technical-notes.pdf` (the prose spec alongside the XSD above — useful for field-level notes the schema alone doesn't carry, but the XSD covers the structural `[VERIFY]` items Phase 2 needs); `oficio-circulado-30213-2019.pdf`; the actual **CIVA Art. 29.º text** (not just DL 28/2019's redlines to it) — needed to resolve task 2.10's still-open cancellation-conditions `[VERIFY]` (see `docs/plans/phase-2.md`).
 
 ## AT webservices
 
@@ -36,7 +36,7 @@ Claude Code must resolve every **[VERIFY]** item from these documents (citing do
 
 | File | Content | Needed for | Status |
 |---|---|---|---|
-| `dl-28-2019.pdf` (art. 12 + transitional provisions) | Authenticity and integrity of electronic invoices: qualified signature, qualified seal, EDI | Phase 3 | |
+| `dl-28-2019.pdf` (Art. 12.º + transitional provisions) | Authenticity and integrity of electronic invoices: qualified signature, qualified seal (eIDAS 910/2014), or EDI under the "Acordo tipo EDI europeu" (Rec. 1994/820/CE); Art. 13.º adds e-invoicing software requirements (chronological validation, non-repudiation, non-duplication, certificate-revocation checks) | Phase 3 | ✅ (same file as above) |
 | `oe-2026-extract.pdf` | State Budget 2026 provision extending the PDF transitional regime to 31 Dec 2026 | Phase 3 | |
 | `eidas-910-2014.pdf` (as amended by Reg. 2024/1183) | EU definitions of qualified signatures, seals and trust service providers | Phase 3 | |
 | `etsi-en-319-142.pdf` | PAdES: technical standard for signatures embedded in PDF | Phase 3 | |
