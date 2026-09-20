@@ -622,7 +622,7 @@ This section exists because of a recurring real-world problem: **cent difference
    - `net` — prices exclude VAT (typical B2B). Net amounts are the anchor; VAT is derived.
    - `gross` — prices include VAT (typical B2C, web shops). **Gross amounts are the anchor**; net and VAT are derived, so the total always equals what the customer saw.
 4. **The price the customer saw is the price on the invoice.** Integrations send the prices they displayed and the mode; the system reproduces the same total to the cent.
-5. **Rounding happens in exactly defined places**, with one rounding mode: `HALF_UP` **[VERIFY]** against AT guidance.
+5. **Rounding happens in exactly defined places**, with one rounding mode: `ROUND_HALF_UP` (owner-decided, §14.2 decision 7 — no AT guidance mandates a specific mode, so this is a product choice, not a compliance one). Every calculation is done in `brick/math` `BigDecimal`; non-PHP consumers (the web app, e-commerce integrations validating against `tests/Fixtures/pricing-test-vectors.json`) must use an arbitrary-precision decimal library (e.g. decimal.js, big.js) configured for `ROUND_HALF_UP` — native float arithmetic (`toFixed`, `Math.round`) does not reliably reproduce it, as shown by the vector suite's two exact-half-cent tie cases.
 
 #### 7.9.3 Precision tiers
 

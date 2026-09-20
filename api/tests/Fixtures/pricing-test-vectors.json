@@ -1,6 +1,10 @@
 {
-  "version": 1,
-  "description": "technical-scope.md §7.9.6: shared test vectors for PriceCalculator. Used by the PHP test suite (tests/Unit/Tax/Domain/PriceCalculatorVectorsTest.php); the web app and any e-commerce integration should validate against the same vectors, or call POST /api/v1/companies/{companyId}/calculate directly with the same 'input' shape. A changed or new vector is a fiscal change: it needs 🧑 owner review before merge (docs/plans/phase-2.md task 2.1).",
+  "version": 2,
+  "description": "technical-scope.md §7.9.6: shared test vectors for PriceCalculator. Used by the PHP test suite (tests/Unit/Tax/Domain/PriceCalculatorVectorsTest.php); the web app and any e-commerce integration should validate against the same vectors, or call POST /api/v1/companies/{companyId}/calculate directly with the same 'input' shape. A changed or new vector is a fiscal change: it needs 🧑 owner review before merge (docs/plans/phase-2.md task 2.1). Rounding mode is ROUND_HALF_UP (technical-scope.md §7.9.2) throughout; 'cascading-percentage-discounts' and 'cascading-plus-fixed' each land on an exact half-cent and are the vectors that actually pin the mode down (banker's rounding would fail both). Non-PHP consumers (the web app, e-commerce integrations) MUST NOT use native float arithmetic to reproduce these — JavaScript's `(x*rate/100).toFixed(2)` and `Math.round(x*100)/100` both get at least one of the two half-cent vectors wrong. Use an arbitrary-precision decimal library (decimal.js or big.js) configured for ROUND_HALF_UP.",
+  "known_gaps": [
+    "Credit notes / negative amounts: out of scope for PriceCalculator itself until docs/plans/phase-2.md task 2.7 (credit notes). No vector here uses a negative quantity or amount.",
+    "No vector combines a fixed-amount global discount with uneven line amounts (global discounts are percentage-only per current input shape — see 'global-discount-with-line-discounts' for the largest-remainder case, which needs a line-level discount to force genuine sub-6dp remainder distribution)."
+  ],
   "vectors": [
     {
       "name": "simple-net",
@@ -108,7 +112,7 @@
     },
     {
       "name": "cascading-percentage-discounts",
-      "notes": "Two cascading percentages applied in order: 100 × (1-10%) × (1-5%) = 85.50.",
+      "notes": "Two cascading percentages applied in order: 100 × (1-10%) × (1-5%) = 85.50. ROUNDING TIE VECTOR: 85.50 × 23% = 19.665 exactly, an exact half-cent — expected tax_amount 19.67 only holds under ROUND_HALF_UP (banker's rounding would give 19.66). See the top-level description for what this means for non-PHP consumers.",
       "input": {
         "pricing_mode": "net",
         "rounding_method": "per_line",
@@ -161,7 +165,7 @@
     },
     {
       "name": "cascading-plus-fixed",
-      "notes": "Cascading percentages then a fixed amount, in the order listed: 100 × 0.9 × 0.95 = 85.50, then - 2.00 = 83.50.",
+      "notes": "Cascading percentages then a fixed amount, in the order listed: 100 × 0.9 × 0.95 = 85.50, then - 2.00 = 83.50. ROUNDING TIE VECTOR: 83.50 × 23% = 19.205 exactly, an exact half-cent — expected tax_amount 19.21 only holds under ROUND_HALF_UP (banker's rounding would give 19.20). See the top-level description for what this means for non-PHP consumers.",
       "input": {
         "pricing_mode": "net",
         "rounding_method": "per_line",
@@ -188,31 +192,64 @@
       }
     },
     {
-      "name": "global-discount-largest-remainder",
-      "notes": "10.00 + 20.00 + 5.01 = 35.01 total, 7% global discount = 2.4507. Exact per-line shares (0.700070.., 1.400147.., 0.350483..) floor to 0.70/1.40/0.35 (sum 2.45), leaving 0.0007 to distribute — the largest remainder (line 3) gets the extra unit, landing on 0.3507 instead of 0.3500, so the three settlements sum to exactly 2.450700.",
+      "name": "global-discount-with-line-discounts",
+      "notes": "Replaces the old 'global-discount-largest-remainder' vector, which didn't actually exercise remainder distribution: with clean 2dp line amounts and no line-level discount, a percentage global discount's exact per-line share (amount × rate) always terminates within 4 decimals, so at 6dp there is never a remainder to distribute — the old vector passed even with the redistribution logic deleted entirely. Here each line first takes a 33.33% line-level discount (100.00/50.00/75.00 → 66.673300/33.335000/50.002500, i.e. non-2dp amounts), THEN a 12.34% global discount is allocated across those — this genuinely produces a sub-6dp remainder that must be redistributed by largest-remainder for the three settlement_amounts (8.227078 + 4.113539 + 6.170309 = 18.510926) to sum exactly to the line-precision-rounded discount total. Also closes the coverage gap of no vector combining a global discount with line-level discounts (§7.9.4 step ordering: line discounts, then global discount, then VAT last).",
       "input": {
         "pricing_mode": "net",
         "rounding_method": "per_line",
         "date": "2026-01-01",
-        "global_discount_percent": "7.00",
+        "global_discount_percent": "12.34",
         "lines": [
-          { "quantity": "1", "unit_price": "10.00", "tax_region": "PT", "tax_code": "NOR" },
-          { "quantity": "1", "unit_price": "20.00", "tax_region": "PT", "tax_code": "NOR" },
-          { "quantity": "1", "unit_price": "5.01", "tax_region": "PT", "tax_code": "NOR" }
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT", "tax_code": "NOR", "discounts": [
+            { "type": "percentage", "value": "33.33" }
+          ] },
+          { "quantity": "1", "unit_price": "50.00", "tax_region": "PT", "tax_code": "NOR", "discounts": [
+            { "type": "percentage", "value": "33.33" }
+          ] },
+          { "quantity": "1", "unit_price": "75.00", "tax_region": "PT", "tax_code": "NOR", "discounts": [
+            { "type": "percentage", "value": "33.33" }
+          ] }
         ]
       },
       "expected": {
         "lines": [
-          { "line_amount_before_discounts": "10.000000", "discount_amount": "0.000000", "settlement_amount": "0.700000", "net_amount": "9.30", "gross_amount": "11.44", "tax_amount": "2.14", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
-          { "line_amount_before_discounts": "20.000000", "discount_amount": "0.000000", "settlement_amount": "1.400000", "net_amount": "18.60", "gross_amount": "22.88", "tax_amount": "4.28", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
-          { "line_amount_before_discounts": "5.010000", "discount_amount": "0.000000", "settlement_amount": "0.350700", "net_amount": "4.66", "gross_amount": "5.73", "tax_amount": "1.07", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" }
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "33.330000", "settlement_amount": "8.227078", "net_amount": "58.44", "gross_amount": "71.88", "tax_amount": "13.44", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
+          { "line_amount_before_discounts": "50.000000", "discount_amount": "16.665000", "settlement_amount": "4.113539", "net_amount": "29.22", "gross_amount": "35.94", "tax_amount": "6.72", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
+          { "line_amount_before_discounts": "75.000000", "discount_amount": "24.997500", "settlement_amount": "6.170309", "net_amount": "43.83", "gross_amount": "53.91", "tax_amount": "10.08", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" }
         ],
         "tax_summary": [
-          { "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00", "taxable_base": "32.56", "tax_amount": "7.49" }
+          { "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00", "taxable_base": "131.49", "tax_amount": "30.24" }
         ],
-        "net_total": "32.56",
-        "tax_total": "7.49",
-        "gross_total": "40.05"
+        "net_total": "131.49",
+        "tax_total": "30.24",
+        "gross_total": "161.73"
+      }
+    },
+    {
+      "name": "global-discount-across-tax-groups",
+      "notes": "A percentage global discount allocated across lines that belong to two different tax groups (PT/NOR and PT/RED) — closes the coverage gap of no global discount spanning tax groups. Each line's settlement is a clean 10% of its own amount (10.00 and 5.00, no remainder to redistribute here — see 'global-discount-with-line-discounts' for that case); the two resulting tax_summary rows confirm the discount reduces each group's own taxable base independently.",
+      "input": {
+        "pricing_mode": "net",
+        "rounding_method": "per_line",
+        "date": "2026-01-01",
+        "global_discount_percent": "10.00",
+        "lines": [
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT", "tax_code": "NOR" },
+          { "quantity": "1", "unit_price": "50.00", "tax_region": "PT", "tax_code": "RED" }
+        ]
+      },
+      "expected": {
+        "lines": [
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "0.000000", "settlement_amount": "10.000000", "net_amount": "90.00", "gross_amount": "110.70", "tax_amount": "20.70", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
+          { "line_amount_before_discounts": "50.000000", "discount_amount": "0.000000", "settlement_amount": "5.000000", "net_amount": "45.00", "gross_amount": "47.70", "tax_amount": "2.70", "tax_region": "PT", "tax_code": "RED", "tax_percentage": "6.00" }
+        ],
+        "tax_summary": [
+          { "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00", "taxable_base": "90.00", "tax_amount": "20.70" },
+          { "tax_region": "PT", "tax_code": "RED", "tax_percentage": "6.00", "taxable_base": "45.00", "tax_amount": "2.70" }
+        ],
+        "net_total": "135.00",
+        "tax_total": "23.40",
+        "gross_total": "158.40"
       }
     },
     {
@@ -292,11 +329,35 @@
     },
     {
       "name": "madeira-region-rate",
-      "notes": "PT-MA reduced rate is 5%, confirmed 2026-09-20 (corrected from an earlier 4% candidate — docs/legal/civa-extracts.md).",
+      "notes": "PT-MA reduced rate is 4% as of this vector's date (2026-01-01), and has been since 1 October 2024 — Decreto Legislativo Regional n.º 6/2024/M, de 29 de julho, art. 21.º (docs/legal/civa-extracts.md). A 2026-09-20 review had corrected this to 5.00 based on the AT portal, which turned out to be stale; owner-corrected 2026-09-20. See 'madeira-region-rate-before-october-2024' for the historical 5% rate this superseded, and Version20260921090000 for the date-versioned seed data.",
       "input": {
         "pricing_mode": "net",
         "rounding_method": "per_line",
         "date": "2026-01-01",
+        "global_discount_percent": null,
+        "lines": [
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT-MA", "tax_code": "RED" }
+        ]
+      },
+      "expected": {
+        "lines": [
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "100.00", "gross_amount": "104.00", "tax_amount": "4.00", "tax_region": "PT-MA", "tax_code": "RED", "tax_percentage": "4.00" }
+        ],
+        "tax_summary": [
+          { "tax_region": "PT-MA", "tax_code": "RED", "tax_percentage": "4.00", "taxable_base": "100.00", "tax_amount": "4.00" }
+        ],
+        "net_total": "100.00",
+        "tax_total": "4.00",
+        "gross_total": "104.00"
+      }
+    },
+    {
+      "name": "madeira-region-rate-before-october-2024",
+      "notes": "Same line as 'madeira-region-rate' but dated before the DLR 6/2024/M change: PT-MA/RED was 5% up to and including 2024-09-30. Exercises both the historical rate and date-versioning itself — every other vector in this file uses 2026-01-01, so without this one, rate-versioning by document date was never exercised at all (this is exactly how the earlier 5%-vs-4% mistake could have shipped unnoticed). The pre-2024-10-01 value of 5% is not independently confirmed against the decree's own predecessor-rate text — see Version20260921090000's docblock.",
+      "input": {
+        "pricing_mode": "net",
+        "rounding_method": "per_line",
+        "date": "2024-06-15",
         "global_discount_percent": null,
         "lines": [
           { "quantity": "1", "unit_price": "100.00", "tax_region": "PT-MA", "tax_code": "RED" }
@@ -340,6 +401,146 @@
         "net_total": "24.37",
         "tax_total": "5.60",
         "gross_total": "29.97"
+      }
+    },
+    {
+      "name": "per-group-rounding-multiple-tax-groups",
+      "notes": "'rounding-method-per-group' exercises per_group with a single tax group; this one has two (PT/NOR and PT/RED) in the same calculation, each rounding its own group total independently. NOR: 0.30 × 23% = 0.069 → 0.07 (one cent MORE than summing each line's own rounded tax, 3 × 0.02 = 0.06). RED: 0.30 × 6% = 0.018 → 0.02, but here per_group rounds to LESS than naive per-line summation would (3 × round(0.10×6%=0.006) = 3 × 0.01 = 0.03) — the two groups round in opposite directions, showing per_group's group total isn't simply 'whichever is bigger'.",
+      "input": {
+        "pricing_mode": "net",
+        "rounding_method": "per_group",
+        "date": "2026-01-01",
+        "global_discount_percent": null,
+        "lines": [
+          { "quantity": "1", "unit_price": "0.10", "tax_region": "PT", "tax_code": "NOR" },
+          { "quantity": "1", "unit_price": "0.10", "tax_region": "PT", "tax_code": "NOR" },
+          { "quantity": "1", "unit_price": "0.10", "tax_region": "PT", "tax_code": "NOR" },
+          { "quantity": "1", "unit_price": "0.10", "tax_region": "PT", "tax_code": "RED" },
+          { "quantity": "1", "unit_price": "0.10", "tax_region": "PT", "tax_code": "RED" },
+          { "quantity": "1", "unit_price": "0.10", "tax_region": "PT", "tax_code": "RED" }
+        ]
+      },
+      "expected": {
+        "lines": [
+          { "line_amount_before_discounts": "0.100000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "0.100000", "gross_amount": "0.123000", "tax_amount": "0.023000", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
+          { "line_amount_before_discounts": "0.100000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "0.100000", "gross_amount": "0.123000", "tax_amount": "0.023000", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
+          { "line_amount_before_discounts": "0.100000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "0.100000", "gross_amount": "0.123000", "tax_amount": "0.023000", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" },
+          { "line_amount_before_discounts": "0.100000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "0.100000", "gross_amount": "0.106000", "tax_amount": "0.006000", "tax_region": "PT", "tax_code": "RED", "tax_percentage": "6.00" },
+          { "line_amount_before_discounts": "0.100000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "0.100000", "gross_amount": "0.106000", "tax_amount": "0.006000", "tax_region": "PT", "tax_code": "RED", "tax_percentage": "6.00" },
+          { "line_amount_before_discounts": "0.100000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "0.100000", "gross_amount": "0.106000", "tax_amount": "0.006000", "tax_region": "PT", "tax_code": "RED", "tax_percentage": "6.00" }
+        ],
+        "tax_summary": [
+          { "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00", "taxable_base": "0.30", "tax_amount": "0.07" },
+          { "tax_region": "PT", "tax_code": "RED", "tax_percentage": "6.00", "taxable_base": "0.30", "tax_amount": "0.02" }
+        ],
+        "net_total": "0.60",
+        "tax_total": "0.09",
+        "gross_total": "0.69"
+      }
+    },
+    {
+      "name": "fractional-quantity",
+      "notes": "Quantity is stored at 6dp (technical-scope.md §6) and must be carried at full precision, not rounded early: 0.333333 × 10.00 = 3.333330 exactly. Rounding the quantity to 2dp first (0.33 × 10.00 = 3.30) would give a different, wrong net_amount — this vector's 3.33 only comes out right if the full 6dp quantity is used.",
+      "input": {
+        "pricing_mode": "net",
+        "rounding_method": "per_line",
+        "date": "2026-01-01",
+        "global_discount_percent": null,
+        "lines": [
+          { "quantity": "0.333333", "unit_price": "10.00", "tax_region": "PT", "tax_code": "NOR" }
+        ]
+      },
+      "expected": {
+        "lines": [
+          { "line_amount_before_discounts": "3.333330", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "3.33", "gross_amount": "4.10", "tax_amount": "0.77", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" }
+        ],
+        "tax_summary": [
+          { "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00", "taxable_base": "3.33", "tax_amount": "0.77" }
+        ],
+        "net_total": "3.33",
+        "tax_total": "0.77",
+        "gross_total": "4.10"
+      }
+    },
+    {
+      "name": "unit-price-beyond-two-decimals",
+      "notes": "Unit price is an unconstrained-scale Decimal, not fixed at 2dp — catalogue/price-list unit prices may legitimately carry more precision (e.g. a cost-plus-margin price list). 12.3456 × 1 = 12.345600, rounding HALF_UP to 12.35 (unambiguous — the digits after the rounding point, '56', are not a tie).",
+      "input": {
+        "pricing_mode": "net",
+        "rounding_method": "per_line",
+        "date": "2026-01-01",
+        "global_discount_percent": null,
+        "lines": [
+          { "quantity": "1", "unit_price": "12.3456", "tax_region": "PT", "tax_code": "NOR" }
+        ]
+      },
+      "expected": {
+        "lines": [
+          { "line_amount_before_discounts": "12.345600", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "12.35", "gross_amount": "15.19", "tax_amount": "2.84", "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00" }
+        ],
+        "tax_summary": [
+          { "tax_region": "PT", "tax_code": "NOR", "tax_percentage": "23.00", "taxable_base": "12.35", "tax_amount": "2.84" }
+        ],
+        "net_total": "12.35",
+        "tax_total": "2.84",
+        "gross_total": "15.19"
+      }
+    },
+    {
+      "name": "acores-and-madeira-remaining-rate-combinations",
+      "notes": "Closes coverage gaps: PT-MA NOR (22%) and PT-AC RED (4%) were the only mainland/Açores/Madeira normal-or-reduced combinations with no vector at all.",
+      "input": {
+        "pricing_mode": "net",
+        "rounding_method": "per_line",
+        "date": "2026-01-01",
+        "global_discount_percent": null,
+        "lines": [
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT-MA", "tax_code": "NOR" },
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT-AC", "tax_code": "RED" }
+        ]
+      },
+      "expected": {
+        "lines": [
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "100.00", "gross_amount": "122.00", "tax_amount": "22.00", "tax_region": "PT-MA", "tax_code": "NOR", "tax_percentage": "22.00" },
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "100.00", "gross_amount": "104.00", "tax_amount": "4.00", "tax_region": "PT-AC", "tax_code": "RED", "tax_percentage": "4.00" }
+        ],
+        "tax_summary": [
+          { "tax_region": "PT-MA", "tax_code": "NOR", "tax_percentage": "22.00", "taxable_base": "100.00", "tax_amount": "22.00" },
+          { "tax_region": "PT-AC", "tax_code": "RED", "tax_percentage": "4.00", "taxable_base": "100.00", "tax_amount": "4.00" }
+        ],
+        "net_total": "200.00",
+        "tax_total": "26.00",
+        "gross_total": "226.00"
+      }
+    },
+    {
+      "name": "intermediate-rate-all-regions",
+      "notes": "Closes the last coverage gap: the INT (intermediate) tax code had no vector at all for any region. Covers PT/INT (13%), PT-AC/INT (9%) and PT-MA/INT (12%) in one vector.",
+      "input": {
+        "pricing_mode": "net",
+        "rounding_method": "per_line",
+        "date": "2026-01-01",
+        "global_discount_percent": null,
+        "lines": [
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT", "tax_code": "INT" },
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT-AC", "tax_code": "INT" },
+          { "quantity": "1", "unit_price": "100.00", "tax_region": "PT-MA", "tax_code": "INT" }
+        ]
+      },
+      "expected": {
+        "lines": [
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "100.00", "gross_amount": "113.00", "tax_amount": "13.00", "tax_region": "PT", "tax_code": "INT", "tax_percentage": "13.00" },
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "100.00", "gross_amount": "109.00", "tax_amount": "9.00", "tax_region": "PT-AC", "tax_code": "INT", "tax_percentage": "9.00" },
+          { "line_amount_before_discounts": "100.000000", "discount_amount": "0.000000", "settlement_amount": "0.000000", "net_amount": "100.00", "gross_amount": "112.00", "tax_amount": "12.00", "tax_region": "PT-MA", "tax_code": "INT", "tax_percentage": "12.00" }
+        ],
+        "tax_summary": [
+          { "tax_region": "PT", "tax_code": "INT", "tax_percentage": "13.00", "taxable_base": "100.00", "tax_amount": "13.00" },
+          { "tax_region": "PT-AC", "tax_code": "INT", "tax_percentage": "9.00", "taxable_base": "100.00", "tax_amount": "9.00" },
+          { "tax_region": "PT-MA", "tax_code": "INT", "tax_percentage": "12.00", "taxable_base": "100.00", "tax_amount": "12.00" }
+        ],
+        "net_total": "300.00",
+        "tax_total": "34.00",
+        "gross_total": "334.00"
       }
     }
   ]
