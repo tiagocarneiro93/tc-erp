@@ -35,10 +35,15 @@ final class PriceCalculatorVectorsTest extends TestCase
      * confirms these are the real mainland/Açores/Madeira rates as of
      * 2026-09-20, but this test pins them independently of that migration).
      */
+    /**
+     * PT-MA/RED is handled separately in {@see calculator()} — it's
+     * genuinely date-versioned (5% until 2024-09-30, 4% from 2024-10-01
+     * — DLR 6/2024/M art. 21.º), unlike everything else here.
+     */
     private const RATES = [
         'PT' => ['NOR' => '23.00', 'RED' => '6.00', 'INT' => '13.00', 'ISE' => '0.00'],
         'PT-AC' => ['NOR' => '16.00', 'RED' => '4.00', 'INT' => '9.00'],
-        'PT-MA' => ['NOR' => '22.00', 'RED' => '5.00', 'INT' => '12.00'],
+        'PT-MA' => ['NOR' => '22.00', 'INT' => '12.00'],
     ];
 
     /**
@@ -154,6 +159,15 @@ final class PriceCalculatorVectorsTest extends TestCase
         $repository = $this->createMock(TaxRateRepository::class);
         $repository->method('findApplicable')->willReturnCallback(
             static function (string $region, string $code, \DateTimeImmutable $date): ?TaxRate {
+                // PT-MA/RED is genuinely date-versioned (DLR 6/2024/M art.
+                // 21.º), mirroring the two real seeded rows exactly, so a
+                // vector can exercise rate-versioning by date.
+                if ('PT-MA' === $region && 'RED' === $code) {
+                    return $date < new \DateTimeImmutable('2024-10-01')
+                        ? new TaxRate(TaxRateId::generate(), $region, $code, Percentage::fromString('5.00'), new \DateTimeImmutable('2011-01-01'), new \DateTimeImmutable('2024-09-30'), 'test')
+                        : new TaxRate(TaxRateId::generate(), $region, $code, Percentage::fromString('4.00'), new \DateTimeImmutable('2024-10-01'), null, 'test');
+                }
+
                 if (!isset(self::RATES[$region][$code])) {
                     return null;
                 }

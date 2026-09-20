@@ -28,8 +28,9 @@ final class TaxRatesAndExemptionReasonsSeedMigrationTest extends KernelTestCase
         $taxRatesBefore = $connection->fetchOne('SELECT COUNT(*) FROM tax_rates');
         self::assertSame(33, $exemptionReasonsBefore);
         // 9 RED/INT/NOR rows from this migration + 3 ISE rows seeded by
-        // Version20260912100000.
-        self::assertSame(12, $taxRatesBefore);
+        // Version20260912100000 + 1 extra PT-MA/RED row from
+        // Version20260921090000 splitting it into two date-versioned rows.
+        self::assertSame(13, $taxRatesBefore);
 
         $migration = new \DoctrineMigrations\Version20260911211300($connection, new NullLogger());
         $migration->up($connection->createSchemaManager()->introspectSchema());

@@ -38,8 +38,10 @@ final class TaxRatesControllerTest extends WebTestCase
 
         /** @var array{items: list<array{region: string, code: string, percentage: string}>} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        // 9 RED/INT/NOR rows (task 1.2) + 3 ISE (exempt) rows, one per region.
-        self::assertCount(12, $body['items']);
+        // 9 RED/INT/NOR rows (task 1.2) + 3 ISE (exempt) rows, one per region,
+        // + 1 extra row because PT-MA/RED is split into two date-versioned
+        // rows (5% until 2024-09-30, 4% from 2024-10-01 — DLR 6/2024/M art. 21.º).
+        self::assertCount(13, $body['items']);
     }
 
     public function testFiltersByRegion(): void

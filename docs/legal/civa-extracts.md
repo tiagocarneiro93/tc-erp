@@ -8,11 +8,29 @@ Code could not fetch it directly.
 **Regional (Açores/Madeira) rates confirmed 2026-09-20** against the AT's own
 summary page (https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/c-iva-listas.aspx,
 pasted by the owner — same domain as Art. 18.º above, blocked for direct fetch):
-mainland 6%/13%/23%, Açores 4%/9%/16%, **Madeira 5%/12%/22%**. This resolves the
+mainland 6%/13%/23%, Açores 4%/9%/16%, **Madeira 5%/12%/22%**. This resolved the
 dispute noted below in "Still open" in favour of 5% for Madeira's reduced rate
 (the seeded candidate had been 4%) — corrected via
 `api/migrations/Version20260920090000.php` (never editing the committed
 original seed).
+
+**Correction, 2026-09-20 (later same day): the AT portal figure above is stale
+for Madeira's reduced rate.** Madeira's reduced rate has been **4%** since
+**1 October 2024**, per Decreto Legislativo Regional n.º 6/2024/M, de 29 de
+julho, art. 21.º (owner-cited; the decree's own text is not yet in this
+directory — still worth obtaining for a complete primary-source citation). 5%
+was the rate immediately before that change, so this is not a data-entry
+error like the same-day correction above — it's a genuine rate change
+effective on a specific date. Corrected via
+`api/migrations/Version20260921090000.php`, which splits the single eternal
+PT-MA/RED row into two date-versioned rows (5% until 2024-09-30, 4% from
+2024-10-01). The pre-2024-10-01 value of 5% is *not* independently confirmed
+against the decree's own predecessor-rate text — it's inferred from the AT
+portal figure being a plausible pre-change value, not a primary source for
+that specific historical period. 🧑 Owner confirmation, or the decree text
+itself, would close this. PT-MA's `INT`/`NOR` rates and all of PT-AC's rates
+are believed unaffected (the owner's correction named only PT-MA `RED`), but
+the same "AT portal may be stale" risk applies to them too.
 
 ## Article 18 — Tax rates (verbatim)
 
@@ -91,7 +109,8 @@ original seed).
 | Açores (PT-AC) | `RED` (reduzida) | ✅ 4% | AT portal, confirmed 2026-09-20 |
 | Açores (PT-AC) | `INT` (intermédia) | ✅ 9% | AT portal, confirmed 2026-09-20 |
 | Açores (PT-AC) | `NOR` (normal) | ✅ 16% | AT portal, confirmed 2026-09-20 |
-| Madeira (PT-MA) | `RED` (reduzida) | ✅ 5% | AT portal, confirmed 2026-09-20 — corrected from the 4% candidate |
+| Madeira (PT-MA) | `RED` (reduzida), until 2024-09-30 | ✅ 5% | AT portal figure, not independently confirmed for this historical period — see correction note above |
+| Madeira (PT-MA) | `RED` (reduzida), from 2024-10-01 | ✅ 4% | DLR 6/2024/M, de 29 de julho, art. 21.º — owner-cited, decree text not yet in this directory |
 | Madeira (PT-MA) | `INT` (intermédia) | ✅ 12% | AT portal, confirmed 2026-09-20 |
 | Madeira (PT-MA) | `NOR` (normal) | ✅ 22% | AT portal, confirmed 2026-09-20 |
 
