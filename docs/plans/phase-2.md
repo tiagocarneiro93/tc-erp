@@ -115,9 +115,10 @@ identical output for the same input (no second implementation drift).
   webservice call that would populate it automatically is Phase 3) →
   `finished`/`cancelled`. A series with no `validation_code` cannot issue.
 - Training series (`is_training`): same lifecycle, flagged so issued
-  documents print the training mention (§7.2 — exact wording still
-  `[VERIFY]`; use a clearly-marked placeholder and flag it for the owner
-  rather than guessing wording, per CLAUDE.md).
+  documents print the exact mention Despacho 8632/2014 §1.5 requires —
+  "Documento emitido para fins de Formação" — in a series-specific header
+  that shows the *software producer's* own identification instead of the
+  client company's. No longer `[VERIFY]` (§7.2).
 - CRUD + list; `series.manage` permission (decision 3).
 - ADR 0002 updated with the four new permissions from decision 3.
 

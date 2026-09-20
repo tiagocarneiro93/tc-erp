@@ -538,7 +538,7 @@ Anything in steps 3–14 failing rolls everything back: no number is consumed, n
 - Result stored as base64 (`hash`) plus key version (`hash_control`).
 - Printed: characters 1, 11, 21 and 31 of the hash + `-Processado por programa certificado n.º XXXX/AT`.
 - Receipts (not signed) print `Emitido por programa certificado n.º XXXX/AT`.
-- Training documents print the training mention **[VERIFY]** exact text.
+- Training documents print the exact mention Despacho 8632/2014 §1.5 requires: **"Documento emitido para fins de Formação"** — also in a series-specific header showing the *software producer's* own identification, not the client company's, per that same paragraph. No longer `[VERIFY]`.
 - Algorithm and key size exactly as the Despacho specifies **[VERIFY]**; the private key never leaves the signing service (§8.2).
 
 ### 7.3 Movement of goods
