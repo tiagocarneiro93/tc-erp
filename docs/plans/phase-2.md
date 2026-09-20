@@ -12,11 +12,10 @@ opportunistically during the phase, not blocking any task. Scope §14.2
 decisions are confirmed (rounding: HALF_UP; series: corrected per
 `docs/decisions/0005`, see below).
 
-Two items remain genuinely open and are called out per-task below rather than
-blocking the whole phase: the exact legal conditions for cancelling an
-already-issued document (§7.4, beyond the ordering rules Despacho 8632/2014
-does give — task 2.10), and the AT series-communication webservice itself
-(task 2.2 uses a manually-entered validation code; the live call is Phase 3).
+One item remains open by design, not blocking: the AT series-communication
+webservice itself (task 2.2 uses a manually-entered validation code; the live
+call is Phase 3). Cancellation's legal conditions (§7.4, task 2.10) are now
+resolved from CIVA Art. 29.º §7 — see `docs/legal/civa-extracts.md`.
 
 Depends on Phase 1 being complete: customers/suppliers, products (with tax
 rate + exemption reason), product families, price lists, warehouses, and the
@@ -291,30 +290,32 @@ too, on its own series.
 
 ### 2.10 Cancellation
 
-- Status `A` (§7.4). Legal conditions beyond the ordering rules already
-  resolved (task 2.7's §3.3.7–3.3.8) are still `[VERIFY]` — `dl-28-2019.pdf`
-  is now in `docs/legal/` but does **not** resolve this: it only requires
-  that cancelled documents be logged (Art. 7.º §5), not what makes a
-  cancellation legal in the first place. The substantive rule most likely
-  lives in **CIVA Art. 29.º §7** itself (cited by Despacho 8632/2014
-  §2.2.6, but not reproduced in DL 28/2019's text since that decree only
-  redlines the paragraphs it actually changes). Until CIVA's own text is
-  obtained: cancellation is only allowed before the document has been
-  communicated to the AT (`at_communications.status` still `pending`,
-  never `sent`/`accepted`) — the one condition we can state with
-  confidence from what's already in `docs/legal/` (Despacho's ordering
-  rules presuppose a pre-communication window) — and this restriction is
-  flagged in code and in this file as provisional pending CIVA Art. 29.º.
+- Status `A` (§7.4). Legal conditions resolved from **CIVA Art. 29.º §7**
+  (verbatim in `docs/legal/civa-extracts.md`), on top of the ordering rules
+  already resolved (task 2.7's §3.3.7–3.3.8): §7 requires that **any**
+  change to an invoice's taxable value or tax — "por qualquer motivo,
+  incluindo inexatidão" (for any reason, including inaccuracy) — go through
+  a rectifying document (NC/ND), never a plain cancellation. So a
+  cancellation is only legitimate for a document that never had external
+  effect (never actually reached the customer); once it plausibly could
+  have, only a credit/debit note applies, even to fix an outright mistake.
+  This system can't directly observe "did the customer see it", so it uses
+  `at_communications.status` still `pending` (never `sent`/`accepted`) as
+  the conservative technical proxy for "not yet delivered" — CIVA doesn't
+  name AT communication as the boundary itself, but erring toward requiring
+  a credit note over an improper cancellation is the safer default. See
+  `docs/legal/civa-extracts.md`'s "What this resolves" note for the full
+  reasoning.
 - Writes a `document_status_events` row; reverses stock/account effects
   with new compensating entries (never deleting) — stubbed the same way
   task 2.6 stubs them, real wiring in Phase 5.
 
 **Accept:** cancelling a document with a rectifying NC/ND already issued
 against it is rejected (reuses task 2.7's check); cancelling a
-communicated-to-AT document is rejected under the provisional rule above;
-a cancelled document's data is untouched (only a new status event and the
-allowed `status` column change) — verified against task 2.3's immutability
-triggers, not just application logic.
+communicated-to-AT document is rejected (CIVA Art. 29.º §7 — a credit note
+is required instead); a cancelled document's data is untouched (only a new
+status event and the allowed `status` column change) — verified against
+task 2.3's immutability triggers, not just application logic.
 
 ### 2.11 Web: document editor and related screens
 
@@ -352,8 +353,5 @@ document and convert it, issue a receipt allocated across two invoices.
   anything touching signing or calculation.
 - 🧑 Owner reviews `pricing-test-vectors.json` (decision/task 2.1) before
   the calculator is considered done, not only at phase end.
-- 🧑 Owner confirms the provisional cancellation-window rule (task 2.10) or
-  supplies CIVA Art. 29.º's own text (DL 28/2019 doesn't reproduce it) so
-  it can be replaced with the actual legal conditions before Phase 3 (AT
-  communication) makes the distinction between "communicated" and "not
-  yet communicated" load-bearing.
+- Cancellation conditions (task 2.10) are resolved from CIVA Art. 29.º §7 —
+  no longer an open exit item.

@@ -1,4 +1,4 @@
-# CIVA extracts — VAT rates
+# CIVA extracts
 
 Source: https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/pages/iva18.aspx
 (Código do IVA, Artigo 18.º — Taxas do imposto). Pasted by the owner on 2026-09-11;
@@ -103,3 +103,53 @@ figures; those came from the AT's own summary page (see the note at the top of
 this file), not the regional decree directly, but that's now an AT-portal
 citation rather than a third-party table. All nine mainland/Açores/Madeira
 RED/INT/NOR rates are confirmed; no more `[VERIFY]` on tax rates for Phase 2.
+
+## Article 29 — General obligations (verbatim, relevant paragraphs)
+
+Source: https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva29.aspx.
+Pasted by the owner on 2026-09-20; same network-egress limitation as Art. 18.º
+above. Full article pasted; only §7 (the one this repo needed) and its
+immediate context are reproduced here — the rest of the article (declaration
+deadlines, IRC/IRS annexes, exemption thresholds, etc.) is Phase 3+/accounting
+territory, not needed for Phase 2's document lifecycle.
+
+> Artigo 29.º
+> Obrigações em geral
+>
+> [...]
+>
+> 7 - Quando o valor tributável de uma operação ou o imposto correspondente
+> sejam alterados por qualquer motivo, incluindo inexatidão, deve ser emitido
+> documento retificativo de fatura. (Redacção do D.L. nº 197/2012, de 24 de
+> Agosto, com entrada em vigor em 1 de Janeiro de 2013)
+>
+> [...]
+>
+> 19 - Não é permitida aos sujeitos passivos a emissão e entrega de documentos
+> de natureza diferente da fatura para titular a transmissão de bens ou
+> prestação de serviços aos respetivos adquirentes ou destinatários, sob pena
+> de aplicação das penalidades legalmente previstas. (Aditado pelo D.L.
+> nº 197/2012, de 24 de Agosto, com entrada em vigor em 1 de Janeiro de 2013)
+
+### What this resolves for Phase 2 task 2.10 (cancellation)
+
+§7 is unconditional and broad: **any** change to an invoice's taxable value
+or tax amount — "por qualquer motivo, incluindo inexatidão" (for any reason,
+including inaccuracy) — must be corrected through a rectifying document
+(NC/ND), never by voiding the original. This is stronger than what Despacho
+8632/2014 alone implied: it means "cancel and reissue" is never the
+correction mechanism once a document has left the issuer's hands, full stop
+— a credit/debit note always is, even to fix an outright mistake.
+
+This sharpens (rather than replaces) the provisional rule already in
+`docs/plans/phase-2.md`: true cancellation (SAF-T `InvoiceStatus = A`) is
+only legitimate for a document that never had external effect — one that
+was signed and numbered but never actually delivered to or seen by the
+customer (e.g. a duplicate created by a client crash, a document generated
+in error and caught immediately). Once a document could plausibly have
+reached the customer, §7 requires a rectifying document instead. "Not yet
+communicated to the AT" remains the system's own technical proxy for "not
+yet delivered" — CIVA doesn't name AT communication as the legal boundary
+itself, but it's the most conservative signal this system can actually
+observe, and erring toward requiring a credit note over an improper
+cancellation is the safer default either way.
