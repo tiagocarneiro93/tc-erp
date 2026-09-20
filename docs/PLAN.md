@@ -295,9 +295,9 @@ Kit-rate mismatch, price preview and cost-estimate rendering reuse the exact fie
 - [x] `make lint` and `make test` green, re-verified as one final pass across the whole of Phase 1 (not just per-task): 236 PHPUnit tests/846 assertions, PHPStan, Deptrac and PHP-CS-Fixer clean on the API; ESLint (0 errors), `tsc -b`, `vite build` and 22 Vitest tests clean on the web app.
 - [x] Playwright e2e from task 1.10 (`master-data.spec.ts`) passes.
 - [x] 🧑 **Owner confirmed 2026-09-20:** mainland tax rates (6%/13%/23%) and all PT-AC/PT-MA rates against the AT portal — Madeira's reduced rate was corrected from the 4% candidate to the confirmed 5% (`api/migrations/Version20260920090000.php`; see `docs/legal/civa-extracts.md`).
-- [ ] 🧑 **Owner action required:** review Phase 1 (this plan and the resulting code) before Phase 2 starts.
+- [x] 🧑 **Owner reviewed and closed Phase 1 on 2026-09-21.**
 
-**Notes:** every criterion this session can verify mechanically is green; the two 🧑 items are the owner's own to close — Phase 2 does not start until they are. `onboarding.spec.ts`'s pre-existing non-idempotency (noted under task 1.10) is a test-environment gap the owner may want tracked separately, not a Phase 1 blocker.
+**Notes:** every criterion this session can verify mechanically is green; both 🧑 items are closed. **Phase 1 is done.** `onboarding.spec.ts`'s pre-existing non-idempotency (noted under task 1.10) is a test-environment gap the owner may want tracked separately, not a Phase 1 blocker.
 
 **Fixes from owner testing (post-1.10):**
 - `tax_rates` was missing the exempt (`ISE`, SAF-T TaxCode) row entirely — only `RED`/`INT`/`NOR` were seeded in task 1.2. Added via an additive migration (`Version20260912100000`, never editing the committed one): 0% for every region. 0% for an exemption isn't a legally variable figure the way the disputed PT-AC/PT-MA percentages are, so this carries no `[VERIFY]`.

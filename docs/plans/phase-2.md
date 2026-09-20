@@ -17,6 +17,8 @@ webservice itself (task 2.2 uses a manually-entered validation code; the live
 call is Phase 3). Cancellation's legal conditions (§7.4, task 2.10) are now
 resolved from CIVA Art. 29.º §7 — see `docs/legal/civa-extracts.md`.
 
+**🧑 Owner approved this plan on 2026-09-21. Implementation starts at task 2.1.**
+
 Depends on Phase 1 being complete: customers/suppliers, products (with tax
 rate + exemption reason), product families, price lists, warehouses, and the
 two 🧑 Phase 1 exit items (mainland/PT-AC/PT-MA tax-rate sign-off, owner
