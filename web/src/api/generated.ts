@@ -182,6 +182,35 @@ export interface ChangeMemberRoleRequest {
   role?: string;
 }
 
+export type CalculateRequestPricingMode = typeof CalculateRequestPricingMode[keyof typeof CalculateRequestPricingMode];
+
+
+export const CalculateRequestPricingMode = {
+  net: 'net',
+  gross: 'gross',
+} as const;
+
+export type CalculateRequestRoundingMethod = typeof CalculateRequestRoundingMethod[keyof typeof CalculateRequestRoundingMethod];
+
+
+export const CalculateRequestRoundingMethod = {
+  per_line: 'per_line',
+  per_group: 'per_group',
+} as const;
+
+export type CalculateRequestLinesItem = {[key: string]: unknown | null};
+
+export interface CalculateRequest {
+  pricing_mode?: CalculateRequestPricingMode;
+  rounding_method?: CalculateRequestRoundingMethod;
+  /** @minItems 1 */
+  lines?: CalculateRequestLinesItem[];
+  /** @nullable */
+  global_discount_percent?: string | null;
+  /** @nullable */
+  date?: string | null;
+}
+
 export type GetPriceListsList200ItemsItem = {
   id?: string;
   name?: string;
@@ -595,6 +624,36 @@ export type GetCountriesList200ItemsItem = {
 
 export type GetCountriesList200 = {
   items?: GetCountriesList200ItemsItem[];
+};
+
+export type PostTaxCalculate200LinesItem = {
+  line_amount_before_discounts?: string;
+  discount_amount?: string;
+  settlement_amount?: string;
+  net_amount?: string;
+  gross_amount?: string;
+  tax_amount?: string;
+  tax_region?: string;
+  tax_code?: string;
+  tax_percentage?: string;
+  /** @nullable */
+  exemption_reason_code?: string | null;
+};
+
+export type PostTaxCalculate200TaxSummaryItem = {
+  tax_region?: string;
+  tax_code?: string;
+  tax_percentage?: string;
+  taxable_base?: string;
+  tax_amount?: string;
+};
+
+export type PostTaxCalculate200 = {
+  lines?: PostTaxCalculate200LinesItem[];
+  tax_summary?: PostTaxCalculate200TaxSummaryItem[];
+  net_total?: string;
+  tax_total?: string;
+  gross_total?: string;
 };
 
 export type GetExemptionReasonsListParams = {
@@ -5486,6 +5545,89 @@ export function useGetCountriesList<TData = Awaited<ReturnType<typeof getCountri
 
 
 
+
+export const getPostTaxCalculateUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/calculate`
+}
+
+export const postTaxCalculate = async (companyId: string,
+    calculateRequest: CalculateRequest, options?: RequestInit): Promise<PostTaxCalculate200> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostTaxCalculate200>(getPostTaxCalculateUrl(companyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(calculateRequest)
+  }
+);}
+
+
+
+
+
+export const getPostTaxCalculateMutationKey = () => ['postTaxCalculate'] as const;
+
+export const getPostTaxCalculateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postTaxCalculate>>, TError,PostTaxCalculateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postTaxCalculate>>, TError,PostTaxCalculateMutationVariables, TContext> => {
+
+const mutationKey = getPostTaxCalculateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postTaxCalculate>>, PostTaxCalculateMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  postTaxCalculate(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostTaxCalculateMutationResult = NonNullable<Awaited<ReturnType<typeof postTaxCalculate>>>
+    export type PostTaxCalculateMutationBody = CalculateRequest
+    export type PostTaxCalculateMutationError = void
+    export type PostTaxCalculateMutationVariables = {companyId: string;data: CalculateRequest}
+
+    export const usePostTaxCalculate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postTaxCalculate>>, TError,PostTaxCalculateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postTaxCalculate>>,
+        TError,
+        PostTaxCalculateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostTaxCalculateMutationOptions(options), queryClient);
+    }
 
 export const getGetExemptionReasonsListUrl = (params?: GetExemptionReasonsListParams,) => {
   const normalizedParams = new URLSearchParams();
