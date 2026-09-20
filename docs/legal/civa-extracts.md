@@ -5,6 +5,15 @@ Source: https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tribu
 this sandbox's network egress is blocked for `portaldasfinancas.gov.pt`, so Claude
 Code could not fetch it directly.
 
+**Regional (Açores/Madeira) rates confirmed 2026-09-20** against the AT's own
+summary page (https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/c-iva-listas.aspx,
+pasted by the owner — same domain as Art. 18.º above, blocked for direct fetch):
+mainland 6%/13%/23%, Açores 4%/9%/16%, **Madeira 5%/12%/22%**. This resolves the
+dispute noted below in "Still open" in favour of 5% for Madeira's reduced rate
+(the seeded candidate had been 4%) — corrected via
+`api/migrations/Version20260920090000.php` (never editing the committed
+original seed).
+
 ## Article 18 — Tax rates (verbatim)
 
 > Artigo 18.º
@@ -79,28 +88,18 @@ Code could not fetch it directly.
 | Mainland (Continente) | `RED` (reduzida) | 6% | Art. 18.º n.º 1 a), Lista I |
 | Mainland (Continente) | `INT` (intermédia) | 13% | Art. 18.º n.º 1 b), Lista II |
 | Mainland (Continente) | `NOR` (normal) | 23% | Art. 18.º n.º 1 c) |
-| Açores (PT-AC) | `RED` (reduzida) | ⚠️ 4% (unverified) | secondary source, see below |
-| Açores (PT-AC) | `INT` (intermédia) | ⚠️ 9% (unverified) | secondary source, see below |
-| Açores (PT-AC) | `NOR` (normal) | ⚠️ 16% (unverified) | secondary source, see below |
-| Madeira (PT-MA) | `RED` (reduzida) | ⚠️ 4% (unverified, disputed) | secondary source, see below — a separate web search returned 5% for this one figure |
-| Madeira (PT-MA) | `INT` (intermédia) | ⚠️ 12% (unverified) | secondary source, see below |
-| Madeira (PT-MA) | `NOR` (normal) | ⚠️ 22% (unverified) | secondary source, see below |
+| Açores (PT-AC) | `RED` (reduzida) | ✅ 4% | AT portal, confirmed 2026-09-20 |
+| Açores (PT-AC) | `INT` (intermédia) | ✅ 9% | AT portal, confirmed 2026-09-20 |
+| Açores (PT-AC) | `NOR` (normal) | ✅ 16% | AT portal, confirmed 2026-09-20 |
+| Madeira (PT-MA) | `RED` (reduzida) | ✅ 5% | AT portal, confirmed 2026-09-20 — corrected from the 4% candidate |
+| Madeira (PT-MA) | `INT` (intermédia) | ✅ 12% | AT portal, confirmed 2026-09-20 |
+| Madeira (PT-MA) | `NOR` (normal) | ✅ 22% | AT portal, confirmed 2026-09-20 |
 
-## Still open
+## Resolved (previously "Still open")
 
 Article 18 §3 only says the Regions **may** set their own reduced rates under the
-Regional Finance Law (Lei Orgânica n.º 2/2013) — it does not state what those rates
-currently are; that requires each Region's own legislative decree (a Decreto
-Legislativo Regional), which is not in `docs/legal/`. Mainland rates are resolved
-(6%/13%/23%, cited above from the primary CIVA text).
-
-For Açores/Madeira, the owner supplied a screenshot of a third-party table quoting
-4%/9%/16% (Açores) and 4%/12%/22% (Madeira) — "informação que encontrei online," not
-the primary source. This is recorded above as a **candidate, not a confirmed value**:
-a separate web search done earlier gave the same Açores figures but 5% (not 4%) for
-Madeira's reduced rate — two secondary sources disagreeing on one figure is exactly
-why this isn't being treated as settled. `docs/plans/phase-1.md` task 1.2 seeds these
-candidate PT-AC/PT-MA values but flags them for explicit 🧑 owner sign-off (ideally
-against the Jornal Oficial da Região Autónoma dos Açores / da Madeira, or the
-region's finance department) before Phase 2's `PriceCalculator` relies on them for
-real invoices.
+Regional Finance Law (Lei Orgânica n.º 2/2013) — it doesn't itself state the
+figures; those came from the AT's own summary page (see the note at the top of
+this file), not the regional decree directly, but that's now an AT-portal
+citation rather than a third-party table. All nine mainland/Açores/Madeira
+RED/INT/NOR rates are confirmed; no more `[VERIFY]` on tax rates for Phase 2.
