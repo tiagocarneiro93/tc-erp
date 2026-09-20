@@ -114,6 +114,24 @@ final class PriceCalculator
      * total — never a cent adrift from rounding each line's share
      * independently.
      *
+     * Deliberately computes each line's *exact* share as `amount_i × rate`
+     * directly, never via `amount_i ÷ total × discountTotal`. The two are
+     * not the same computation: dividing by `total` is inherently an
+     * approximation (rounded to a finite, if generous, working scale),
+     * whereas `Σ(amount_i × rate) = total × rate` exactly, by
+     * distributivity — no division needed. An earlier revision used the
+     * division form; empirically (see the git history for this file) it
+     * produced byte-identical output to this one on every case tried,
+     * including adversarial ones combining line-level and global
+     * discounts, because the division's working scale (`LINE_SCALE + 14`)
+     * left far more headroom than any realistic invoice amount could
+     * exhaust. So this is not a fix for an observed bug — it's kept
+     * because it is the exact computation with one fewer operation, not
+     * because the division form was shown to misbehave in practice. The
+     * only genuine rounding to redistribute is the (small, bounded) gap
+     * between the aggregate `discountTotal` — itself rounded to line
+     * precision — and the exact per-line shares.
+     *
      * @param array<int, BigDecimal> $afterLineDiscounts
      *
      * @return array<int, BigDecimal> settlement amount per line index, scale 6
@@ -121,10 +139,11 @@ final class PriceCalculator
     private function allocateGlobalDiscount(array $afterLineDiscounts, BigDecimal $total, Percentage $globalDiscountPercent): array
     {
         if ($total->isZero()) {
-            return array_fill_keys(array_keys($afterLineDiscounts), BigDecimal::zero());
+            return array_fill_keys(array_keys($afterLineDiscounts), BigDecimal::zero()->toScale(self::LINE_SCALE));
         }
 
-        $discountTotal = $total->multipliedBy($globalDiscountPercent->asMultiplier())->toScale(self::LINE_SCALE, RoundingMode::HalfUp);
+        $rateMultiplier = $globalDiscountPercent->asMultiplier();
+        $discountTotal = $total->multipliedBy($rateMultiplier)->toScale(self::LINE_SCALE, RoundingMode::HalfUp);
         $targetUnits = $discountTotal->withPointMovedRight(self::LINE_SCALE)->toBigInteger();
 
         $flooredUnits = [];
@@ -132,9 +151,7 @@ final class PriceCalculator
         $sumFloored = BigInteger::zero();
 
         foreach ($afterLineDiscounts as $i => $amount) {
-            $exactShareUnits = $amount
-                ->dividedBy($total, self::LINE_SCALE + 14, RoundingMode::HalfUp)
-                ->multipliedBy($discountTotal->withPointMovedRight(self::LINE_SCALE));
+            $exactShareUnits = $amount->multipliedBy($rateMultiplier)->withPointMovedRight(self::LINE_SCALE);
             $floored = $exactShareUnits->toScale(0, RoundingMode::Down)->toBigInteger();
             $flooredUnits[$i] = $floored;
             $remainders[$i] = $exactShareUnits->minus($floored);
