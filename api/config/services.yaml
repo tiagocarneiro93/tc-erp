@@ -215,8 +215,6 @@ services:
     App\Shared\Domain\CustomerExistenceChecker:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true
-    # Nothing calls this yet either — task 2.6 (issuance) is the first
-    # caller — so it needs the same public: true treatment.
     App\Fiscal\Domain\Signing\DocumentSigner:
         alias: App\Fiscal\Infrastructure\Signing\OpenSslDocumentSigner
         public: true
@@ -224,9 +222,25 @@ services:
         arguments:
             $privateKeyPath: '%kernel.project_dir%/%env(DOCUMENT_SIGNING_KEY_PATH)%'
             $keyVersion: '%env(int:DOCUMENT_SIGNING_KEY_VERSION)%'
-    # Nothing calls this yet either — no issuing endpoint exists before
-    # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:
+        public: true
+    App\Shared\Domain\TransactionManager:
+        alias: App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionManager
+        public: true
+    App\Shared\Domain\Fiscal\CustomerSnapshotProvider:
+        alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
+        public: true
+    App\Shared\Domain\Fiscal\IssuerSnapshotProvider:
+        alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\DoctrineCompanyProfileRepository
+        public: true
+    App\Shared\Domain\Fiscal\ProductSnapshotProvider:
+        alias: App\Catalog\Infrastructure\Persistence\Doctrine\Repository\DoctrineProductRepository
+        public: true
+    App\Fiscal\Domain\DocumentWriter:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineDocumentWriter
+        public: true
+    App\Fiscal\Domain\AtCommunicationQueue:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineAtCommunicationQueue
         public: true
 
     # Scoped to the `default` connection only — `migrations` runs DDL as

@@ -497,6 +497,10 @@ export type GetDraftsValidate200 = {
   errors?: GetDraftsValidate200ErrorsItem[];
 };
 
+export type PostDocumentsIssue201 = {
+  id?: string;
+};
+
 export type GetSeriesList200ItemsItemStatus = typeof GetSeriesList200ItemsItemStatus[keyof typeof GetSeriesList200ItemsItemStatus];
 
 
@@ -807,6 +811,7 @@ export type PostTaxCalculate200 = {
   net_total?: string;
   tax_total?: string;
   gross_total?: string;
+  settlement_total?: string;
 };
 
 export type GetExemptionReasonsListParams = {
@@ -3689,6 +3694,76 @@ export function useGetDraftsValidate<TData = Awaited<ReturnType<typeof getDrafts
 
 
 
+
+export const getPostDocumentsIssueUrl = (companyId: string,
+    draftId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/documents/drafts/${draftId}/issue`
+}
+
+export const postDocumentsIssue = async (companyId: string,
+    draftId: string, options?: RequestInit): Promise<PostDocumentsIssue201> => {
+
+  return httpClient<PostDocumentsIssue201>(getPostDocumentsIssueUrl(companyId,draftId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPostDocumentsIssueMutationKey = () => ['postDocumentsIssue'] as const;
+
+export const getPostDocumentsIssueMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsIssue>>, TError,PostDocumentsIssueMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postDocumentsIssue>>, TError,PostDocumentsIssueMutationVariables, TContext> => {
+
+const mutationKey = getPostDocumentsIssueMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postDocumentsIssue>>, PostDocumentsIssueMutationVariables> = (props) => {
+          const {companyId,draftId} = props ?? {};
+
+          return  postDocumentsIssue(companyId,draftId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostDocumentsIssueMutationResult = NonNullable<Awaited<ReturnType<typeof postDocumentsIssue>>>
+
+    export type PostDocumentsIssueMutationError = void
+    export type PostDocumentsIssueMutationVariables = {companyId: string;draftId: string}
+
+    export const usePostDocumentsIssue = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsIssue>>, TError,PostDocumentsIssueMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postDocumentsIssue>>,
+        TError,
+        PostDocumentsIssueMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostDocumentsIssueMutationOptions(options), queryClient);
+    }
 
 export const getGetSeriesListUrl = (companyId: string,) => {
 

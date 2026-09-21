@@ -24,6 +24,7 @@ final class PriceCalculation
         private readonly Money $netTotal,
         private readonly Money $taxTotal,
         private readonly Money $grossTotal,
+        private readonly Money $settlementTotal,
     ) {
     }
 
@@ -56,5 +57,17 @@ final class PriceCalculation
     public function grossTotal(): Money
     {
         return $this->grossTotal;
+    }
+
+    /**
+     * `documents.settlement_total` (technical-scope.md §6.6): the sum of
+     * every line's `settlementAmount()` — the total discount allocated
+     * from the document-level global discount (§7.9.4 step 3), rounded to
+     * money scale the same way `netTotal`/`taxTotal`/`grossTotal` are.
+     * Zero when there is no global discount.
+     */
+    public function settlementTotal(): Money
+    {
+        return $this->settlementTotal;
     }
 }

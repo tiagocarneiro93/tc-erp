@@ -63,6 +63,7 @@ final class CalculateController
         new OA\Property(property: 'net_total', type: 'string'),
         new OA\Property(property: 'tax_total', type: 'string'),
         new OA\Property(property: 'gross_total', type: 'string'),
+        new OA\Property(property: 'settlement_total', type: 'string'),
     ]))]
     #[OA\Response(response: 422, description: 'A line is invalid (bad decimal, unknown discount type, or unresolvable tax region/code), or the request payload failed validation.')]
     public function calculate(#[MapRequestPayload] CalculateRequest $request): JsonResponse
@@ -82,6 +83,7 @@ final class CalculateController
             'net_total' => $result->netTotal()->toString(),
             'tax_total' => $result->taxTotal()->toString(),
             'gross_total' => $result->grossTotal()->toString(),
+            'settlement_total' => $result->settlementTotal()->toString(),
         ]);
     }
 

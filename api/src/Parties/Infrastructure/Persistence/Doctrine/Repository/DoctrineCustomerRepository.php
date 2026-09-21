@@ -9,10 +9,11 @@ use App\Parties\Domain\CustomerId;
 use App\Parties\Domain\CustomerRepository;
 use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\CustomerExistenceChecker;
+use App\Shared\Domain\Fiscal\CustomerSnapshotProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class DoctrineCustomerRepository implements CustomerRepository, CustomerExistenceChecker
+final class DoctrineCustomerRepository implements CustomerRepository, CustomerExistenceChecker, CustomerSnapshotProvider
 {
     public function __construct(
         #[Autowire(service: 'doctrine.orm.default_entity_manager')]
@@ -59,5 +60,29 @@ final class DoctrineCustomerRepository implements CustomerRepository, CustomerEx
     {
         $this->entityManager->persist($customer);
         $this->entityManager->flush();
+    }
+
+    public function snapshot(CompanyId $companyId, string $customerId): ?array
+    {
+        try {
+            $id = CustomerId::fromString($customerId);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+
+        $customer = $this->find($companyId, $id);
+
+        if (null === $customer) {
+            return null;
+        }
+
+        return [
+            'nif' => $customer->nif(),
+            'name' => $customer->name(),
+            'address' => $customer->address(),
+            'postal_code' => $customer->postalCode(),
+            'city' => $customer->city(),
+            'country' => $customer->country(),
+        ];
     }
 }

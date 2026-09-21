@@ -224,11 +224,21 @@ deptrac:
             - Fiscal.Domain
             - Shared.Domain
             - Shared.Infrastructure
+        # Shared.Infrastructure is added here only for
+        # Shared\Infrastructure\Http\IdempotencyKeyGuard (task 0.11), built
+        # ahead of any real caller with the explicit intent that "a
+        # controller calls guard() around the code" (its own docblock,
+        # confirmed by tests/Integration/Shared/IdempotencyKeyGuardTest.php
+        # already exercising this module's own issuance route as its
+        # example) — task 2.6 is that first real caller. Not a general
+        # license for Fiscal.UIHttp to reach into Infrastructure; every
+        # other class in this codebase still follows the layer rule.
         Fiscal.UIHttp:
             - Fiscal.UIHttp
             - Fiscal.Application
             - Fiscal.Domain
             - Shared.Domain
+            - Shared.Infrastructure
 
         Company.Domain:
             - Company.Domain

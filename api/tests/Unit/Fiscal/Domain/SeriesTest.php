@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Fiscal\Domain;
 
+use App\Fiscal\Domain\Exception\ChronologyViolation;
 use App\Fiscal\Domain\Exception\InvalidSeriesStatusTransition;
+use App\Fiscal\Domain\Exception\SeriesCannotIssue;
 use App\Fiscal\Domain\Series;
 use App\Fiscal\Domain\SeriesId;
 use App\Fiscal\Domain\SeriesStatus;
@@ -154,6 +156,74 @@ final class SeriesTest extends TestCase
         $this->expectException(InvalidSeriesStatusTransition::class);
 
         $series->cancel();
+    }
+
+    public function testNextNumberIsFirstNumberBeforeAnyIssuance(): void
+    {
+        $series = Series::create(SeriesId::generate(), CompanyId::generate(), 'FT', '2026A', false, 5);
+
+        self::assertSame(5, $series->nextNumber());
+    }
+
+    public function testRecordIssuanceAdvancesLastNumberHashAndDates(): void
+    {
+        $series = $this->newSeries();
+        $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T00:00:00Z'));
+        $issueDate = new \DateTimeImmutable('2026-01-02T10:00:00Z');
+
+        $series->recordIssuance(1, 'HASH1', $issueDate, $issueDate);
+
+        self::assertSame(1, $series->lastNumber());
+        self::assertSame('HASH1', $series->lastHash());
+        self::assertSame($issueDate, $series->lastIssueDate());
+        self::assertSame($issueDate, $series->lastSystemEntryAt());
+        self::assertSame(2, $series->nextNumber());
+
+        $series->recordIssuance(2, 'HASH2', $issueDate, $issueDate);
+
+        self::assertSame(2, $series->lastNumber());
+        self::assertSame('HASH2', $series->lastHash());
+    }
+
+    public function testRecordIssuanceFailsWhenTheSeriesCannotIssue(): void
+    {
+        $series = $this->newSeries();
+
+        $this->expectException(SeriesCannotIssue::class);
+
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable(), new \DateTimeImmutable());
+    }
+
+    public function testRecordIssuanceFailsWithTheWrongNumber(): void
+    {
+        $series = $this->newSeries();
+        $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T00:00:00Z'));
+
+        $this->expectException(\LogicException::class);
+
+        $series->recordIssuance(2, 'HASH1', new \DateTimeImmutable(), new \DateTimeImmutable());
+    }
+
+    public function testRecordIssuanceRejectsAnIssueDateBeforeTheLastOne(): void
+    {
+        $series = $this->newSeries();
+        $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T00:00:00Z'));
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable('2026-01-02T10:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:00Z'));
+
+        $this->expectException(ChronologyViolation::class);
+
+        $series->recordIssuance(2, 'HASH2', new \DateTimeImmutable('2026-01-02T09:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:01Z'));
+    }
+
+    public function testRecordIssuanceRejectsASystemEntryAtBeforeTheLastOne(): void
+    {
+        $series = $this->newSeries();
+        $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T00:00:00Z'));
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable('2026-01-02T10:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:00Z'));
+
+        $this->expectException(ChronologyViolation::class);
+
+        $series->recordIssuance(2, 'HASH2', new \DateTimeImmutable('2026-01-02T10:00:01Z'), new \DateTimeImmutable('2026-01-02T09:59:59Z'));
     }
 
     private function newSeries(): Series

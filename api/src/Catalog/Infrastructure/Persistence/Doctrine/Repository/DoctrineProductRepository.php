@@ -9,10 +9,11 @@ use App\Catalog\Domain\ProductFamilyId;
 use App\Catalog\Domain\ProductId;
 use App\Catalog\Domain\ProductRepository;
 use App\Shared\Domain\CompanyId;
+use App\Shared\Domain\Fiscal\ProductSnapshotProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class DoctrineProductRepository implements ProductRepository
+final class DoctrineProductRepository implements ProductRepository, ProductSnapshotProvider
 {
     public function __construct(
         #[Autowire(service: 'doctrine.orm.default_entity_manager')]
@@ -65,5 +66,27 @@ final class DoctrineProductRepository implements ProductRepository
     {
         $this->entityManager->persist($product);
         $this->entityManager->flush();
+    }
+
+    public function snapshot(CompanyId $companyId, string $productId): ?array
+    {
+        try {
+            $id = ProductId::fromString($productId);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+
+        $product = $this->find($companyId, $id);
+
+        if (null === $product) {
+            return null;
+        }
+
+        return [
+            'code' => $product->code(),
+            'description' => $product->description(),
+            'type' => $product->type(),
+            'unit_code' => $product->unitCode(),
+        ];
     }
 }

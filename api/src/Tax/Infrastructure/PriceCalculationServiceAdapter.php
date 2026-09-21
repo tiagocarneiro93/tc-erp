@@ -79,6 +79,7 @@ final class PriceCalculationServiceAdapter implements PriceCalculationService
             'net_total' => $result->netTotal()->toString(),
             'tax_total' => $result->taxTotal()->toString(),
             'gross_total' => $result->grossTotal()->toString(),
+            'settlement_total' => $result->settlementTotal()->toString(),
         ];
     }
 

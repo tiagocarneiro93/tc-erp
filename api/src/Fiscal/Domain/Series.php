@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Fiscal\Domain;
 
+use App\Fiscal\Domain\Exception\ChronologyViolation;
 use App\Fiscal\Domain\Exception\InvalidSeriesStatusTransition;
+use App\Fiscal\Domain\Exception\SeriesCannotIssue;
 use App\Shared\Domain\CompanyId;
 
 /**
@@ -13,12 +15,12 @@ use App\Shared\Domain\CompanyId;
  * forced year rotation. Lifecycle: `draft` → `active` (once a validation
  * code exists) → `finished`/`cancelled`, the latter two both terminal.
  *
- * `lastNumber`/`lastHash`/`lastIssueDate`/`lastSystemEntryAt` are part of
- * this schema (§6.6) but have no mutator yet: they're written only by the
- * issuance use case (docs/plans/phase-2.md task 2.6, not built yet), under
- * invariants this task doesn't have the context to enforce correctly
- * (§6.9: last_number increases by exactly one per issuance; the date
- * columns never move backwards) — they stay null until then.
+ * `lastNumber`/`lastHash`/`lastIssueDate`/`lastSystemEntryAt` are written
+ * only by {@see recordIssuance()} (docs/plans/phase-2.md task 2.6), which
+ * the issuance use case calls while holding this row's pessimistic lock
+ * ({@see SeriesRepository::findForUpdate()}) so the
+ * §6.9 invariants below hold under concurrent issuance, not just in
+ * isolation.
  */
 final class Series
 {
@@ -31,10 +33,10 @@ final class Series
         private ?string $validationCode,
         private SeriesStatus $status,
         private int $firstNumber,
-        private readonly ?int $lastNumber,
-        private readonly ?string $lastHash,
-        private readonly ?\DateTimeImmutable $lastIssueDate,
-        private readonly ?\DateTimeImmutable $lastSystemEntryAt,
+        private ?int $lastNumber,
+        private ?string $lastHash,
+        private ?\DateTimeImmutable $lastIssueDate,
+        private ?\DateTimeImmutable $lastSystemEntryAt,
         private ?\DateTimeImmutable $atCommunicatedAt,
         private ?\DateTimeImmutable $atFinishedAt,
     ) {
@@ -123,6 +125,48 @@ final class Series
     public function canIssue(): bool
     {
         return SeriesStatus::Active === $this->status && null !== $this->validationCode;
+    }
+
+    /**
+     * The number the next issued document on this series will get —
+     * `first_number` for the series' first document, `last_number + 1`
+     * otherwise (§6.9: "last_number can only increase by exactly one per
+     * issuance").
+     */
+    public function nextNumber(): int
+    {
+        return null === $this->lastNumber ? $this->firstNumber : $this->lastNumber + 1;
+    }
+
+    /**
+     * §7.1 steps 4–11/§6.9: called once, under this row's pessimistic
+     * lock, after the document to be issued has already been signed with
+     * this series' current {@see lastHash()} as its previous hash — so
+     * the number/hash/dates recorded here are exactly what the just-signed
+     * document used, never recomputed.
+     */
+    public function recordIssuance(int $number, string $hash, \DateTimeImmutable $issueDate, \DateTimeImmutable $systemEntryAt): void
+    {
+        if (!$this->canIssue()) {
+            throw new SeriesCannotIssue($this->status);
+        }
+
+        if ($number !== $this->nextNumber()) {
+            throw new \LogicException(\sprintf('Expected to record number %d, got %d — the caller must sign with nextNumber() before calling recordIssuance().', $this->nextNumber(), $number));
+        }
+
+        if (null !== $this->lastIssueDate && $issueDate < $this->lastIssueDate) {
+            throw new ChronologyViolation('issue_date', $issueDate, $this->lastIssueDate);
+        }
+
+        if (null !== $this->lastSystemEntryAt && $systemEntryAt < $this->lastSystemEntryAt) {
+            throw new ChronologyViolation('system_entry_at', $systemEntryAt, $this->lastSystemEntryAt);
+        }
+
+        $this->lastNumber = $number;
+        $this->lastHash = $hash;
+        $this->lastIssueDate = $issueDate;
+        $this->lastSystemEntryAt = $systemEntryAt;
     }
 
     private function guardStatus(string $action, SeriesStatus $required): void

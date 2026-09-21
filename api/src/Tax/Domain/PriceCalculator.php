@@ -333,12 +333,18 @@ final class PriceCalculator
             $taxTotal = $taxTotal->plus($group['vat']);
         }
 
+        $settlementTotal = BigDecimal::zero();
+        foreach ($calculatedLines as $calculatedLine) {
+            $settlementTotal = $settlementTotal->plus($calculatedLine->settlementAmount()->toBigDecimal());
+        }
+
         return new PriceCalculation(
             $calculatedLines,
             $taxSummary,
             Money::fromString($netTotal->__toString()),
             Money::fromString($taxTotal->__toString()),
             Money::fromString($netTotal->plus($taxTotal)->__toString()),
+            Money::fromString($settlementTotal->toScale(self::MONEY_SCALE, RoundingMode::HalfUp)->__toString()),
         );
     }
 }
