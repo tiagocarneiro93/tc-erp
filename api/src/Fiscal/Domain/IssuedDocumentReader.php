@@ -46,4 +46,12 @@ interface IssuedDocumentReader
      * document — the minimal running total this phase can track.
      */
     public function sumGrossTotalOfActiveCreditNotesAgainst(CompanyId $companyId, string $documentNo): Money;
+
+    /**
+     * task 2.9, §6.6 `receipt_allocations`: how much of this document has
+     * already been settled by non-cancelled receipts — the same minimal
+     * live-running-total approach as {@see self::sumGrossTotalOfActiveCreditNotesAgainst()},
+     * §6.7's current-accounts module not existing yet either.
+     */
+    public function sumSettledAmount(CompanyId $companyId, DocumentId $documentId): Money;
 }

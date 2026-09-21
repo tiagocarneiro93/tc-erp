@@ -128,6 +128,16 @@ export interface UpdateDraftRequest {
   payload?: UpdateDraftRequestPayload;
 }
 
+export type IssueReceiptRequestAllocationsItem = {[key: string]: string};
+
+export interface IssueReceiptRequest {
+  series_id?: string;
+  /** @nullable */
+  customer_id?: string | null;
+  payment_method?: string;
+  allocations?: IssueReceiptRequestAllocationsItem[];
+}
+
 export interface CreateSeriesRequest {
   document_type?: string;
   code?: string;
@@ -525,6 +535,10 @@ export type GetDraftsValidate200 = {
 };
 
 export type PostDocumentsIssue201 = {
+  id?: string;
+};
+
+export type PostReceiptsIssue201 = {
   id?: string;
 };
 
@@ -3960,6 +3974,89 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPostDocumentsIssueMutationOptions(options), queryClient);
+    }
+
+export const getPostReceiptsIssueUrl = (companyId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/receipts`
+}
+
+export const postReceiptsIssue = async (companyId: string,
+    issueReceiptRequest: IssueReceiptRequest, options?: RequestInit): Promise<PostReceiptsIssue201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostReceiptsIssue201>(getPostReceiptsIssueUrl(companyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(issueReceiptRequest)
+  }
+);}
+
+
+
+
+
+export const getPostReceiptsIssueMutationKey = () => ['postReceiptsIssue'] as const;
+
+export const getPostReceiptsIssueMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postReceiptsIssue>>, TError,PostReceiptsIssueMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postReceiptsIssue>>, TError,PostReceiptsIssueMutationVariables, TContext> => {
+
+const mutationKey = getPostReceiptsIssueMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postReceiptsIssue>>, PostReceiptsIssueMutationVariables> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  postReceiptsIssue(companyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostReceiptsIssueMutationResult = NonNullable<Awaited<ReturnType<typeof postReceiptsIssue>>>
+    export type PostReceiptsIssueMutationBody = IssueReceiptRequest
+    export type PostReceiptsIssueMutationError = void
+    export type PostReceiptsIssueMutationVariables = {companyId: string;data: IssueReceiptRequest}
+
+    export const usePostReceiptsIssue = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postReceiptsIssue>>, TError,PostReceiptsIssueMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postReceiptsIssue>>,
+        TError,
+        PostReceiptsIssueMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostReceiptsIssueMutationOptions(options), queryClient);
     }
 
 export const getGetSeriesListUrl = (companyId: string,) => {

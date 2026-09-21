@@ -1993,6 +1993,64 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/receipts": {
+            "post": {
+                "tags": [
+                    "Receipts"
+                ],
+                "operationId": "post_receipts_issue",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IssueReceiptRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Issued.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An allocation is missing \"document_id\" or \"amount\"."
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "The series, or an allocation's document, does not exist."
+                    },
+                    "422": {
+                        "description": "No allocations, the series cannot issue, or an allocation is invalid (cancelled document, no receivable, or exceeds the open amount)."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/series": {
             "get": {
                 "tags": [
@@ -4396,6 +4454,34 @@
                 },
                 "type": "object"
             },
+            "IssueReceiptRequest": {
+                "properties": {
+                    "series_id": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "customer_id": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "payment_method": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "allocations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "default": []
+                    }
+                },
+                "type": "object"
+            },
             "CreateSeriesRequest": {
                 "properties": {
                     "document_type": {
@@ -4708,6 +4794,9 @@
         },
         {
             "name": "Drafts"
+        },
+        {
+            "name": "Receipts"
         },
         {
             "name": "Series"

@@ -143,9 +143,11 @@ final class Series
      * lock, after the document to be issued has already been signed with
      * this series' current {@see lastHash()} as its previous hash — so
      * the number/hash/dates recorded here are exactly what the just-signed
-     * document used, never recomputed.
+     * document used, never recomputed. `$hash` is only ever null for a
+     * receipts (RG) series — receipts are never signed (Despacho 8632/2014
+     * §2.2.3), so there is no hash chain to carry forward on that series.
      */
-    public function recordIssuance(int $number, string $hash, \DateTimeImmutable $issueDate, \DateTimeImmutable $systemEntryAt): void
+    public function recordIssuance(int $number, ?string $hash, \DateTimeImmutable $issueDate, \DateTimeImmutable $systemEntryAt): void
     {
         if (!$this->canIssue()) {
             throw new SeriesCannotIssue($this->status);

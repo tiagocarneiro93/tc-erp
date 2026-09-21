@@ -100,4 +100,21 @@ final class DoctrineIssuedDocumentReader implements IssuedDocumentReader
 
         return Money::fromString((string) $sum);
     }
+
+    public function sumSettledAmount(CompanyId $companyId, DocumentId $documentId): Money
+    {
+        $sum = $this->connection->fetchOne(
+            "SELECT COALESCE(SUM(ra.settlement_amount), 0.00)
+             FROM receipt_allocations ra
+             JOIN receipts r ON r.company_id = ra.company_id AND r.id = ra.receipt_id
+             WHERE ra.company_id = ? AND ra.document_id = ? AND r.status <> 'A'",
+            [$companyId->toString(), $documentId->toString()],
+        );
+
+        if (!\is_string($sum) && !is_numeric($sum)) {
+            throw new \UnexpectedValueException('Unexpected column type reading receipt_allocations/receipts.settlement_amount.');
+        }
+
+        return Money::fromString((string) $sum);
+    }
 }

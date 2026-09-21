@@ -245,6 +245,9 @@ services:
     App\Fiscal\Domain\AtCommunicationQueue:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineAtCommunicationQueue
         public: true
+    App\Fiscal\Domain\ReceiptWriter:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineReceiptWriter
+        public: true
 
     # Scoped to the `default` connection only — `migrations` runs DDL as
     # app_owner and never needs a company context (config/packages/doctrine.yaml).
