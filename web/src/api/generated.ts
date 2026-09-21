@@ -106,6 +106,10 @@ export interface PaymentTermsRequest {
   is_default?: boolean;
 }
 
+export interface ConvertDocumentRequest {
+  document_type: string;
+}
+
 export interface CreditNoteRequest {
   /** @nullable */
   reason?: string | null;
@@ -431,6 +435,10 @@ export type PostPaymentTermsCreate201 = {
   id?: string;
 };
 
+export type PostDocumentsConvert201 = {
+  id?: string;
+};
+
 export type PostDocumentsCreditNote201 = {
   id?: string;
 };
@@ -467,6 +475,11 @@ export type GetDraftsList200ItemsItem = {
   /** @nullable */
   customer_id?: string | null;
   updated_at?: string;
+  /**
+     * Despacho 8632/2014 §1.2 — set for working documents (OR/PF/NE).
+     * @nullable
+     */
+  mention?: string | null;
 };
 
 export type GetDraftsList200 = {
@@ -495,6 +508,11 @@ export type GetDraftsGet200 = {
   /** @nullable */
   customer_id?: string | null;
   updated_at?: string;
+  /**
+     * Despacho 8632/2014 §1.2 — set for working documents (OR/PF/NE).
+     * @nullable
+     */
+  mention?: string | null;
 };
 
 export type GetDraftsValidate200ErrorsItem = {
@@ -3068,6 +3086,91 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDeletePaymentTermsDeactivateMutationOptions(options), queryClient);
+    }
+
+export const getPostDocumentsConvertUrl = (companyId: string,
+    documentId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/documents/${documentId}/convert`
+}
+
+export const postDocumentsConvert = async (companyId: string,
+    documentId: string,
+    convertDocumentRequest: ConvertDocumentRequest, options?: RequestInit): Promise<PostDocumentsConvert201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostDocumentsConvert201>(getPostDocumentsConvertUrl(companyId,documentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(convertDocumentRequest)
+  }
+);}
+
+
+
+
+
+export const getPostDocumentsConvertMutationKey = () => ['postDocumentsConvert'] as const;
+
+export const getPostDocumentsConvertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsConvert>>, TError,PostDocumentsConvertMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postDocumentsConvert>>, TError,PostDocumentsConvertMutationVariables, TContext> => {
+
+const mutationKey = getPostDocumentsConvertMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postDocumentsConvert>>, PostDocumentsConvertMutationVariables> = (props) => {
+          const {companyId,documentId,data} = props ?? {};
+
+          return  postDocumentsConvert(companyId,documentId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostDocumentsConvertMutationResult = NonNullable<Awaited<ReturnType<typeof postDocumentsConvert>>>
+    export type PostDocumentsConvertMutationBody = ConvertDocumentRequest
+    export type PostDocumentsConvertMutationError = void
+    export type PostDocumentsConvertMutationVariables = {companyId: string;documentId: string;data: ConvertDocumentRequest}
+
+    export const usePostDocumentsConvert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsConvert>>, TError,PostDocumentsConvertMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postDocumentsConvert>>,
+        TError,
+        PostDocumentsConvertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostDocumentsConvertMutationOptions(options), queryClient);
     }
 
 export const getPostDocumentsCreditNoteUrl = (companyId: string,

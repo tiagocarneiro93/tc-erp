@@ -30,4 +30,24 @@ interface DocumentWriter
      * @param array<string, mixed>       $statusEvent
      */
     public function insert(CompanyId $companyId, array $document, array $lines, array $taxSummary, array $references, array $statusEvent): void;
+
+    /**
+     * `SELECT ... FOR UPDATE` on the `documents` row, so two conversions
+     * racing to close the same source document (task 2.8, §6.8) serialize
+     * on it instead of both reading pending quantities that don't yet
+     * reflect each other's insert — the same reasoning as
+     * {@see SeriesRepository::findForUpdate()}'s lock.
+     * A no-op if no such document exists.
+     */
+    public function lockByDocumentNo(CompanyId $companyId, string $documentNo): void;
+
+    /**
+     * §6.9's only other allowed `documents` mutation: a status change,
+     * always preceded (here, in the same call) by the
+     * `document_status_events` row the table's own trigger requires
+     * before it will allow the `UPDATE`.
+     *
+     * @param array<string, mixed> $statusEvent
+     */
+    public function updateStatus(CompanyId $companyId, DocumentId $documentId, string $status, ?string $statusReason, \DateTimeImmutable $statusAt, array $statusEvent): void;
 }

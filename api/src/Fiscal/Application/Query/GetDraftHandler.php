@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Fiscal\Application\Query;
 
 use App\Fiscal\Domain\DocumentDraftRepository;
+use App\Fiscal\Domain\DocumentTypeRepository;
 use App\Fiscal\Domain\Exception\DocumentDraftNotFound;
 use App\Shared\Domain\Company\CompanyContext;
 use App\Shared\Domain\Exception\PermissionDenied;
@@ -16,6 +17,7 @@ final class GetDraftHandler
 {
     public function __construct(
         private readonly DocumentDraftRepository $drafts,
+        private readonly DocumentTypeRepository $documentTypes,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
     ) {
@@ -35,6 +37,6 @@ final class GetDraftHandler
             throw new DocumentDraftNotFound();
         }
 
-        return DraftView::fromEntity($draft);
+        return DraftView::fromEntity($draft, $this->documentTypes->find($draft->documentType()));
     }
 }

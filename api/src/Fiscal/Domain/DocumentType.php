@@ -77,4 +77,17 @@ final class DocumentType
     {
         return $this->requiresAtPriorCommunication;
     }
+
+    /**
+     * Despacho 8632/2014 §1.2: a document that isn't an invoice or
+     * rectifying document, presented to the customer, must carry
+     * {@see Signing\NotAnInvoiceMention}. Scoped to
+     * `WorkingDocuments` (OR/PF/NE, task 2.8) for now — GT/GR/GD
+     * (MovementOfGoods) and RG (Payments) are each their own task's
+     * (Phase 5, task 2.9) reading to make, not assumed here.
+     */
+    public function mustDeclareItIsNotAnInvoice(): bool
+    {
+        return 'WorkingDocuments' === $this->saftSection;
+    }
 }

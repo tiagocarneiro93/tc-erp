@@ -20,6 +20,7 @@ use App\Fiscal\Domain\Exception\InvalidDraftLineForIssuance;
 use App\Fiscal\Domain\Exception\SeriesCannotIssue;
 use App\Fiscal\Domain\Exception\SeriesNotFound;
 use App\Fiscal\Domain\Exception\UnknownDocumentType;
+use App\Fiscal\Domain\IssuedDocumentReader;
 use App\Fiscal\Domain\SeriesId;
 use App\Fiscal\Domain\SeriesRepository;
 use App\Fiscal\Domain\Signing\AtcudBuilder;
@@ -34,6 +35,7 @@ use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
 use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Decimal\Money;
+use App\Shared\Domain\Decimal\Quantity;
 use App\Shared\Domain\Exception\PermissionDenied;
 use App\Shared\Domain\Fiscal\CustomerSnapshotProvider;
 use App\Shared\Domain\Fiscal\IssuerSnapshotProvider;
@@ -71,6 +73,7 @@ final class IssueDraftHandler
         private readonly PriceCalculationService $priceCalculation,
         private readonly DocumentSigner $signer,
         private readonly DocumentWriter $documentWriter,
+        private readonly IssuedDocumentReader $issuedDocuments,
         private readonly CustomerSnapshotProvider $customerSnapshots,
         private readonly IssuerSnapshotProvider $issuerSnapshots,
         private readonly ProductSnapshotProvider $productSnapshots,
@@ -250,6 +253,10 @@ final class IssueDraftHandler
 
         $this->documentWriter->insert($companyId, $document, $lines, $taxSummary, $references, $statusEvent);
 
+        foreach ($this->collectOriginDocumentNumbers($payload) as $sourceDocumentNo) {
+            $this->closeIfFullyConverted($companyId, $sourceDocumentNo, $command->actingUserId, $now);
+        }
+
         $this->auditLogger->log(
             'document.issued',
             'Document',
@@ -280,6 +287,7 @@ final class IssueDraftHandler
             $calculated = $calculation['lines'][$index];
             $productId = \is_string($rawLine['product_id'] ?? null) ? $rawLine['product_id'] : null;
             $productSnapshot = null !== $productId ? $this->productSnapshots->snapshot($companyId, $productId) : null;
+            $quantity = $this->requireLineString($rawLine, 'quantity', $index);
 
             $rows[] = [
                 'id' => Uuid::v7()->toRfc4122(),
@@ -290,7 +298,7 @@ final class IssueDraftHandler
                 'product_description' => $productSnapshot['description'] ?? $this->requireLineString($rawLine, 'description', $index),
                 'product_type' => $productSnapshot['type'] ?? $this->requireLineString($rawLine, 'product_type', $index),
                 'unit_code' => $productSnapshot['unit_code'] ?? $this->requireLineString($rawLine, 'unit_code', $index),
-                'quantity' => $this->requireLineString($rawLine, 'quantity', $index),
+                'quantity' => $quantity,
                 'unit_price' => $this->requireLineString($rawLine, 'unit_price', $index),
                 'discount_percent' => $this->firstPercentageDiscount($rawLine),
                 'discount_amount' => $calculated['discount_amount'],
@@ -304,11 +312,91 @@ final class IssueDraftHandler
                 'exemption_reason_code' => $calculated['exemption_reason_code'],
                 'exemption_reason_text' => null,
                 'tax_point_date' => null,
-                'origin_references' => null,
+                'origin_references' => $this->buildOriginReferences($rawLine, $quantity),
             ];
         }
 
         return $rows;
+    }
+
+    /**
+     * §6.8 "the system tracks converted quantities per source line": a
+     * conversion draft (task 2.8's `CreateConversionDraftHandler`) tags
+     * each of its lines with an `origin` (`document_no`/`line_number`
+     * identifying the source line) — never a quantity, which is always
+     * taken from this line's own, possibly partial-conversion-edited,
+     * `quantity` at issuance, so the two can never disagree. JSON-encoded
+     * here, same as `customer_snapshot`/`issuer_snapshot` above — raw
+     * `Connection::insert()` doesn't serialize arrays for JSONB columns.
+     *
+     * @param array<string, mixed> $rawLine
+     */
+    private function buildOriginReferences(array $rawLine, string $quantity): ?string
+    {
+        $origin = $rawLine['origin'] ?? null;
+
+        if (!\is_array($origin) || !\is_string($origin['document_no'] ?? null) || !\is_int($origin['line_number'] ?? null)) {
+            return null;
+        }
+
+        return json_encode([['document_no' => $origin['document_no'], 'line_number' => $origin['line_number'], 'quantity' => $quantity]], \JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     *
+     * @return list<string>
+     */
+    private function collectOriginDocumentNumbers(array $payload): array
+    {
+        $numbers = [];
+
+        foreach ((array) ($payload['lines'] ?? []) as $rawLine) {
+            $origin = \is_array($rawLine) ? ($rawLine['origin'] ?? null) : null;
+
+            if (\is_array($origin) && \is_string($origin['document_no'] ?? null)) {
+                $numbers[$origin['document_no']] = true;
+            }
+        }
+
+        return array_keys($numbers);
+    }
+
+    /**
+     * §6.8: "converting a working document fully closes it" — status `F`,
+     * once every one of its lines has zero quantity left pending. Locks
+     * the source row first ({@see DocumentWriter::lockByDocumentNo()}) so
+     * two conversions racing to close the same source (e.g. two partial
+     * conversions completing it together) serialize rather than both
+     * reading pending quantities that don't yet reflect each other.
+     */
+    private function closeIfFullyConverted(CompanyId $companyId, string $documentNo, string $actingUserId, \DateTimeImmutable $now): void
+    {
+        $this->documentWriter->lockByDocumentNo($companyId, $documentNo);
+
+        $source = $this->issuedDocuments->findByDocumentNo($companyId, $documentNo);
+
+        if (null === $source || 'N' !== $source['status']) {
+            return;
+        }
+
+        foreach ($source['lines'] as $line) {
+            if (Quantity::fromString($line['pending_quantity'])->isPositive()) {
+                return;
+            }
+        }
+
+        $reason = 'Fully converted (§6.8).';
+        $statusEvent = [
+            'id' => Uuid::v7()->toRfc4122(),
+            'document_id' => $source['id'],
+            'status' => 'F',
+            'reason' => $reason,
+            'user_id' => $actingUserId,
+            'occurred_at' => $now->format('Y-m-d H:i:sP'),
+        ];
+
+        $this->documentWriter->updateStatus($companyId, DocumentId::fromString($source['id']), 'F', $reason, $now, $statusEvent);
     }
 
     private function stringOrDefault(mixed $value, string $default): string

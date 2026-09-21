@@ -77,6 +77,7 @@ final class DraftsController
             new OA\Property(property: 'series_id', type: 'string', nullable: true),
             new OA\Property(property: 'customer_id', type: 'string', nullable: true),
             new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+            new OA\Property(property: 'mention', type: 'string', nullable: true, description: 'Despacho 8632/2014 §1.2 — set for working documents (OR/PF/NE).'),
         ], type: 'object')),
     ]))]
     public function list(): JsonResponse
@@ -96,6 +97,7 @@ final class DraftsController
         new OA\Property(property: 'series_id', type: 'string', nullable: true),
         new OA\Property(property: 'customer_id', type: 'string', nullable: true),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'mention', type: 'string', nullable: true, description: 'Despacho 8632/2014 §1.2 — set for working documents (OR/PF/NE).'),
     ]))]
     #[OA\Response(response: 404, description: 'No such draft.')]
     public function get(string $draftId): JsonResponse
@@ -160,7 +162,7 @@ final class DraftsController
     }
 
     /**
-     * @return array{id: string, document_type: string, payload: array<string, mixed>, calculated: ?array<string, mixed>, series_id: ?string, customer_id: ?string, updated_at: string}
+     * @return array{id: string, document_type: string, payload: array<string, mixed>, calculated: ?array<string, mixed>, series_id: ?string, customer_id: ?string, updated_at: string, mention: ?string}
      */
     private static function toArray(DraftView $draft): array
     {
@@ -172,6 +174,7 @@ final class DraftsController
             'series_id' => $draft->seriesId,
             'customer_id' => $draft->customerId,
             'updated_at' => $draft->updatedAt,
+            'mention' => $draft->mention,
         ];
     }
 

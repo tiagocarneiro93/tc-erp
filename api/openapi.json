@@ -1428,6 +1428,69 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/documents/{documentId}/convert": {
+            "post": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "post_documents_convert",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConvertDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "A new draft of the target type, prefilled from the source document's pending quantities.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "No such document."
+                    },
+                    "422": {
+                        "description": "The source is not a convertible working document, is cancelled, the target type is not an allowed conversion, or nothing is left to convert."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/documents/{documentId}/credit-note": {
             "post": {
                 "tags": [
@@ -1594,6 +1657,11 @@
                                                     "updated_at": {
                                                         "type": "string",
                                                         "format": "date-time"
+                                                    },
+                                                    "mention": {
+                                                        "description": "Despacho 8632/2014 \u00a71.2 \u2014 set for working documents (OR/PF/NE).",
+                                                        "type": "string",
+                                                        "nullable": true
                                                     }
                                                 },
                                                 "type": "object"
@@ -1714,6 +1782,11 @@
                                         "updated_at": {
                                             "type": "string",
                                             "format": "date-time"
+                                        },
+                                        "mention": {
+                                            "description": "Despacho 8632/2014 \u00a71.2 \u2014 set for working documents (OR/PF/NE).",
+                                            "type": "string",
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -4270,6 +4343,17 @@
                     "is_default": {
                         "type": "boolean",
                         "default": false
+                    }
+                },
+                "type": "object"
+            },
+            "ConvertDocumentRequest": {
+                "required": [
+                    "document_type"
+                ],
+                "properties": {
+                    "document_type": {
+                        "type": "string"
                     }
                 },
                 "type": "object"

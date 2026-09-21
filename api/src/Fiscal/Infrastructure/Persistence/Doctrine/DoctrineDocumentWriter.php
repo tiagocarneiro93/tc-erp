@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Fiscal\Infrastructure\Persistence\Doctrine;
 
+use App\Fiscal\Domain\DocumentId;
 use App\Fiscal\Domain\DocumentWriter;
 use App\Shared\Domain\CompanyId;
 use Doctrine\DBAL\Connection;
@@ -48,5 +49,29 @@ final class DoctrineDocumentWriter implements DocumentWriter
         }
 
         $this->connection->insert('document_status_events', $company + $statusEvent);
+    }
+
+    public function lockByDocumentNo(CompanyId $companyId, string $documentNo): void
+    {
+        $this->connection->fetchOne(
+            'SELECT id FROM documents WHERE company_id = ? AND document_no = ? FOR UPDATE',
+            [$companyId->toString(), $documentNo],
+        );
+    }
+
+    public function updateStatus(CompanyId $companyId, DocumentId $documentId, string $status, ?string $statusReason, \DateTimeImmutable $statusAt, array $statusEvent): void
+    {
+        $company = ['company_id' => $companyId->toString()];
+
+        // The trigger enforcing §6.9's immutability rule requires a
+        // matching document_status_events row to already exist before it
+        // allows the UPDATE below — insert first, always in this order.
+        $this->connection->insert('document_status_events', $company + $statusEvent);
+
+        $this->connection->update(
+            'documents',
+            ['status' => $status, 'status_at' => $statusAt->format('Y-m-d H:i:sP'), 'status_reason' => $statusReason],
+            ['company_id' => $companyId->toString(), 'id' => $documentId->toString()],
+        );
     }
 }

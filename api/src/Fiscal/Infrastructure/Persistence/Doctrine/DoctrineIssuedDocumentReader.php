@@ -27,21 +27,61 @@ final class DoctrineIssuedDocumentReader implements IssuedDocumentReader
             [$companyId->toString(), $id->toString()],
         );
 
+        return $this->hydrate($companyId, $document);
+    }
+
+    public function findByDocumentNo(CompanyId $companyId, string $documentNo): ?array
+    {
+        $document = $this->connection->fetchAssociative(
+            'SELECT id, document_type, document_no, status, customer_id, pricing_mode, rounding_method, gross_total
+             FROM documents WHERE company_id = ? AND document_no = ?',
+            [$companyId->toString(), $documentNo],
+        );
+
+        return $this->hydrate($companyId, $document);
+    }
+
+    /**
+     * @param array<string, mixed>|false $document
+     *
+     * @return array{id: string, document_type: string, document_no: string, status: string, customer_id: ?string, pricing_mode: string, rounding_method: string, gross_total: string, lines: list<array{line_number: int, pending_quantity: string, product_id: ?string, product_code: string, product_description: string, product_type: string, unit_code: string, quantity: string, unit_price: string, discount_percent: ?string, tax_region: string, tax_code: string, exemption_reason_code: ?string}>}|null
+     */
+    private function hydrate(CompanyId $companyId, array|false $document): ?array
+    {
         if (false === $document) {
             return null;
         }
 
+        // pending_quantity: this line's quantity minus whatever any other
+        // (non-cancelled) document has already claimed against this exact
+        // line number via its own lines' `origin_references` — task 2.8's
+        // conversion tracking (§6.8). `jsonb_array_elements(NULL)` yields
+        // zero rows rather than erroring, so ordinary, never-converted-from
+        // lines (the vast majority) are untouched by the LATERAL join.
         $lines = $this->connection->fetchAllAssociative(
-            'SELECT product_id, product_code, product_description, product_type, unit_code, quantity, unit_price,
-                    discount_percent, tax_region, tax_code, exemption_reason_code
-             FROM document_lines WHERE company_id = ? AND document_id = ? ORDER BY line_number ASC',
-            [$companyId->toString(), $id->toString()],
+            "SELECT dl.line_number, dl.product_id, dl.product_code, dl.product_description, dl.product_type, dl.unit_code,
+                    dl.quantity, dl.unit_price, dl.discount_percent, dl.tax_region, dl.tax_code, dl.exemption_reason_code,
+                    dl.quantity - COALESCE((
+                        SELECT SUM((oref->>'quantity')::numeric)
+                        FROM document_lines tl
+                        JOIN documents td ON td.company_id = tl.company_id AND td.id = tl.document_id
+                        CROSS JOIN LATERAL jsonb_array_elements(tl.origin_references) AS oref
+                        WHERE tl.company_id = dl.company_id
+                          AND td.status <> 'A'
+                          AND oref->>'document_no' = ?
+                          AND (oref->>'line_number')::int = dl.line_number
+                    ), 0) AS pending_quantity
+             FROM document_lines dl WHERE dl.company_id = ? AND dl.document_id = ? ORDER BY dl.line_number ASC",
+            [$document['document_no'], $companyId->toString(), $document['id']],
         );
+
+        /** @var list<array{line_number: int, pending_quantity: string, product_id: ?string, product_code: string, product_description: string, product_type: string, unit_code: string, quantity: string, unit_price: string, discount_percent: ?string, tax_region: string, tax_code: string, exemption_reason_code: ?string}> $lineRows */
+        $lineRows = $lines;
 
         /** @var array{id: string, document_type: string, document_no: string, status: string, customer_id: ?string, pricing_mode: string, rounding_method: string, gross_total: string} $documentRow */
         $documentRow = $document;
 
-        return $documentRow + ['lines' => $lines];
+        return $documentRow + ['lines' => $lineRows];
     }
 
     public function sumGrossTotalOfActiveCreditNotesAgainst(CompanyId $companyId, string $documentNo): Money
