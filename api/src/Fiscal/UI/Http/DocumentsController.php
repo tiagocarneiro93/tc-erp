@@ -88,6 +88,9 @@ final class DocumentsController
         new OA\Property(property: 'pricing_mode', type: 'string'),
         new OA\Property(property: 'rounding_method', type: 'string'),
         new OA\Property(property: 'gross_total', type: 'string'),
+        new OA\Property(property: 'can_cancel', type: 'boolean', description: 'Whether POST .../cancel would currently succeed for this document.'),
+        new OA\Property(property: 'can_credit_note', type: 'boolean', description: 'Whether POST .../credit-note would currently succeed for this document.'),
+        new OA\Property(property: 'convert_targets', type: 'array', items: new OA\Items(type: 'string'), description: 'Document types POST .../convert would currently accept for this document; empty if it cannot be converted at all.'),
         new OA\Property(property: 'lines', type: 'array', items: new OA\Items(properties: [
             new OA\Property(property: 'line_number', type: 'integer'),
             new OA\Property(property: 'pending_quantity', type: 'string'),

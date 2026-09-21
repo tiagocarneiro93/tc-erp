@@ -530,6 +530,12 @@ export type GetDocumentsGet200 = {
   pricing_mode?: string;
   rounding_method?: string;
   gross_total?: string;
+  /** Whether POST .../cancel would currently succeed for this document. */
+  can_cancel?: boolean;
+  /** Whether POST .../credit-note would currently succeed for this document. */
+  can_credit_note?: boolean;
+  /** Document types POST .../convert would currently accept for this document; empty if it cannot be converted at all. */
+  convert_targets?: string[];
   lines?: GetDocumentsGet200LinesItem[];
 };
 

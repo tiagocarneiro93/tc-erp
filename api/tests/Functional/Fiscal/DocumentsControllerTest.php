@@ -80,6 +80,145 @@ final class DocumentsControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
+    /**
+     * The detail screen's action buttons (task 2.11) used to be gated only
+     * by the document's *type* — never by whether the specific operation
+     * would actually succeed, so an already-fully-rectified FT still
+     * showed "Anular"/"Nota de crédito". `can_cancel`/`can_credit_note`
+     * mirror exactly what {@see \App\Fiscal\Application\Command\CancelDocumentHandler}
+     * and {@see \App\Fiscal\Application\Command\CreateCreditNoteDraftHandler}
+     * themselves check.
+     */
+    public function testEligibilityFlagsOnAFreshlyIssuedInvoiceAllowBothActions(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client);
+        $companyId = $this->createCompany($client);
+        $documentId = $this->issueInvoice($client, $companyId, '100.00');
+
+        $detail = $this->getDocument($client, $companyId, $documentId);
+
+        self::assertTrue($detail['can_cancel']);
+        self::assertTrue($detail['can_credit_note']);
+        self::assertSame([], $detail['convert_targets']);
+    }
+
+    public function testEligibilityFlagsAfterAFullCreditNoteBlockBothActions(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client);
+        $companyId = $this->createCompany($client);
+        $ncSeriesId = $this->createActiveSeries($client, $companyId, 'NC', '2026A');
+        $documentId = $this->issueInvoice($client, $companyId, '100.00');
+
+        $originalDocumentNo = $this->getDocument($client, $companyId, $documentId)['document_no'];
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/documents/{$documentId}/credit-note", server: self::HEADERS, content: '{}');
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $creditNoteDraft */
+        $creditNoteDraft = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        $client->request('PUT', "/api/v1/companies/{$companyId}/drafts/{$creditNoteDraft['id']}", server: self::HEADERS, content: json_encode([
+            'payload' => [
+                'series_id' => $ncSeriesId,
+                'pricing_mode' => 'net',
+                'rounding_method' => 'per_line',
+                'date' => '2026-01-01',
+                'lines' => [
+                    ['product_code' => 'SKU-1', 'description' => 'Widget', 'product_type' => 'P', 'unit_code' => 'UN', 'quantity' => '1', 'unit_price' => '100.00', 'tax_region' => 'PT', 'tax_code' => 'ISE', 'exemption_reason_code' => 'M99'],
+                ],
+                'references' => [['referenced_document_no' => $originalDocumentNo, 'reason' => 'Devolução total']],
+            ],
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/documents/drafts/{$creditNoteDraft['id']}/issue", server: self::HEADERS + ['HTTP_Idempotency-Key' => 'nc-full-eligibility'], content: '{}');
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $detail = $this->getDocument($client, $companyId, $documentId);
+
+        self::assertFalse($detail['can_cancel']);
+        self::assertFalse($detail['can_credit_note']);
+    }
+
+    /**
+     * `convert_targets` mirrors {@see \App\Fiscal\Application\Command\CreateConversionDraftHandler}:
+     * the detail screen's "Converter" dialog used to offer a fixed FT/FR
+     * choice regardless of source type, so an OR/NE could offer "FR" even
+     * though only "FT" is ever valid for them (§6.8).
+     */
+    public function testConvertTargetsReflectWhatIsActuallyAllowedAndDisappearOnceFullyConverted(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client);
+        $companyId = $this->createCompany($client);
+        $neSeriesId = $this->createActiveSeries($client, $companyId, 'NE', '2026A');
+        $ftSeriesId = $this->createActiveSeries($client, $companyId, 'FT', '2026A');
+
+        $neId = $this->issueWorkingDocument($client, $companyId, $neSeriesId, 'NE');
+
+        self::assertSame(['FT'], $this->getDocument($client, $companyId, $neId)['convert_targets']);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/documents/{$neId}/convert", server: self::HEADERS, content: json_encode(['document_type' => 'FT'], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $draft */
+        $draft = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        $client->request('GET', "/api/v1/companies/{$companyId}/drafts/{$draft['id']}", server: self::HEADERS);
+        /** @var array{payload: array<string, mixed>} $draftView */
+        $draftView = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        $payload = $draftView['payload'];
+        $payload['series_id'] = $ftSeriesId;
+
+        $client->request('PUT', "/api/v1/companies/{$companyId}/drafts/{$draft['id']}", server: self::HEADERS, content: json_encode(['payload' => $payload], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/documents/drafts/{$draft['id']}/issue", server: self::HEADERS + ['HTTP_Idempotency-Key' => 'ne-convert-eligibility'], content: '{}');
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        self::assertSame([], $this->getDocument($client, $companyId, $neId)['convert_targets']);
+    }
+
+    /**
+     * @return array{document_no: string, can_cancel: bool, can_credit_note: bool, convert_targets: list<string>}
+     */
+    private function getDocument(KernelBrowser $client, string $companyId, string $documentId): array
+    {
+        $client->request('GET', "/api/v1/companies/{$companyId}/documents/{$documentId}", server: self::HEADERS);
+        self::assertResponseIsSuccessful();
+
+        /** @var array{document_no: string, can_cancel: bool, can_credit_note: bool, convert_targets: list<string>} $detail */
+        $detail = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        return $detail;
+    }
+
+    private function issueWorkingDocument(KernelBrowser $client, string $companyId, string $seriesId, string $documentType): string
+    {
+        $client->request('POST', "/api/v1/companies/{$companyId}/drafts", server: self::HEADERS, content: json_encode([
+            'document_type' => $documentType,
+            'payload' => [
+                'series_id' => $seriesId,
+                'pricing_mode' => 'net',
+                'rounding_method' => 'per_line',
+                'date' => '2026-01-01',
+                'lines' => [
+                    ['product_code' => 'SKU-1', 'description' => 'Widget', 'product_type' => 'P', 'unit_code' => 'UN', 'quantity' => '1', 'unit_price' => '10.00', 'tax_region' => 'PT', 'tax_code' => 'NOR'],
+                ],
+            ],
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $draft */
+        $draft = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/documents/drafts/{$draft['id']}/issue", server: self::HEADERS + ['HTTP_Idempotency-Key' => 'issue-'.$draft['id']], content: '{}');
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $document */
+        $document = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        return $document['id'];
+    }
+
     private function issueInvoice(KernelBrowser $client, string $companyId, string $unitPrice): string
     {
         $ftSeriesId = $this->createActiveSeries($client, $companyId, 'FT', '2026A');

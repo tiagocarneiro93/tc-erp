@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Fiscal\Application\Command;
 
+use App\Fiscal\Domain\DocumentConversionRules;
 use App\Fiscal\Domain\DocumentDraft;
 use App\Fiscal\Domain\DocumentDraftId;
 use App\Fiscal\Domain\DocumentDraftRepository;
@@ -30,12 +31,6 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final class CreateConversionDraftHandler
 {
-    private const ALLOWED_TARGETS = [
-        'OR' => ['FT'],
-        'PF' => ['FT', 'FR'],
-        'NE' => ['FT'],
-    ];
-
     public function __construct(
         private readonly IssuedDocumentReader $documents,
         private readonly DocumentDraftRepository $drafts,
@@ -62,8 +57,9 @@ final class CreateConversionDraftHandler
         }
 
         $sourceType = $source['document_type'];
+        $allowedTargets = DocumentConversionRules::allowedTargets($sourceType);
 
-        if (!isset(self::ALLOWED_TARGETS[$sourceType])) {
+        if ([] === $allowedTargets) {
             throw ConversionNotAllowed::sourceTypeNotConvertible($sourceType);
         }
 
@@ -71,7 +67,7 @@ final class CreateConversionDraftHandler
             throw ConversionNotAllowed::documentIsCancelled();
         }
 
-        if (!\in_array($command->targetDocumentType, self::ALLOWED_TARGETS[$sourceType], true)) {
+        if (!\in_array($command->targetDocumentType, $allowedTargets, true)) {
             throw ConversionNotAllowed::targetTypeNotAllowed($sourceType, $command->targetDocumentType);
         }
 

@@ -4,7 +4,6 @@ import { useState } from 'react'
 
 import {
   getGetDocumentsGetQueryOptions,
-  useGetDocumentTypesList,
   useGetDocumentsGet,
   usePostDocumentsCancel,
   usePostDocumentsConvert,
@@ -20,22 +19,24 @@ import { apiErrorMessage } from '@/lib/api-error'
 import { formatMoney, formatQuantity } from '@/lib/format/decimal'
 
 const STATUS_LABELS: Record<string, string> = { N: 'Normal', A: 'Anulado', F: 'Totalmente convertido' }
-const CONVERT_TARGETS = ['FT', 'FR'] as const
 
 /**
  * docs/plans/phase-2.md task 2.11: read-only view of an issued document
  * (drafts are the only thing this app ever lets someone edit — CLAUDE.md
  * "issued fiscal data is immutable"), with the credit-note (task 2.7),
  * convert (task 2.8) and cancel (task 2.10) actions this document type
- * actually supports.
+ * actually supports. Which actions actually apply *right now* — not just
+ * "this kind of document can, in general" — comes straight from the
+ * backend (`can_cancel`/`can_credit_note`/`convert_targets`, added after
+ * the owner found a cancelled-in-vain "Anular" button): CLAUDE.md forbids
+ * re-deriving fiscal eligibility rules here.
  */
 export function DocumentDetail({ companyId, documentId }: { companyId: string; documentId: string }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: document, isLoading } = useGetDocumentsGet(companyId, documentId)
-  const { data: documentTypesResponse } = useGetDocumentTypesList()
   const [convertOpen, setConvertOpen] = useState(false)
-  const [convertTarget, setConvertTarget] = useState<string>(CONVERT_TARGETS[0])
+  const [convertTarget, setConvertTarget] = useState<string>('')
   const [actionError, setActionError] = useState<string | null>(null)
 
   const creditNote = usePostDocumentsCreditNote<ApiError>()
@@ -46,10 +47,15 @@ export function DocumentDetail({ companyId, documentId }: { companyId: string; d
     return <p className="text-muted-foreground text-sm">A carregar…</p>
   }
 
-  const documentType = (documentTypesResponse?.items ?? []).find((type) => type.code === document.document_type)
-  const canCreditNote = 'N' === document.status && 'debit' === documentType?.account_effect
-  const canConvert = 'N' === document.status && 'WorkingDocuments' === documentType?.saft_section
-  const canCancel = 'N' === document.status
+  const convertTargets = document.convert_targets ?? []
+  const canCreditNote = document.can_credit_note ?? false
+  const canConvert = convertTargets.length > 0
+  const canCancel = document.can_cancel ?? false
+
+  const openConvertDialog = () => {
+    setConvertTarget(convertTargets[0] ?? '')
+    setConvertOpen(true)
+  }
 
   const handleCreditNote = () => {
     setActionError(null)
@@ -138,7 +144,7 @@ export function DocumentDetail({ companyId, documentId }: { companyId: string; d
             </Button>
           )}
           {canConvert && (
-            <Button variant="outline" onClick={() => setConvertOpen(true)}>
+            <Button variant="outline" onClick={openConvertDialog}>
               Converter
             </Button>
           )}
@@ -194,7 +200,7 @@ export function DocumentDetail({ companyId, documentId }: { companyId: string; d
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CONVERT_TARGETS.map((target) => (
+                {convertTargets.map((target) => (
                   <SelectItem key={target} value={target}>
                     {target}
                   </SelectItem>
