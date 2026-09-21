@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Fiscal\Domain\Series" table="series">
+        <id name="id" type="series_id" column="id">
+            <generator strategy="NONE" />
+        </id>
+
+        <field name="companyId" type="company_id" column="company_id" />
+        <field name="documentType" type="string" column="document_type" />
+        <field name="code" type="string" column="code" />
+        <field name="isTraining" type="boolean" column="is_training" />
+        <field name="validationCode" type="string" column="validation_code" nullable="true" />
+        <field name="status" type="string" column="status" enum-type="App\Fiscal\Domain\SeriesStatus" />
+        <field name="firstNumber" type="integer" column="first_number" />
+        <field name="lastNumber" type="integer" column="last_number" nullable="true" />
+        <field name="lastHash" type="text" column="last_hash" nullable="true" />
+        <field name="lastIssueDate" type="datetimetz_immutable" column="last_issue_date" nullable="true" />
+        <field name="lastSystemEntryAt" type="datetimetz_immutable" column="last_system_entry_at" nullable="true" />
+        <field name="atCommunicatedAt" type="datetimetz_immutable" column="at_communicated_at" nullable="true" />
+        <field name="atFinishedAt" type="datetimetz_immutable" column="at_finished_at" nullable="true" />
+
+        <unique-constraints>
+            <unique-constraint name="uniq_series_company_document_type_code" columns="company_id,document_type,code" />
+        </unique-constraints>
+    </entity>
+</doctrine-mapping>

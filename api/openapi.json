@@ -1479,6 +1479,409 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/series": {
+            "get": {
+                "tags": [
+                    "Series"
+                ],
+                "operationId": "get_series_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every series for this company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "document_type": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_training": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "validation_code": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "draft",
+                                                            "active",
+                                                            "finished",
+                                                            "cancelled"
+                                                        ]
+                                                    },
+                                                    "first_number": {
+                                                        "type": "integer"
+                                                    },
+                                                    "last_number": {
+                                                        "type": "integer",
+                                                        "nullable": true
+                                                    },
+                                                    "can_issue": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "at_communicated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    },
+                                                    "at_finished_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Series"
+                ],
+                "operationId": "post_series_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateSeriesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Series created (status draft).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the series.manage permission."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation, or document_type is unknown."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/series/{seriesId}": {
+            "get": {
+                "tags": [
+                    "Series"
+                ],
+                "operationId": "get_series_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "seriesId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The series.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "document_type": {
+                                            "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "is_training": {
+                                            "type": "boolean"
+                                        },
+                                        "validation_code": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "draft",
+                                                "active",
+                                                "finished",
+                                                "cancelled"
+                                            ]
+                                        },
+                                        "first_number": {
+                                            "type": "integer"
+                                        },
+                                        "last_number": {
+                                            "type": "integer",
+                                            "nullable": true
+                                        },
+                                        "can_issue": {
+                                            "type": "boolean"
+                                        },
+                                        "at_communicated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "nullable": true
+                                        },
+                                        "at_finished_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such series."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Series"
+                ],
+                "operationId": "put_series_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "seriesId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateSeriesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Series updated."
+                    },
+                    "403": {
+                        "description": "The caller lacks the series.manage permission."
+                    },
+                    "404": {
+                        "description": "No such series."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation, or the series is not draft."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/series/{seriesId}/activate": {
+            "post": {
+                "tags": [
+                    "Series"
+                ],
+                "operationId": "post_series_activate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "seriesId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActivateSeriesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Series activated (status active)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the series.manage permission."
+                    },
+                    "404": {
+                        "description": "No such series."
+                    },
+                    "422": {
+                        "description": "The series is not draft, so it cannot be activated."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/series/{seriesId}/finish": {
+            "post": {
+                "tags": [
+                    "Series"
+                ],
+                "operationId": "post_series_finish",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "seriesId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Series finished (status finished)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the series.manage permission."
+                    },
+                    "404": {
+                        "description": "No such series."
+                    },
+                    "422": {
+                        "description": "The series is not active, so it cannot be finished."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/series/{seriesId}/cancel": {
+            "post": {
+                "tags": [
+                    "Series"
+                ],
+                "operationId": "post_series_cancel",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "seriesId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Series cancelled (status cancelled)."
+                    },
+                    "403": {
+                        "description": "The caller lacks the series.manage permission."
+                    },
+                    "404": {
+                        "description": "No such series."
+                    },
+                    "422": {
+                        "description": "The series is already finished or cancelled."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/warehouses": {
             "get": {
                 "tags": [
@@ -3427,6 +3830,57 @@
                 },
                 "type": "object"
             },
+            "CreateSeriesRequest": {
+                "properties": {
+                    "document_type": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "code": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "is_training": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "first_number": {
+                        "type": "integer",
+                        "default": 1,
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateSeriesRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "is_training": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "first_number": {
+                        "type": "integer",
+                        "default": 1,
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                    }
+                },
+                "type": "object"
+            },
+            "ActivateSeriesRequest": {
+                "properties": {
+                    "validation_code": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "type": "object"
+            },
             "WarehouseRequest": {
                 "properties": {
                     "code": {
@@ -3682,6 +4136,9 @@
         },
         {
             "name": "Company"
+        },
+        {
+            "name": "Series"
         },
         {
             "name": "Warehouses"
