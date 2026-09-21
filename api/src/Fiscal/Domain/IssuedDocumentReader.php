@@ -67,4 +67,18 @@ interface IssuedDocumentReader
      * never happened, per that note's own "safer default" reasoning.
      */
     public function hasBlockingAtCommunication(CompanyId $companyId, DocumentId $documentId): bool;
+
+    /**
+     * task 2.11: the document list screen (technical-scope.md §9's
+     * `GET /companies/{c}/documents?type=&status=&customer=&from=&to=`).
+     * `open_amount` (`gross_total` minus {@see self::sumSettledAmount()})
+     * is included on every row so the same list can also drive the
+     * receipts screen's "pick an open invoice to allocate against"
+     * picker — a display convenience, not a fiscal calculation: which
+     * allocations are actually allowed is still decided server-side by
+     * `IssueReceiptHandler`, regardless of what this shows.
+     *
+     * @return list<array{id: string, document_type: string, document_no: string, status: string, customer_id: ?string, customer_name: string, issue_date: string, gross_total: string, open_amount: string}>
+     */
+    public function search(CompanyId $companyId, ?string $documentType, ?string $status, ?string $customerId, ?string $from, ?string $to): array;
 }

@@ -1655,6 +1655,256 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/documents": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "get_documents_list",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "customer",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Documents matching the filters, if any.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "document_type": {
+                                                        "type": "string"
+                                                    },
+                                                    "document_no": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "customer_id": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "customer_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "issue_date": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "gross_total": {
+                                                        "type": "string"
+                                                    },
+                                                    "open_amount": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "next_cursor": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.read permission."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/documents/{documentId}": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "get_documents_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document, with its lines.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "document_type": {
+                                            "type": "string"
+                                        },
+                                        "document_no": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "customer_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "pricing_mode": {
+                                            "type": "string"
+                                        },
+                                        "rounding_method": {
+                                            "type": "string"
+                                        },
+                                        "gross_total": {
+                                            "type": "string"
+                                        },
+                                        "lines": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "line_number": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pending_quantity": {
+                                                        "type": "string"
+                                                    },
+                                                    "product_id": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "product_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "product_description": {
+                                                        "type": "string"
+                                                    },
+                                                    "product_type": {
+                                                        "type": "string"
+                                                    },
+                                                    "unit_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "quantity": {
+                                                        "type": "string"
+                                                    },
+                                                    "unit_price": {
+                                                        "type": "string"
+                                                    },
+                                                    "discount_percent": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "tax_region": {
+                                                        "type": "string"
+                                                    },
+                                                    "tax_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "exemption_reason_code": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.read permission."
+                    },
+                    "404": {
+                        "description": "No such document."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/drafts": {
             "get": {
                 "tags": [
@@ -2044,6 +2294,91 @@
             }
         },
         "/api/v1/companies/{companyId}/receipts": {
+            "get": {
+                "tags": [
+                    "Receipts"
+                ],
+                "operationId": "get_receipts_list",
+                "parameters": [
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every issued receipt.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "document_no": {
+                                                        "type": "string"
+                                                    },
+                                                    "atcud": {
+                                                        "type": "string"
+                                                    },
+                                                    "issue_date": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "customer_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "total": {
+                                                        "type": "string"
+                                                    },
+                                                    "payment_method": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "next_cursor": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.read permission."
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "Receipts"
@@ -2097,6 +2432,103 @@
                     },
                     "422": {
                         "description": "No allocations, the series cannot issue, or an allocation is invalid (cancelled document, no receivable, or exceeds the open amount)."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/receipts/{receiptId}": {
+            "get": {
+                "tags": [
+                    "Receipts"
+                ],
+                "operationId": "get_receipts_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "receiptId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The receipt, with its allocations.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "document_no": {
+                                            "type": "string"
+                                        },
+                                        "atcud": {
+                                            "type": "string"
+                                        },
+                                        "issue_date": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "customer_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "customer_name": {
+                                            "type": "string"
+                                        },
+                                        "total": {
+                                            "type": "string"
+                                        },
+                                        "payment_method": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "allocations": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "document_id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "document_no": {
+                                                        "type": "string"
+                                                    },
+                                                    "amount": {
+                                                        "type": "string"
+                                                    },
+                                                    "settlement_amount": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.read permission."
+                    },
+                    "404": {
+                        "description": "No such receipt."
                     }
                 }
             }

@@ -19,17 +19,24 @@ import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCCompanyIdRouteImport } from './routes/_authenticated.c.$companyId'
 import { Route as AuthenticatedCCompanyIdIndexRouteImport } from './routes/_authenticated.c.$companyId.index'
 import { Route as AuthenticatedCCompanyIdCustomersRouteImport } from './routes/_authenticated.c.$companyId.customers'
+import { Route as AuthenticatedCCompanyIdDocumentsRouteImport } from './routes/_authenticated.c.$companyId.documents'
 import { Route as AuthenticatedCCompanyIdMembersRouteImport } from './routes/_authenticated.c.$companyId.members'
 import { Route as AuthenticatedCCompanyIdPaymentTermsRouteImport } from './routes/_authenticated.c.$companyId.payment-terms'
 import { Route as AuthenticatedCCompanyIdPriceListsRouteImport } from './routes/_authenticated.c.$companyId.price-lists'
 import { Route as AuthenticatedCCompanyIdProductFamiliesRouteImport } from './routes/_authenticated.c.$companyId.product-families'
 import { Route as AuthenticatedCCompanyIdProductsRouteImport } from './routes/_authenticated.c.$companyId.products'
+import { Route as AuthenticatedCCompanyIdReceiptsRouteImport } from './routes/_authenticated.c.$companyId.receipts'
 import { Route as AuthenticatedCCompanyIdReferenceDataRouteImport } from './routes/_authenticated.c.$companyId.reference-data'
+import { Route as AuthenticatedCCompanyIdSeriesRouteImport } from './routes/_authenticated.c.$companyId.series'
 import { Route as AuthenticatedCCompanyIdSettingsRouteImport } from './routes/_authenticated.c.$companyId.settings'
 import { Route as AuthenticatedCCompanyIdSuppliersRouteImport } from './routes/_authenticated.c.$companyId.suppliers'
 import { Route as AuthenticatedCCompanyIdWarehousesRouteImport } from './routes/_authenticated.c.$companyId.warehouses'
+import { Route as AuthenticatedCCompanyIdDocumentsIndexRouteImport } from './routes/_authenticated.c.$companyId.documents.index'
+import { Route as AuthenticatedCCompanyIdDocumentsDocumentIdRouteImport } from './routes/_authenticated.c.$companyId.documents.$documentId'
 import { Route as AuthenticatedCCompanyIdProductsIndexRouteImport } from './routes/_authenticated.c.$companyId.products.index'
 import { Route as AuthenticatedCCompanyIdProductsProductIdRouteImport } from './routes/_authenticated.c.$companyId.products.$productId'
+import { Route as AuthenticatedCCompanyIdReceiptsIndexRouteImport } from './routes/_authenticated.c.$companyId.receipts.index'
+import { Route as AuthenticatedCCompanyIdDocumentsDraftsDraftIdRouteImport } from './routes/_authenticated.c.$companyId.documents.drafts.$draftId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -83,6 +90,12 @@ const AuthenticatedCCompanyIdCustomersRoute =
     path: '/customers',
     getParentRoute: () => AuthenticatedCCompanyIdRoute,
   } as any)
+const AuthenticatedCCompanyIdDocumentsRoute =
+  AuthenticatedCCompanyIdDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
 const AuthenticatedCCompanyIdMembersRoute =
   AuthenticatedCCompanyIdMembersRouteImport.update({
     id: '/members',
@@ -113,10 +126,22 @@ const AuthenticatedCCompanyIdProductsRoute =
     path: '/products',
     getParentRoute: () => AuthenticatedCCompanyIdRoute,
   } as any)
+const AuthenticatedCCompanyIdReceiptsRoute =
+  AuthenticatedCCompanyIdReceiptsRouteImport.update({
+    id: '/receipts',
+    path: '/receipts',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
 const AuthenticatedCCompanyIdReferenceDataRoute =
   AuthenticatedCCompanyIdReferenceDataRouteImport.update({
     id: '/reference-data',
     path: '/reference-data',
+    getParentRoute: () => AuthenticatedCCompanyIdRoute,
+  } as any)
+const AuthenticatedCCompanyIdSeriesRoute =
+  AuthenticatedCCompanyIdSeriesRouteImport.update({
+    id: '/series',
+    path: '/series',
     getParentRoute: () => AuthenticatedCCompanyIdRoute,
   } as any)
 const AuthenticatedCCompanyIdSettingsRoute =
@@ -137,6 +162,18 @@ const AuthenticatedCCompanyIdWarehousesRoute =
     path: '/warehouses',
     getParentRoute: () => AuthenticatedCCompanyIdRoute,
   } as any)
+const AuthenticatedCCompanyIdDocumentsIndexRoute =
+  AuthenticatedCCompanyIdDocumentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCCompanyIdDocumentsRoute,
+  } as any)
+const AuthenticatedCCompanyIdDocumentsDocumentIdRoute =
+  AuthenticatedCCompanyIdDocumentsDocumentIdRouteImport.update({
+    id: '/$documentId',
+    path: '/$documentId',
+    getParentRoute: () => AuthenticatedCCompanyIdDocumentsRoute,
+  } as any)
 const AuthenticatedCCompanyIdProductsIndexRoute =
   AuthenticatedCCompanyIdProductsIndexRouteImport.update({
     id: '/',
@@ -149,6 +186,18 @@ const AuthenticatedCCompanyIdProductsProductIdRoute =
     path: '/$productId',
     getParentRoute: () => AuthenticatedCCompanyIdProductsRoute,
   } as any)
+const AuthenticatedCCompanyIdReceiptsIndexRoute =
+  AuthenticatedCCompanyIdReceiptsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCCompanyIdReceiptsRoute,
+  } as any)
+const AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute =
+  AuthenticatedCCompanyIdDocumentsDraftsDraftIdRouteImport.update({
+    id: '/drafts/$draftId',
+    path: '/drafts/$draftId',
+    getParentRoute: () => AuthenticatedCCompanyIdDocumentsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,18 +208,25 @@ export interface FileRoutesByFullPath {
   '/companies': typeof AuthenticatedCompaniesRoute
   '/c/$companyId': typeof AuthenticatedCCompanyIdRouteWithChildren
   '/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
+  '/c/$companyId/documents': typeof AuthenticatedCCompanyIdDocumentsRouteWithChildren
   '/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
   '/c/$companyId/payment-terms': typeof AuthenticatedCCompanyIdPaymentTermsRoute
   '/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
   '/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
   '/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsRouteWithChildren
+  '/c/$companyId/receipts': typeof AuthenticatedCCompanyIdReceiptsRouteWithChildren
   '/c/$companyId/reference-data': typeof AuthenticatedCCompanyIdReferenceDataRoute
+  '/c/$companyId/series': typeof AuthenticatedCCompanyIdSeriesRoute
   '/c/$companyId/settings': typeof AuthenticatedCCompanyIdSettingsRoute
   '/c/$companyId/suppliers': typeof AuthenticatedCCompanyIdSuppliersRoute
   '/c/$companyId/warehouses': typeof AuthenticatedCCompanyIdWarehousesRoute
   '/c/$companyId/': typeof AuthenticatedCCompanyIdIndexRoute
+  '/c/$companyId/documents/$documentId': typeof AuthenticatedCCompanyIdDocumentsDocumentIdRoute
   '/c/$companyId/products/$productId': typeof AuthenticatedCCompanyIdProductsProductIdRoute
+  '/c/$companyId/documents/': typeof AuthenticatedCCompanyIdDocumentsIndexRoute
   '/c/$companyId/products/': typeof AuthenticatedCCompanyIdProductsIndexRoute
+  '/c/$companyId/receipts/': typeof AuthenticatedCCompanyIdReceiptsIndexRoute
+  '/c/$companyId/documents/drafts/$draftId': typeof AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -185,12 +241,17 @@ export interface FileRoutesByTo {
   '/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
   '/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
   '/c/$companyId/reference-data': typeof AuthenticatedCCompanyIdReferenceDataRoute
+  '/c/$companyId/series': typeof AuthenticatedCCompanyIdSeriesRoute
   '/c/$companyId/settings': typeof AuthenticatedCCompanyIdSettingsRoute
   '/c/$companyId/suppliers': typeof AuthenticatedCCompanyIdSuppliersRoute
   '/c/$companyId/warehouses': typeof AuthenticatedCCompanyIdWarehousesRoute
   '/c/$companyId': typeof AuthenticatedCCompanyIdIndexRoute
+  '/c/$companyId/documents/$documentId': typeof AuthenticatedCCompanyIdDocumentsDocumentIdRoute
   '/c/$companyId/products/$productId': typeof AuthenticatedCCompanyIdProductsProductIdRoute
+  '/c/$companyId/documents': typeof AuthenticatedCCompanyIdDocumentsIndexRoute
   '/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsIndexRoute
+  '/c/$companyId/receipts': typeof AuthenticatedCCompanyIdReceiptsIndexRoute
+  '/c/$companyId/documents/drafts/$draftId': typeof AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -203,18 +264,25 @@ export interface FileRoutesById {
   '/_authenticated/companies': typeof AuthenticatedCompaniesRoute
   '/_authenticated/c/$companyId': typeof AuthenticatedCCompanyIdRouteWithChildren
   '/_authenticated/c/$companyId/customers': typeof AuthenticatedCCompanyIdCustomersRoute
+  '/_authenticated/c/$companyId/documents': typeof AuthenticatedCCompanyIdDocumentsRouteWithChildren
   '/_authenticated/c/$companyId/members': typeof AuthenticatedCCompanyIdMembersRoute
   '/_authenticated/c/$companyId/payment-terms': typeof AuthenticatedCCompanyIdPaymentTermsRoute
   '/_authenticated/c/$companyId/price-lists': typeof AuthenticatedCCompanyIdPriceListsRoute
   '/_authenticated/c/$companyId/product-families': typeof AuthenticatedCCompanyIdProductFamiliesRoute
   '/_authenticated/c/$companyId/products': typeof AuthenticatedCCompanyIdProductsRouteWithChildren
+  '/_authenticated/c/$companyId/receipts': typeof AuthenticatedCCompanyIdReceiptsRouteWithChildren
   '/_authenticated/c/$companyId/reference-data': typeof AuthenticatedCCompanyIdReferenceDataRoute
+  '/_authenticated/c/$companyId/series': typeof AuthenticatedCCompanyIdSeriesRoute
   '/_authenticated/c/$companyId/settings': typeof AuthenticatedCCompanyIdSettingsRoute
   '/_authenticated/c/$companyId/suppliers': typeof AuthenticatedCCompanyIdSuppliersRoute
   '/_authenticated/c/$companyId/warehouses': typeof AuthenticatedCCompanyIdWarehousesRoute
   '/_authenticated/c/$companyId/': typeof AuthenticatedCCompanyIdIndexRoute
+  '/_authenticated/c/$companyId/documents/$documentId': typeof AuthenticatedCCompanyIdDocumentsDocumentIdRoute
   '/_authenticated/c/$companyId/products/$productId': typeof AuthenticatedCCompanyIdProductsProductIdRoute
+  '/_authenticated/c/$companyId/documents/': typeof AuthenticatedCCompanyIdDocumentsIndexRoute
   '/_authenticated/c/$companyId/products/': typeof AuthenticatedCCompanyIdProductsIndexRoute
+  '/_authenticated/c/$companyId/receipts/': typeof AuthenticatedCCompanyIdReceiptsIndexRoute
+  '/_authenticated/c/$companyId/documents/drafts/$draftId': typeof AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -227,18 +295,25 @@ export interface FileRouteTypes {
     | '/companies'
     | '/c/$companyId'
     | '/c/$companyId/customers'
+    | '/c/$companyId/documents'
     | '/c/$companyId/members'
     | '/c/$companyId/payment-terms'
     | '/c/$companyId/price-lists'
     | '/c/$companyId/product-families'
     | '/c/$companyId/products'
+    | '/c/$companyId/receipts'
     | '/c/$companyId/reference-data'
+    | '/c/$companyId/series'
     | '/c/$companyId/settings'
     | '/c/$companyId/suppliers'
     | '/c/$companyId/warehouses'
     | '/c/$companyId/'
+    | '/c/$companyId/documents/$documentId'
     | '/c/$companyId/products/$productId'
+    | '/c/$companyId/documents/'
     | '/c/$companyId/products/'
+    | '/c/$companyId/receipts/'
+    | '/c/$companyId/documents/drafts/$draftId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -253,12 +328,17 @@ export interface FileRouteTypes {
     | '/c/$companyId/price-lists'
     | '/c/$companyId/product-families'
     | '/c/$companyId/reference-data'
+    | '/c/$companyId/series'
     | '/c/$companyId/settings'
     | '/c/$companyId/suppliers'
     | '/c/$companyId/warehouses'
     | '/c/$companyId'
+    | '/c/$companyId/documents/$documentId'
     | '/c/$companyId/products/$productId'
+    | '/c/$companyId/documents'
     | '/c/$companyId/products'
+    | '/c/$companyId/receipts'
+    | '/c/$companyId/documents/drafts/$draftId'
   id:
     | '__root__'
     | '/'
@@ -270,18 +350,25 @@ export interface FileRouteTypes {
     | '/_authenticated/companies'
     | '/_authenticated/c/$companyId'
     | '/_authenticated/c/$companyId/customers'
+    | '/_authenticated/c/$companyId/documents'
     | '/_authenticated/c/$companyId/members'
     | '/_authenticated/c/$companyId/payment-terms'
     | '/_authenticated/c/$companyId/price-lists'
     | '/_authenticated/c/$companyId/product-families'
     | '/_authenticated/c/$companyId/products'
+    | '/_authenticated/c/$companyId/receipts'
     | '/_authenticated/c/$companyId/reference-data'
+    | '/_authenticated/c/$companyId/series'
     | '/_authenticated/c/$companyId/settings'
     | '/_authenticated/c/$companyId/suppliers'
     | '/_authenticated/c/$companyId/warehouses'
     | '/_authenticated/c/$companyId/'
+    | '/_authenticated/c/$companyId/documents/$documentId'
     | '/_authenticated/c/$companyId/products/$productId'
+    | '/_authenticated/c/$companyId/documents/'
     | '/_authenticated/c/$companyId/products/'
+    | '/_authenticated/c/$companyId/receipts/'
+    | '/_authenticated/c/$companyId/documents/drafts/$draftId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -364,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCCompanyIdCustomersRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdRoute
     }
+    '/_authenticated/c/$companyId/documents': {
+      id: '/_authenticated/c/$companyId/documents'
+      path: '/documents'
+      fullPath: '/c/$companyId/documents'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdDocumentsRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
     '/_authenticated/c/$companyId/members': {
       id: '/_authenticated/c/$companyId/members'
       path: '/members'
@@ -399,11 +493,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCCompanyIdProductsRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdRoute
     }
+    '/_authenticated/c/$companyId/receipts': {
+      id: '/_authenticated/c/$companyId/receipts'
+      path: '/receipts'
+      fullPath: '/c/$companyId/receipts'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdReceiptsRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
     '/_authenticated/c/$companyId/reference-data': {
       id: '/_authenticated/c/$companyId/reference-data'
       path: '/reference-data'
       fullPath: '/c/$companyId/reference-data'
       preLoaderRoute: typeof AuthenticatedCCompanyIdReferenceDataRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdRoute
+    }
+    '/_authenticated/c/$companyId/series': {
+      id: '/_authenticated/c/$companyId/series'
+      path: '/series'
+      fullPath: '/c/$companyId/series'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdSeriesRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdRoute
     }
     '/_authenticated/c/$companyId/settings': {
@@ -427,6 +535,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCCompanyIdWarehousesRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdRoute
     }
+    '/_authenticated/c/$companyId/documents/': {
+      id: '/_authenticated/c/$companyId/documents/'
+      path: '/'
+      fullPath: '/c/$companyId/documents/'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdDocumentsIndexRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdDocumentsRoute
+    }
+    '/_authenticated/c/$companyId/documents/$documentId': {
+      id: '/_authenticated/c/$companyId/documents/$documentId'
+      path: '/$documentId'
+      fullPath: '/c/$companyId/documents/$documentId'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdDocumentsDocumentIdRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdDocumentsRoute
+    }
     '/_authenticated/c/$companyId/products/': {
       id: '/_authenticated/c/$companyId/products/'
       path: '/'
@@ -441,8 +563,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCCompanyIdProductsProductIdRouteImport
       parentRoute: typeof AuthenticatedCCompanyIdProductsRoute
     }
+    '/_authenticated/c/$companyId/receipts/': {
+      id: '/_authenticated/c/$companyId/receipts/'
+      path: '/'
+      fullPath: '/c/$companyId/receipts/'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdReceiptsIndexRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdReceiptsRoute
+    }
+    '/_authenticated/c/$companyId/documents/drafts/$draftId': {
+      id: '/_authenticated/c/$companyId/documents/drafts/$draftId'
+      path: '/drafts/$draftId'
+      fullPath: '/c/$companyId/documents/drafts/$draftId'
+      preLoaderRoute: typeof AuthenticatedCCompanyIdDocumentsDraftsDraftIdRouteImport
+      parentRoute: typeof AuthenticatedCCompanyIdDocumentsRoute
+    }
   }
 }
+
+interface AuthenticatedCCompanyIdDocumentsRouteChildren {
+  AuthenticatedCCompanyIdDocumentsDocumentIdRoute: typeof AuthenticatedCCompanyIdDocumentsDocumentIdRoute
+  AuthenticatedCCompanyIdDocumentsIndexRoute: typeof AuthenticatedCCompanyIdDocumentsIndexRoute
+  AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute: typeof AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute
+}
+
+const AuthenticatedCCompanyIdDocumentsRouteChildren: AuthenticatedCCompanyIdDocumentsRouteChildren =
+  {
+    AuthenticatedCCompanyIdDocumentsDocumentIdRoute:
+      AuthenticatedCCompanyIdDocumentsDocumentIdRoute,
+    AuthenticatedCCompanyIdDocumentsIndexRoute:
+      AuthenticatedCCompanyIdDocumentsIndexRoute,
+    AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute:
+      AuthenticatedCCompanyIdDocumentsDraftsDraftIdRoute,
+  }
+
+const AuthenticatedCCompanyIdDocumentsRouteWithChildren =
+  AuthenticatedCCompanyIdDocumentsRoute._addFileChildren(
+    AuthenticatedCCompanyIdDocumentsRouteChildren,
+  )
 
 interface AuthenticatedCCompanyIdProductsRouteChildren {
   AuthenticatedCCompanyIdProductsProductIdRoute: typeof AuthenticatedCCompanyIdProductsProductIdRoute
@@ -462,14 +619,32 @@ const AuthenticatedCCompanyIdProductsRouteWithChildren =
     AuthenticatedCCompanyIdProductsRouteChildren,
   )
 
+interface AuthenticatedCCompanyIdReceiptsRouteChildren {
+  AuthenticatedCCompanyIdReceiptsIndexRoute: typeof AuthenticatedCCompanyIdReceiptsIndexRoute
+}
+
+const AuthenticatedCCompanyIdReceiptsRouteChildren: AuthenticatedCCompanyIdReceiptsRouteChildren =
+  {
+    AuthenticatedCCompanyIdReceiptsIndexRoute:
+      AuthenticatedCCompanyIdReceiptsIndexRoute,
+  }
+
+const AuthenticatedCCompanyIdReceiptsRouteWithChildren =
+  AuthenticatedCCompanyIdReceiptsRoute._addFileChildren(
+    AuthenticatedCCompanyIdReceiptsRouteChildren,
+  )
+
 interface AuthenticatedCCompanyIdRouteChildren {
   AuthenticatedCCompanyIdCustomersRoute: typeof AuthenticatedCCompanyIdCustomersRoute
+  AuthenticatedCCompanyIdDocumentsRoute: typeof AuthenticatedCCompanyIdDocumentsRouteWithChildren
   AuthenticatedCCompanyIdMembersRoute: typeof AuthenticatedCCompanyIdMembersRoute
   AuthenticatedCCompanyIdPaymentTermsRoute: typeof AuthenticatedCCompanyIdPaymentTermsRoute
   AuthenticatedCCompanyIdPriceListsRoute: typeof AuthenticatedCCompanyIdPriceListsRoute
   AuthenticatedCCompanyIdProductFamiliesRoute: typeof AuthenticatedCCompanyIdProductFamiliesRoute
   AuthenticatedCCompanyIdProductsRoute: typeof AuthenticatedCCompanyIdProductsRouteWithChildren
+  AuthenticatedCCompanyIdReceiptsRoute: typeof AuthenticatedCCompanyIdReceiptsRouteWithChildren
   AuthenticatedCCompanyIdReferenceDataRoute: typeof AuthenticatedCCompanyIdReferenceDataRoute
+  AuthenticatedCCompanyIdSeriesRoute: typeof AuthenticatedCCompanyIdSeriesRoute
   AuthenticatedCCompanyIdSettingsRoute: typeof AuthenticatedCCompanyIdSettingsRoute
   AuthenticatedCCompanyIdSuppliersRoute: typeof AuthenticatedCCompanyIdSuppliersRoute
   AuthenticatedCCompanyIdWarehousesRoute: typeof AuthenticatedCCompanyIdWarehousesRoute
@@ -480,6 +655,8 @@ const AuthenticatedCCompanyIdRouteChildren: AuthenticatedCCompanyIdRouteChildren
   {
     AuthenticatedCCompanyIdCustomersRoute:
       AuthenticatedCCompanyIdCustomersRoute,
+    AuthenticatedCCompanyIdDocumentsRoute:
+      AuthenticatedCCompanyIdDocumentsRouteWithChildren,
     AuthenticatedCCompanyIdMembersRoute: AuthenticatedCCompanyIdMembersRoute,
     AuthenticatedCCompanyIdPaymentTermsRoute:
       AuthenticatedCCompanyIdPaymentTermsRoute,
@@ -489,8 +666,11 @@ const AuthenticatedCCompanyIdRouteChildren: AuthenticatedCCompanyIdRouteChildren
       AuthenticatedCCompanyIdProductFamiliesRoute,
     AuthenticatedCCompanyIdProductsRoute:
       AuthenticatedCCompanyIdProductsRouteWithChildren,
+    AuthenticatedCCompanyIdReceiptsRoute:
+      AuthenticatedCCompanyIdReceiptsRouteWithChildren,
     AuthenticatedCCompanyIdReferenceDataRoute:
       AuthenticatedCCompanyIdReferenceDataRoute,
+    AuthenticatedCCompanyIdSeriesRoute: AuthenticatedCCompanyIdSeriesRoute,
     AuthenticatedCCompanyIdSettingsRoute: AuthenticatedCCompanyIdSettingsRoute,
     AuthenticatedCCompanyIdSuppliersRoute:
       AuthenticatedCCompanyIdSuppliersRoute,

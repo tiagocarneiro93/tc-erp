@@ -4,8 +4,11 @@ import {
   BoxesIcon,
   CalendarClockIcon,
   ContactIcon,
+  FileTextIcon,
   FolderTreeIcon,
   LayoutDashboardIcon,
+  ListOrderedIcon,
+  ReceiptIcon,
   SettingsIcon,
   TagsIcon,
   TruckIcon,
@@ -15,6 +18,9 @@ import {
 
 const NAV_ITEMS = [
   { to: '/c/$companyId', label: 'Painel', icon: LayoutDashboardIcon, exact: true },
+  { to: '/c/$companyId/documents', label: 'Documentos', icon: FileTextIcon, exact: false },
+  { to: '/c/$companyId/receipts', label: 'Recibos', icon: ReceiptIcon, exact: false },
+  { to: '/c/$companyId/series', label: 'Séries', icon: ListOrderedIcon, exact: false },
   { to: '/c/$companyId/customers', label: 'Clientes', icon: ContactIcon, exact: false },
   { to: '/c/$companyId/suppliers', label: 'Fornecedores', icon: TruckIcon, exact: false },
   { to: '/c/$companyId/products', label: 'Produtos', icon: BoxesIcon, exact: false },

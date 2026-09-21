@@ -129,4 +129,54 @@ final class DoctrineIssuedDocumentReader implements IssuedDocumentReader
 
         return false !== $found;
     }
+
+    public function search(CompanyId $companyId, ?string $documentType, ?string $status, ?string $customerId, ?string $from, ?string $to): array
+    {
+        $conditions = ['d.company_id = ?'];
+        $params = [$companyId->toString()];
+
+        if (null !== $documentType) {
+            $conditions[] = 'd.document_type = ?';
+            $params[] = $documentType;
+        }
+
+        if (null !== $status) {
+            $conditions[] = 'd.status = ?';
+            $params[] = $status;
+        }
+
+        if (null !== $customerId) {
+            $conditions[] = 'd.customer_id = ?';
+            $params[] = $customerId;
+        }
+
+        if (null !== $from) {
+            $conditions[] = 'd.issue_date >= ?';
+            $params[] = $from;
+        }
+
+        if (null !== $to) {
+            $conditions[] = 'd.issue_date <= ?';
+            $params[] = $to;
+        }
+
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT d.id, d.document_type, d.document_no, d.status, d.customer_id,
+                    COALESCE(d.customer_snapshot->>\'name\', \'Consumidor final\') AS customer_name,
+                    d.issue_date, d.gross_total,
+                    d.gross_total - COALESCE((
+                        SELECT SUM(ra.settlement_amount)
+                        FROM receipt_allocations ra
+                        JOIN receipts r ON r.company_id = ra.company_id AND r.id = ra.receipt_id
+                        WHERE ra.company_id = d.company_id AND ra.document_id = d.id AND r.status <> \'A\'
+                    ), 0) AS open_amount
+             FROM documents d WHERE '.implode(' AND ', $conditions).' ORDER BY d.id ASC',
+            $params,
+        );
+
+        /** @var list<array{id: string, document_type: string, document_no: string, status: string, customer_id: ?string, customer_name: string, issue_date: string, gross_total: string, open_amount: string}> $documentRows */
+        $documentRows = $rows;
+
+        return $documentRows;
+    }
 }
