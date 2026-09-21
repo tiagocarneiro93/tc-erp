@@ -106,6 +106,11 @@ export interface PaymentTermsRequest {
   is_default?: boolean;
 }
 
+export interface CreditNoteRequest {
+  /** @nullable */
+  reason?: string | null;
+}
+
 export type CreateDraftRequestPayload = {[key: string]: unknown | null};
 
 export interface CreateDraftRequest {
@@ -423,6 +428,10 @@ export type GetPaymentTermsList200 = {
 };
 
 export type PostPaymentTermsCreate201 = {
+  id?: string;
+};
+
+export type PostDocumentsCreditNote201 = {
   id?: string;
 };
 
@@ -3059,6 +3068,91 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDeletePaymentTermsDeactivateMutationOptions(options), queryClient);
+    }
+
+export const getPostDocumentsCreditNoteUrl = (companyId: string,
+    documentId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/documents/${documentId}/credit-note`
+}
+
+export const postDocumentsCreditNote = async (companyId: string,
+    documentId: string,
+    creditNoteRequest: CreditNoteRequest, options?: RequestInit): Promise<PostDocumentsCreditNote201> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<PostDocumentsCreditNote201>(getPostDocumentsCreditNoteUrl(companyId,documentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(creditNoteRequest)
+  }
+);}
+
+
+
+
+
+export const getPostDocumentsCreditNoteMutationKey = () => ['postDocumentsCreditNote'] as const;
+
+export const getPostDocumentsCreditNoteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsCreditNote>>, TError,PostDocumentsCreditNoteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postDocumentsCreditNote>>, TError,PostDocumentsCreditNoteMutationVariables, TContext> => {
+
+const mutationKey = getPostDocumentsCreditNoteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postDocumentsCreditNote>>, PostDocumentsCreditNoteMutationVariables> = (props) => {
+          const {companyId,documentId,data} = props ?? {};
+
+          return  postDocumentsCreditNote(companyId,documentId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostDocumentsCreditNoteMutationResult = NonNullable<Awaited<ReturnType<typeof postDocumentsCreditNote>>>
+    export type PostDocumentsCreditNoteMutationBody = CreditNoteRequest
+    export type PostDocumentsCreditNoteMutationError = void
+    export type PostDocumentsCreditNoteMutationVariables = {companyId: string;documentId: string;data: CreditNoteRequest}
+
+    export const usePostDocumentsCreditNote = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsCreditNote>>, TError,PostDocumentsCreditNoteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postDocumentsCreditNote>>,
+        TError,
+        PostDocumentsCreditNoteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostDocumentsCreditNoteMutationOptions(options), queryClient);
     }
 
 export const getGetDocumentTypesListUrl = () => {

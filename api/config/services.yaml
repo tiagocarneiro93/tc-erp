@@ -239,6 +239,9 @@ services:
     App\Fiscal\Domain\DocumentWriter:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineDocumentWriter
         public: true
+    App\Fiscal\Domain\IssuedDocumentReader:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineIssuedDocumentReader
+        public: true
     App\Fiscal\Domain\AtCommunicationQueue:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineAtCommunicationQueue
         public: true

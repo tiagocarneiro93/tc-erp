@@ -1428,6 +1428,69 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/documents/{documentId}/credit-note": {
+            "post": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "post_documents_credit_note",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditNoteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "A new NC draft, prefilled from the original document.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "No such document."
+                    },
+                    "422": {
+                        "description": "The document is cancelled or already fully rectified (Despacho 8632/2014 \u00a73.3.7)."
+                    }
+                }
+            }
+        },
         "/api/v1/document-types": {
             "get": {
                 "tags": [
@@ -4211,6 +4274,16 @@
                 },
                 "type": "object"
             },
+            "CreditNoteRequest": {
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    }
+                },
+                "type": "object"
+            },
             "CreateDraftRequest": {
                 "properties": {
                     "document_type": {
@@ -4547,10 +4620,10 @@
             "name": "Company"
         },
         {
-            "name": "Drafts"
+            "name": "Documents"
         },
         {
-            "name": "Documents"
+            "name": "Drafts"
         },
         {
             "name": "Series"
