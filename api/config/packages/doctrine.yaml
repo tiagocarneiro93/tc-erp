@@ -23,6 +23,7 @@ doctrine:
             warehouse_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\WarehouseIdType
             payment_terms_id: App\Company\Infrastructure\Persistence\Doctrine\Type\PaymentTermsIdType
             series_id: App\Fiscal\Infrastructure\Persistence\Doctrine\Type\SeriesIdType
+            document_draft_id: App\Fiscal\Infrastructure\Persistence\Doctrine\Type\DocumentDraftIdType
         default_connection: default
         connections:
             # The app connects as app_runtime: no table ownership, no BYPASSRLS,

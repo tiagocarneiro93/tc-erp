@@ -8,10 +8,11 @@ use App\Parties\Domain\Customer;
 use App\Parties\Domain\CustomerId;
 use App\Parties\Domain\CustomerRepository;
 use App\Shared\Domain\CompanyId;
+use App\Shared\Domain\CustomerExistenceChecker;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class DoctrineCustomerRepository implements CustomerRepository
+final class DoctrineCustomerRepository implements CustomerRepository, CustomerExistenceChecker
 {
     public function __construct(
         #[Autowire(service: 'doctrine.orm.default_entity_manager')]
@@ -24,6 +25,17 @@ final class DoctrineCustomerRepository implements CustomerRepository
         $customer = $this->entityManager->find(Customer::class, $id);
 
         return null !== $customer && $customer->companyId()->equals($companyId) ? $customer : null;
+    }
+
+    public function exists(CompanyId $companyId, string $customerId): bool
+    {
+        try {
+            $id = CustomerId::fromString($customerId);
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
+
+        return null !== $this->find($companyId, $id);
     }
 
     public function search(CompanyId $companyId, ?string $search): array

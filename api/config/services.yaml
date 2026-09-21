@@ -196,11 +196,20 @@ services:
     App\Fiscal\Domain\SeriesRepository:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\Repository\DoctrineSeriesRepository
         public: true
+    App\Fiscal\Domain\DocumentDraftRepository:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\Repository\DoctrineDocumentDraftRepository
+        public: true
     App\Shared\Domain\Fiscal\CustomerHasIssuedDocuments:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\IssuedDocumentsChecker
         public: true
     App\Shared\Domain\Fiscal\ProductHasIssuedDocuments:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\IssuedDocumentsChecker
+        public: true
+    App\Shared\Domain\Tax\PriceCalculationService:
+        alias: App\Tax\Infrastructure\PriceCalculationServiceAdapter
+        public: true
+    App\Shared\Domain\CustomerExistenceChecker:
+        alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.

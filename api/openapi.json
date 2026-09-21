@@ -1479,6 +1479,331 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/drafts": {
+            "get": {
+                "tags": [
+                    "Drafts"
+                ],
+                "operationId": "get_drafts_list",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every draft for this company, most recently updated first.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "document_type": {
+                                                        "type": "string"
+                                                    },
+                                                    "payload": {
+                                                        "type": "object"
+                                                    },
+                                                    "calculated": {
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "series_id": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "customer_id": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Drafts"
+                ],
+                "operationId": "post_drafts_create",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateDraftRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Draft created (status draft).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "422": {
+                        "description": "The request payload failed validation, or document_type is unknown."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/drafts/{draftId}": {
+            "get": {
+                "tags": [
+                    "Drafts"
+                ],
+                "operationId": "get_drafts_get",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "draftId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The draft.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "document_type": {
+                                            "type": "string"
+                                        },
+                                        "payload": {
+                                            "type": "object"
+                                        },
+                                        "calculated": {
+                                            "type": "object",
+                                            "nullable": true
+                                        },
+                                        "series_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "customer_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such draft."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Drafts"
+                ],
+                "operationId": "put_drafts_update",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "draftId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateDraftRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Draft updated; calculated is recomputed live."
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "No such draft."
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Drafts"
+                ],
+                "operationId": "delete_drafts_delete",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "draftId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Draft deleted \u2014 a real delete, drafts carry no fiscal weight."
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "No such draft."
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyId}/drafts/{draftId}/validate": {
+            "get": {
+                "tags": [
+                    "Drafts"
+                ],
+                "operationId": "get_drafts_validate",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "draftId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Validation errors for issuing this draft (empty when none) \u2014 reused by task 2.6's issuance use case.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "field": {
+                                                        "type": "string"
+                                                    },
+                                                    "message": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "No such draft."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/series": {
             "get": {
                 "tags": [
@@ -3830,6 +4155,34 @@
                 },
                 "type": "object"
             },
+            "CreateDraftRequest": {
+                "properties": {
+                    "document_type": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "payload": {
+                        "type": "object",
+                        "default": [],
+                        "additionalProperties": {
+                            "nullable": true
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateDraftRequest": {
+                "properties": {
+                    "payload": {
+                        "type": "object",
+                        "default": [],
+                        "additionalProperties": {
+                            "nullable": true
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "CreateSeriesRequest": {
                 "properties": {
                     "document_type": {
@@ -4136,6 +4489,9 @@
         },
         {
             "name": "Company"
+        },
+        {
+            "name": "Drafts"
         },
         {
             "name": "Series"
