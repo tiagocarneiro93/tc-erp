@@ -9,9 +9,11 @@ use App\Platform\Domain\User;
 use App\Platform\Domain\UserId;
 use App\Platform\Domain\UserRepository;
 use App\Shared\Domain\Nif;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * docs/plans/phase-1.md task 1.5: "Consumidor final" is seeded as soon as
@@ -230,6 +232,135 @@ final class CustomersControllerTest extends WebTestCase
 
         $client->request('GET', "/api/v1/companies/{$companyId}/customers/00000000-0000-7000-8000-000000000000", server: self::HEADERS);
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    /**
+     * Despacho 8632/2014 §3.3.3–3.3.5, docs/plans/phase-2.md task 2.3: once
+     * a customer has an issued document, nif/name lock; other fields stay
+     * editable, and nif may still be corrected away from the generic
+     * final-consumer placeholder (999999990).
+     */
+    public function testNifAndNameLockOnceACustomerHasAnIssuedDocument(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+        $nif = $this->uniqueNif();
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/customers", server: self::HEADERS, content: json_encode([
+            'code' => 'C002',
+            'nif' => $nif,
+            'name' => 'Cliente Dois',
+            'country' => 'PT',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $created */
+        $created = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        $customerId = $created['id'];
+
+        $this->fakeAnIssuedDocumentFor($companyId, $customerId);
+
+        $client->request('PUT', "/api/v1/companies/{$companyId}/customers/{$customerId}", server: self::HEADERS, content: json_encode([
+            'code' => 'C002', 'nif' => $this->uniqueNif(), 'name' => 'Cliente Dois', 'country' => 'PT',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{type: string} $nifLockedBody */
+        $nifLockedBody = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('https://tc-erp.example/problems/customer-nif-is-locked', $nifLockedBody['type']);
+
+        $client->request('PUT', "/api/v1/companies/{$companyId}/customers/{$customerId}", server: self::HEADERS, content: json_encode([
+            'code' => 'C002', 'nif' => $nif, 'name' => 'Nome Alterado', 'country' => 'PT',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{type: string} $nameLockedBody */
+        $nameLockedBody = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('https://tc-erp.example/problems/customer-name-is-locked', $nameLockedBody['type']);
+
+        // Everything else (and nif/name left unchanged) still updates freely.
+        $client->request('PUT', "/api/v1/companies/{$companyId}/customers/{$customerId}", server: self::HEADERS, content: json_encode([
+            'code' => 'C002', 'nif' => $nif, 'name' => 'Cliente Dois', 'country' => 'PT', 'email' => 'novo@example.test',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * The one documented exception to the NIF lock: replacing the generic
+     * final-consumer placeholder (999999990) with a real NIF is allowed
+     * even after an issued document exists — unlike the general case
+     * covered by testNifAndNameLockOnceACustomerHasAnIssuedDocument().
+     */
+    public function testNifCanStillBeCorrectedFromTheGenericFinalConsumerValue(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/customers", server: self::HEADERS, content: json_encode([
+            'code' => 'C003',
+            'nif' => '999999990',
+            'name' => 'Cliente Balcão',
+            'country' => 'PT',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $created */
+        $created = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        $customerId = $created['id'];
+
+        $this->fakeAnIssuedDocumentFor($companyId, $customerId);
+
+        $realNif = $this->uniqueNif();
+        $client->request('PUT', "/api/v1/companies/{$companyId}/customers/{$customerId}", server: self::HEADERS, content: json_encode([
+            'code' => 'C003', 'nif' => $realNif, 'name' => 'Cliente Balcão', 'country' => 'PT',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        $client->request('GET', "/api/v1/companies/{$companyId}/customers/{$customerId}", server: self::HEADERS);
+        /** @var array{nif: string} $updated */
+        $updated = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame($realNif, $updated['nif']);
+    }
+
+    /**
+     * Inserts a minimal `documents` row referencing $customerId, entirely
+     * outside the application (the issuance use case doesn't exist yet —
+     * task 2.6). `documents` has DELETE revoked for app_runtime by design
+     * (task 2.3), so this row is permanent — acceptable here (this test
+     * file's other fixtures already accumulate the same way), but a reason
+     * not to sprinkle this helper across many tests.
+     */
+    private function fakeAnIssuedDocumentFor(string $companyId, string $customerId): void
+    {
+        /** @var Connection $connection */
+        $connection = static::getContainer()->get('doctrine.dbal.default_connection');
+
+        $connection->beginTransaction();
+        $connection->executeStatement("SELECT set_config('app.company_id', :id, true)", ['id' => $companyId]);
+        $connection->executeStatement(
+            <<<'SQL'
+                INSERT INTO documents (
+                  id, company_id, document_type, series_id, number, document_no, atcud,
+                  issue_date, system_entry_at, customer_id, customer_snapshot, issuer_snapshot,
+                  template_version, pricing_mode, rounding_method, currency,
+                  settlement_total, net_total, tax_total, gross_total,
+                  hash, hash_control, qr_payload, is_training, status, status_at,
+                  source_id, issued_via
+                ) VALUES (
+                  :id, :companyId, 'FT', :seriesId, 1, 'FT 2026A/1', 'ABC-1',
+                  now(), now(), :customerId, '{}', '{}',
+                  'v1', 'net', 'per_line', 'EUR',
+                  100.00, 100.00, 23.00, 123.00,
+                  'somehash', 'v1', 'qrpayload', false, 'N', now(),
+                  'user1', 'web'
+                )
+                SQL,
+            [
+                'id' => Uuid::v7()->toRfc4122(),
+                'companyId' => $companyId,
+                'seriesId' => Uuid::v7()->toRfc4122(),
+                'customerId' => $customerId,
+            ],
+        );
+        $connection->commit();
     }
 
     private function createCompany(KernelBrowser $client, string $legalName = 'A Company Lda'): string

@@ -4,28 +4,42 @@ declare(strict_types=1);
 
 namespace App\Parties\Application\Command;
 
+use App\Parties\Domain\Customer;
 use App\Parties\Domain\CustomerRepository;
+use App\Parties\Domain\Exception\CustomerNameIsLocked;
+use App\Parties\Domain\Exception\CustomerNifIsLocked;
 use App\Parties\Domain\Exception\CustomerNotFound;
 use App\Parties\Domain\Exception\InvalidPaymentTermsId;
 use App\Shared\Domain\Audit\AuditLogger;
 use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
+use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\CountryRepository;
 use App\Shared\Domain\Exception\InvalidCountryCode;
 use App\Shared\Domain\Exception\InvalidNif;
 use App\Shared\Domain\Exception\PermissionDenied;
+use App\Shared\Domain\Fiscal\CustomerHasIssuedDocuments;
 use App\Shared\Domain\Nif;
 use App\Shared\Domain\PaymentTermsExistenceChecker;
 use App\Shared\Domain\Security\PermissionChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
+/**
+ * Despacho 8632/2014 §3.3.3–3.3.5, docs/plans/phase-2.md task 2.3: once a
+ * customer has at least one issued document, `nif`/`name` lock — checked
+ * here, not in `Customer::update()` itself, since the entity has no way to
+ * ask Fiscal a question without violating Deptrac (ADR 0004's pattern).
+ */
 #[AsMessageHandler(bus: 'command.bus')]
 final class UpdateCustomerHandler
 {
+    private const FINAL_CONSUMER_NIF = '999999990';
+
     public function __construct(
         private readonly CustomerRepository $customers,
         private readonly CountryRepository $countries,
         private readonly PaymentTermsExistenceChecker $paymentTerms,
+        private readonly CustomerHasIssuedDocuments $issuedDocuments,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
         private readonly AuditLogger $auditLogger,
@@ -57,6 +71,10 @@ final class UpdateCustomerHandler
 
         if (null !== $command->paymentTermsId && !$this->paymentTerms->exists($companyId, $command->paymentTermsId)) {
             throw new InvalidPaymentTermsId($command->paymentTermsId);
+        }
+
+        if ($command->name !== $customer->name() || $command->nif !== $customer->nif()) {
+            $this->guardAgainstLockedFields($companyId, $customer, $command);
         }
 
         $customer->update(
@@ -95,5 +113,22 @@ final class UpdateCustomerHandler
         }
 
         return false;
+    }
+
+    private function guardAgainstLockedFields(CompanyId $companyId, Customer $customer, UpdateCustomer $command): void
+    {
+        if (!$this->issuedDocuments->forCustomer($companyId, $customer->id()->toString())) {
+            return;
+        }
+
+        if ($command->name !== $customer->name()) {
+            throw new CustomerNameIsLocked();
+        }
+
+        $nifWasBlankOrGeneric = '' === $customer->nif() || self::FINAL_CONSUMER_NIF === $customer->nif();
+
+        if ($command->nif !== $customer->nif() && !$nifWasBlankOrGeneric) {
+            throw new CustomerNifIsLocked();
+        }
     }
 }

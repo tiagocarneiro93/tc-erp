@@ -10,9 +10,11 @@ use App\Platform\Domain\UserId;
 use App\Platform\Domain\UserRepository;
 use App\Shared\Domain\Nif;
 use App\Tax\Domain\TaxRateRepository;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * docs/plans/phase-1.md task 1.6: full CRUD (deactivate, not hard delete),
@@ -326,6 +328,100 @@ final class ProductsControllerTest extends WebTestCase
 
         $client->request('GET', "/api/v1/companies/{$companyId}/products/00000000-0000-7000-8000-000000000000", server: self::HEADERS);
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    /**
+     * Despacho 8632/2014 §3.3.3–3.3.5, docs/plans/phase-2.md task 2.3: once
+     * a product has been referenced by an issued document, its description
+     * locks; other fields stay editable.
+     */
+    public function testDescriptionLocksOnceAProductHasBeenReferencedByAnIssuedDocument(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client, $this->uniqueEmail(), 'owner-password');
+        $companyId = $this->createCompany($client);
+        $taxRateId = $this->aKnownTaxRateId();
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/products", server: self::HEADERS, content: json_encode([
+            'code' => 'P002', 'description' => 'Vinho Branco', 'type' => 'P', 'kind' => 'simple',
+            'unit_code' => 'UN', 'tax_rate_id' => $taxRateId, 'track_stock' => true,
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $created */
+        $created = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        $productId = $created['id'];
+
+        $this->fakeAnIssuedDocumentReferencing($companyId, $productId);
+
+        $client->request('PUT', "/api/v1/companies/{$companyId}/products/{$productId}", server: self::HEADERS, content: json_encode([
+            'code' => 'P002', 'description' => 'Vinho Branco Reserva', 'type' => 'P',
+            'unit_code' => 'UN', 'tax_rate_id' => $taxRateId, 'track_stock' => true,
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{type: string} $lockedBody */
+        $lockedBody = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('https://tc-erp.example/problems/product-description-is-locked', $lockedBody['type']);
+
+        // The description unchanged, everything else still updates freely.
+        $client->request('PUT', "/api/v1/companies/{$companyId}/products/{$productId}", server: self::HEADERS, content: json_encode([
+            'code' => 'P002B', 'description' => 'Vinho Branco', 'type' => 'P',
+            'unit_code' => 'UN', 'tax_rate_id' => $taxRateId, 'track_stock' => false,
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Inserts a minimal `documents` + `document_lines` row referencing
+     * $productId, entirely outside the application (the issuance use case
+     * doesn't exist yet — task 2.6). Both tables are insert-only for
+     * app_runtime by design (task 2.3), so these rows are permanent — see
+     * `CustomersControllerTest::fakeAnIssuedDocumentFor()`'s docblock.
+     */
+    private function fakeAnIssuedDocumentReferencing(string $companyId, string $productId): void
+    {
+        /** @var Connection $connection */
+        $connection = static::getContainer()->get('doctrine.dbal.default_connection');
+        $documentId = Uuid::v7()->toRfc4122();
+
+        $connection->beginTransaction();
+        $connection->executeStatement("SELECT set_config('app.company_id', :id, true)", ['id' => $companyId]);
+        $connection->executeStatement(
+            <<<'SQL'
+                INSERT INTO documents (
+                  id, company_id, document_type, series_id, number, document_no, atcud,
+                  issue_date, system_entry_at, customer_snapshot, issuer_snapshot,
+                  template_version, pricing_mode, rounding_method, currency,
+                  settlement_total, net_total, tax_total, gross_total,
+                  hash, hash_control, qr_payload, is_training, status, status_at,
+                  source_id, issued_via
+                ) VALUES (
+                  :id, :companyId, 'FT', :seriesId, 1, 'FT 2026A/1', 'ABC-1',
+                  now(), now(), '{}', '{}',
+                  'v1', 'net', 'per_line', 'EUR',
+                  100.00, 100.00, 23.00, 123.00,
+                  'somehash', 'v1', 'qrpayload', false, 'N', now(),
+                  'user1', 'web'
+                )
+                SQL,
+            ['id' => $documentId, 'companyId' => $companyId, 'seriesId' => Uuid::v7()->toRfc4122()],
+        );
+        $connection->executeStatement(
+            <<<'SQL'
+                INSERT INTO document_lines (
+                  id, company_id, document_id, line_number, product_id, product_code,
+                  product_description, product_type, unit_code, quantity, unit_price,
+                  discount_amount, settlement_amount, net_amount, gross_amount,
+                  tax_region, tax_code, tax_percentage, tax_amount
+                ) VALUES (
+                  :id, :companyId, :documentId, 1, :productId, 'P002',
+                  'Vinho Branco', 'P', 'UN', 1, 100,
+                  0, 0, 100, 123,
+                  'PT', 'NOR', 23, 23
+                )
+                SQL,
+            ['id' => Uuid::v7()->toRfc4122(), 'companyId' => $companyId, 'documentId' => $documentId, 'productId' => $productId],
+        );
+        $connection->commit();
     }
 
     private function aKnownTaxRateId(): string

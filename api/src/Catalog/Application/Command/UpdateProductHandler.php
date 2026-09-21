@@ -9,6 +9,7 @@ use App\Catalog\Domain\Exception\InvalidExemptionReasonCode;
 use App\Catalog\Domain\Exception\InvalidProductType;
 use App\Catalog\Domain\Exception\InvalidTaxRateId;
 use App\Catalog\Domain\Exception\InvalidUnitCode;
+use App\Catalog\Domain\Exception\ProductDescriptionIsLocked;
 use App\Catalog\Domain\Exception\ProductFamilyNotFound;
 use App\Catalog\Domain\Exception\ProductNotFound;
 use App\Catalog\Domain\Product;
@@ -18,12 +19,19 @@ use App\Catalog\Domain\UnitRepository;
 use App\Shared\Domain\Audit\AuditLogger;
 use App\Shared\Domain\Company\CompanyContext;
 use App\Shared\Domain\Exception\PermissionDenied;
+use App\Shared\Domain\Fiscal\ProductHasIssuedDocuments;
 use App\Shared\Domain\Security\PermissionChecker;
 use App\Shared\Domain\Tax\ExemptionReasonExistenceChecker;
 use App\Shared\Domain\Tax\TaxRateExemptionChecker;
 use App\Shared\Domain\Tax\TaxRateExistenceChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
+/**
+ * Despacho 8632/2014 §3.3.3–3.3.5, docs/plans/phase-2.md task 2.3: once a
+ * product has been referenced by at least one issued document,
+ * `description` locks — checked here, not in `Product::update()` itself,
+ * for the same Deptrac-driven reason as `UpdateCustomerHandler`.
+ */
 #[AsMessageHandler(bus: 'command.bus')]
 final class UpdateProductHandler
 {
@@ -34,6 +42,7 @@ final class UpdateProductHandler
         private readonly TaxRateExistenceChecker $taxRates,
         private readonly TaxRateExemptionChecker $taxRateExemption,
         private readonly ExemptionReasonExistenceChecker $exemptionReasons,
+        private readonly ProductHasIssuedDocuments $issuedDocuments,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
         private readonly AuditLogger $auditLogger,
@@ -76,6 +85,10 @@ final class UpdateProductHandler
 
         if (null === $command->exemptionReasonCode && $this->taxRateExemption->isExempt($command->taxRateId)) {
             throw new ExemptionReasonRequired();
+        }
+
+        if ($command->description !== $product->description() && $this->issuedDocuments->forProduct($companyId, $product->id()->toString())) {
+            throw new ProductDescriptionIsLocked();
         }
 
         $product->update(

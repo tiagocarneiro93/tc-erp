@@ -196,6 +196,12 @@ services:
     App\Fiscal\Domain\SeriesRepository:
         alias: App\Fiscal\Infrastructure\Persistence\Doctrine\Repository\DoctrineSeriesRepository
         public: true
+    App\Shared\Domain\Fiscal\CustomerHasIssuedDocuments:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\IssuedDocumentsChecker
+        public: true
+    App\Shared\Domain\Fiscal\ProductHasIssuedDocuments:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\IssuedDocumentsChecker
+        public: true
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:
