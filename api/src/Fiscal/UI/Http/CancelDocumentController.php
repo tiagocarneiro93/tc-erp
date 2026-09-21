@@ -31,7 +31,7 @@ final class CancelDocumentController
     #[OA\Response(response: 204, description: 'Cancelled.')]
     #[OA\Response(response: 403, description: 'The caller lacks the documents.cancel permission.')]
     #[OA\Response(response: 404, description: 'No such document.')]
-    #[OA\Response(response: 422, description: 'The document is not active (already cancelled or, for a working document, already fully converted), already has an active credit note, or may already have reached the AT (CIVA Art. 29.º §7).')]
+    #[OA\Response(response: 422, description: 'The document is not active (already cancelled or, for a working document, already fully converted), already has an active credit note, is already settled by an active receipt, or may already have reached the AT (CIVA Art. 29.º §7).')]
     public function cancel(string $documentId, #[MapRequestPayload] CancelDocumentRequest $request, Request $httpRequest): Response
     {
         $this->commandBus->dispatch(new CancelDocument(

@@ -32,6 +32,20 @@ final class CancellationNotAllowed extends \DomainException implements ProblemDe
         return new self('This document may already have been communicated to the AT — any correction now must be a credit/debit note, never a cancellation (CIVA Art. 29.º §7).');
     }
 
+    /**
+     * A receipt settling (part of) this document is at least as strong a
+     * signal that it reached the customer as AT communication is — you
+     * cannot pay an invoice you never received. No system-provided way to
+     * undo this today (receipts have no cancel/reversal flow yet); that is
+     * deliberate, not a gap this exception papers over — once money has
+     * changed hands, a credit note is the correct instrument, never a
+     * plain cancellation.
+     */
+    public static function alreadySettledByAReceipt(): self
+    {
+        return new self('This document is already settled (in part or in full) by an active receipt — issue a credit note instead of cancelling once payment has been received.');
+    }
+
     private function __construct(string $message)
     {
         parent::__construct($message);

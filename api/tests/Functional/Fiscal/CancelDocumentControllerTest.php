@@ -83,6 +83,27 @@ final class CancelDocumentControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
+    public function testCancellingADocumentAlreadySettledByAReceiptIsRejected(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client);
+        $companyId = $this->createCompany($client);
+        $documentId = $this->issueInvoice($client, $companyId);
+        $rgSeriesId = $this->createActiveSeries($client, $companyId, 'RG', '2026A');
+
+        // A partial payment is enough — paying an invoice is at least as
+        // strong a signal it reached the customer as AT communication is.
+        $client->request('POST', "/api/v1/companies/{$companyId}/receipts", server: self::HEADERS + ['HTTP_Idempotency-Key' => 'settles-ft'], content: json_encode([
+            'series_id' => $rgSeriesId,
+            'payment_method' => 'cash',
+            'allocations' => [['document_id' => $documentId, 'amount' => '1.00']],
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/documents/{$documentId}/cancel", server: self::HEADERS, content: '{}');
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
     public function testCancellingADocumentCommunicatedToTheAtIsRejected(): void
     {
         $client = static::createClient();

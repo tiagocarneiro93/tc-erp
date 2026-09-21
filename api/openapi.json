@@ -1473,7 +1473,7 @@
                         "description": "No such document."
                     },
                     "422": {
-                        "description": "The document is not active (already cancelled or, for a working document, already fully converted), already has an active credit note, or may already have reached the AT (CIVA Art. 29.\u00ba \u00a77)."
+                        "description": "The document is not active (already cancelled or, for a working document, already fully converted), already has an active credit note, is already settled by an active receipt, or may already have reached the AT (CIVA Art. 29.\u00ba \u00a77)."
                     }
                 }
             }
