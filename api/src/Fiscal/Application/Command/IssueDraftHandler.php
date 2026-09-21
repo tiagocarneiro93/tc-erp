@@ -7,6 +7,7 @@ namespace App\Fiscal\Application\Command;
 use App\Fiscal\Application\Exception\DraftValidationFailed;
 use App\Fiscal\Application\Query\DraftValidationError;
 use App\Fiscal\Application\Query\ValidateDraft;
+use App\Fiscal\Domain\AtCommunicationQueue;
 use App\Fiscal\Domain\DocumentDraft;
 use App\Fiscal\Domain\DocumentDraftRepository;
 use App\Fiscal\Domain\DocumentId;
@@ -74,6 +75,7 @@ final class IssueDraftHandler
         private readonly DocumentSigner $signer,
         private readonly DocumentWriter $documentWriter,
         private readonly IssuedDocumentReader $issuedDocuments,
+        private readonly AtCommunicationQueue $atCommunications,
         private readonly CustomerSnapshotProvider $customerSnapshots,
         private readonly IssuerSnapshotProvider $issuerSnapshots,
         private readonly ProductSnapshotProvider $productSnapshots,
@@ -252,6 +254,13 @@ final class IssueDraftHandler
         ];
 
         $this->documentWriter->insert($companyId, $document, $lines, $taxSummary, $references, $statusEvent);
+
+        // §7.1 step 12 / §6.12: every issued document gets a `pending`
+        // outbox row in the same transaction, so the async communication
+        // (Phase 3) always has something to pick up. `kind` follows §6.12's
+        // own enum ("series_register|series_finish|invoice|transport") —
+        // GT/GR/GD (transport) aren't issued through this handler yet.
+        $this->atCommunications->enqueue($companyId, 'invoice', 'Document', $documentId->toString(), $now);
 
         foreach ($this->collectOriginDocumentNumbers($payload) as $sourceDocumentNo) {
             $this->closeIfFullyConverted($companyId, $sourceDocumentNo, $command->actingUserId, $now);

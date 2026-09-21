@@ -117,4 +117,16 @@ final class DoctrineIssuedDocumentReader implements IssuedDocumentReader
 
         return Money::fromString((string) $sum);
     }
+
+    public function hasBlockingAtCommunication(CompanyId $companyId, DocumentId $documentId): bool
+    {
+        $found = $this->connection->fetchOne(
+            "SELECT 1 FROM at_communications
+             WHERE company_id = ? AND subject_type = 'Document' AND subject_id = ? AND status IN ('sending', 'accepted')
+             LIMIT 1",
+            [$companyId->toString(), $documentId->toString()],
+        );
+
+        return false !== $found;
+    }
 }

@@ -1428,6 +1428,56 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/documents/{documentId}/cancel": {
+            "post": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "post_documents_cancel",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CancelDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Cancelled."
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.cancel permission."
+                    },
+                    "404": {
+                        "description": "No such document."
+                    },
+                    "422": {
+                        "description": "The document is not active (already cancelled or, for a working document, already fully converted), already has an active credit note, or may already have reached the AT (CIVA Art. 29.\u00ba \u00a77)."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/documents/{documentId}/convert": {
             "post": {
                 "tags": [
@@ -4401,6 +4451,16 @@
                     "is_default": {
                         "type": "boolean",
                         "default": false
+                    }
+                },
+                "type": "object"
+            },
+            "CancelDocumentRequest": {
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
                     }
                 },
                 "type": "object"

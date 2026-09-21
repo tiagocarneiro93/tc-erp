@@ -54,4 +54,17 @@ interface IssuedDocumentReader
      * §6.7's current-accounts module not existing yet either.
      */
     public function sumSettledAmount(CompanyId $companyId, DocumentId $documentId): Money;
+
+    /**
+     * task 2.10, `docs/legal/civa-extracts.md`'s "What this resolves" note:
+     * "not yet communicated to the AT" is this system's technical proxy
+     * for "not yet delivered to the customer" — the boundary CIVA Art.
+     * 29.º §7 actually cares about but that this system cannot observe
+     * directly. `sending`/`accepted` block cancellation (the document may
+     * already be out); `pending` (never attempted), `rejected` and
+     * `failed` (attempted but never actually delivered to the AT) do not
+     * — erring toward allowing cancellation only when delivery plausibly
+     * never happened, per that note's own "safer default" reasoning.
+     */
+    public function hasBlockingAtCommunication(CompanyId $companyId, DocumentId $documentId): bool;
 }

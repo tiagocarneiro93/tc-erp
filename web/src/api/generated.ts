@@ -106,6 +106,11 @@ export interface PaymentTermsRequest {
   is_default?: boolean;
 }
 
+export interface CancelDocumentRequest {
+  /** @nullable */
+  reason?: string | null;
+}
+
 export interface ConvertDocumentRequest {
   document_type: string;
 }
@@ -3100,6 +3105,91 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDeletePaymentTermsDeactivateMutationOptions(options), queryClient);
+    }
+
+export const getPostDocumentsCancelUrl = (companyId: string,
+    documentId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/documents/${documentId}/cancel`
+}
+
+export const postDocumentsCancel = async (companyId: string,
+    documentId: string,
+    cancelDocumentRequest: CancelDocumentRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPostDocumentsCancelUrl(companyId,documentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(cancelDocumentRequest)
+  }
+);}
+
+
+
+
+
+export const getPostDocumentsCancelMutationKey = () => ['postDocumentsCancel'] as const;
+
+export const getPostDocumentsCancelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsCancel>>, TError,PostDocumentsCancelMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postDocumentsCancel>>, TError,PostDocumentsCancelMutationVariables, TContext> => {
+
+const mutationKey = getPostDocumentsCancelMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postDocumentsCancel>>, PostDocumentsCancelMutationVariables> = (props) => {
+          const {companyId,documentId,data} = props ?? {};
+
+          return  postDocumentsCancel(companyId,documentId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostDocumentsCancelMutationResult = NonNullable<Awaited<ReturnType<typeof postDocumentsCancel>>>
+    export type PostDocumentsCancelMutationBody = CancelDocumentRequest
+    export type PostDocumentsCancelMutationError = void
+    export type PostDocumentsCancelMutationVariables = {companyId: string;documentId: string;data: CancelDocumentRequest}
+
+    export const usePostDocumentsCancel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsCancel>>, TError,PostDocumentsCancelMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postDocumentsCancel>>,
+        TError,
+        PostDocumentsCancelMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostDocumentsCancelMutationOptions(options), queryClient);
     }
 
 export const getPostDocumentsConvertUrl = (companyId: string,
