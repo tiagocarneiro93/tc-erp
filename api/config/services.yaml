@@ -9,6 +9,10 @@
 parameters:
     app.mailer_from_address: '%env(MAILER_FROM_ADDRESS)%'
     app.frontend_url: '%env(FRONTEND_URL)%'
+    # Despacho 8632/2014 §2.2.2/at-qrcode-spec.pdf field R: the number AT
+    # assigns to the certified program. Not consumed yet — task 2.6
+    # (issuance) is the first caller, via PrintedHashMention/QrPayloadInput.
+    app.document_signing_certificate_number: '%env(DOCUMENT_SIGNING_CERTIFICATE_NUMBER)%'
 
 services:
     # default configuration for services in *this* file
@@ -211,6 +215,15 @@ services:
     App\Shared\Domain\CustomerExistenceChecker:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true
+    # Nothing calls this yet either — task 2.6 (issuance) is the first
+    # caller — so it needs the same public: true treatment.
+    App\Fiscal\Domain\Signing\DocumentSigner:
+        alias: App\Fiscal\Infrastructure\Signing\OpenSslDocumentSigner
+        public: true
+    App\Fiscal\Infrastructure\Signing\OpenSslDocumentSigner:
+        arguments:
+            $privateKeyPath: '%kernel.project_dir%/%env(DOCUMENT_SIGNING_KEY_PATH)%'
+            $keyVersion: '%env(int:DOCUMENT_SIGNING_KEY_VERSION)%'
     # Nothing calls this yet either — no issuing endpoint exists before
     # Phase 2 — so it needs the same public: true treatment.
     App\Shared\Infrastructure\Http\IdempotencyKeyGuard:

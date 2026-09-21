@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 COMPOSE := docker compose
 
-.PHONY: help up down api-shell test test-api test-web e2e lint fix migrate openapi seed
+.PHONY: help up down api-shell test test-api test-web e2e lint fix migrate openapi seed signing-key
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -52,3 +52,7 @@ openapi: ## Dump OpenAPI spec to api/openapi.json and regenerate the web client
 
 seed: ## Load development fixtures
 	$(COMPOSE) exec php bin/console app:seed --no-interaction
+
+signing-key: ## Generate the dev document-signing RSA key (Despacho 8632/2014 §6.2: 1024-bit)
+	$(COMPOSE) exec php mkdir -p var/signing
+	$(COMPOSE) exec php openssl genrsa -out var/signing/document-signing-dev.pem 1024
