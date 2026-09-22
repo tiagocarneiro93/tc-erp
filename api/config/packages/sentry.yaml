@@ -1,0 +1,19 @@
+# technical-scope.md §10.2: "Monitoring: Sentry (errors)...". Pulled forward
+# from Phase 7 (docs/PLAN.md) at the owner's request — error tracking
+# doesn't need Phase 7's cross-company platform-admin authorization concept
+# (ADR 0003) at all, since errors are viewed on Sentry's own dashboard, not
+# inside this app. Blank SENTRY_DSN (api/.env) means the SDK sends nothing —
+# same "committed blank placeholder, real value in .env.local" pattern as
+# every other optional secret in this repo (e.g. AT_WEBSERVICES_CLIENT_CERT_PASSWORD).
+#
+# Deliberately narrow scope: error capture only, not performance tracing
+# (traces_sample_rate: 0) or request-body capture (max_request_body_size:
+# none) — request bodies can carry plaintext secrets in flight (e.g. the AT
+# credentials PUT endpoint, CLAUDE.md's "secrets never appear in logs").
+sentry:
+    dsn: '%env(SENTRY_DSN)%'
+    options:
+        environment: '%kernel.environment%'
+        traces_sample_rate: 0.0
+        send_default_pii: false
+        max_request_body_size: none
