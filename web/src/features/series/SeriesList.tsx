@@ -48,6 +48,7 @@ export function SeriesList({ companyId }: { companyId: string }) {
   const [creating, setCreating] = useState(false)
   const [newDocumentType, setNewDocumentType] = useState('')
   const [newCode, setNewCode] = useState('')
+  const [newIsTraining, setNewIsTraining] = useState(false)
   const [activationError, setActivationError] = useState<string | null>(null)
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getGetSeriesListQueryOptions(companyId).queryKey })
@@ -58,12 +59,13 @@ export function SeriesList({ companyId }: { companyId: string }) {
     }
 
     create.mutate(
-      { companyId, data: { document_type: newDocumentType, code: newCode } },
+      { companyId, data: { document_type: newDocumentType, code: newCode, is_training: newIsTraining } },
       {
         onSuccess: () => {
           setCreating(false)
           setNewDocumentType('')
           setNewCode('')
+          setNewIsTraining(false)
           void invalidate()
         },
       },
@@ -164,6 +166,15 @@ export function SeriesList({ companyId }: { companyId: string }) {
               <Label htmlFor="series-code">Código</Label>
               <Input id="series-code" value={newCode} onChange={(event) => setNewCode(event.target.value)} />
             </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="border-input size-4 rounded"
+                checked={newIsTraining}
+                onChange={(event) => setNewIsTraining(event.target.checked)}
+              />
+              Série de formação/teste
+            </label>
             <Button onClick={handleCreate} disabled={create.isPending}>
               {create.isPending ? 'A criar…' : 'Criar série'}
             </Button>
