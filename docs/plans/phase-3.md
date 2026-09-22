@@ -138,6 +138,29 @@ Still open, not blocking the plan but blocking part of the work:
     with our own copy of the flow); the real proof is a live call against
     AT's **test** environment (e.g. `registarSerie` for a throwaway test
     series) as each task's acceptance criterion, not simulated.
+11. **Error mapping, added after task 3.1's live-test fixes**: every
+    AT-integration client (task 3.1's `SeriesWSClient`, task 3.2's invoice/
+    receipt client, any later one) must follow the same convention as the
+    rest of the app (technical-scope.md §9.1, `Shared\Domain\Exception\ProblemDetails` +
+    `ProblemDetailsExceptionListener`, task 0.11) rather than letting a raw
+    `\RuntimeException` fall through to a generic 500. Two categories, not
+    one blanket rule:
+    - **User/business-actionable states** (the caller can do something
+      about it, e.g. "this company hasn't configured AT credentials yet")
+      get a proper exception implementing `ProblemDetails` with a real
+      status and stable `type`. `Shared\Domain\Company\AtCredentialsNotConfigured`
+      (404, moved there from `Company\Domain\Exception` specifically so
+      every module's AT client can throw the same one, not just Company's
+      own handlers) is the first of these and should be reused, not
+      duplicated, by task 3.2's client.
+    - **"Should never happen" / deployment-config / AT-contract-violation
+      states** (missing or corrupt key/cert files, AT returning a
+      response shape our code doesn't recognize) stay as plain exceptions
+      falling through to the generic 500 — this already matches
+      `OpenSslDocumentSigner`'s existing precedent for the exact same
+      category of problem, and converting every single one into a
+      "friendly" client-facing error would be less consistent with the
+      codebase, not more.
 
 ---
 

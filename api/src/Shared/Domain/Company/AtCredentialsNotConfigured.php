@@ -2,10 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Company\Domain\Exception;
+namespace App\Shared\Domain\Company;
 
 use App\Shared\Domain\Exception\ProblemDetails;
 
+/**
+ * Lives in Shared, not Company\Domain, alongside {@see AtCredentialsProvider}:
+ * every AT-integration adapter (any module) needs to react the same way
+ * when a company hasn't configured AT credentials yet — this is a normal,
+ * user-actionable business state, not a server misconfiguration, so it
+ * gets a proper {@see ProblemDetails} mapping rather than falling through
+ * to a generic 500 (technical-scope.md §9.1, RFC 9457).
+ */
 final class AtCredentialsNotConfigured extends \DomainException implements ProblemDetails
 {
     public function __construct()

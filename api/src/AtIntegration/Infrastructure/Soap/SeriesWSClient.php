@@ -10,6 +10,7 @@ use App\Shared\Domain\AtIntegration\SeriesFinalization;
 use App\Shared\Domain\AtIntegration\SeriesRegistration;
 use App\Shared\Domain\AtIntegration\SeriesWebserviceClient;
 use App\Shared\Domain\AtIntegration\SeriesWebserviceResult;
+use App\Shared\Domain\Company\AtCredentialsNotConfigured;
 use App\Shared\Domain\Company\AtCredentialsProvider;
 use App\Shared\Domain\CompanyId;
 
@@ -114,7 +115,7 @@ final class SeriesWSClient implements SeriesWebserviceClient
         $credentials = $this->credentials->forCompany($companyId);
 
         if (null === $credentials) {
-            throw new \RuntimeException(\sprintf('No AT credentials configured for company "%s".', $companyId->toString()));
+            throw new AtCredentialsNotConfigured();
         }
 
         $client = new \SoapClient($this->wsdlPath, [

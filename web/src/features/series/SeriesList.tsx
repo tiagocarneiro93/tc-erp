@@ -81,6 +81,7 @@ export function SeriesList({ companyId }: { companyId: string }) {
           setActivationError(
             apiErrorMessage(error, {
               403: 'Sem permissão para gerir séries.',
+              404: 'Configure primeiro as credenciais da AT desta empresa (Definições).',
               422: 'A AT rejeitou o registo da série.',
             }),
           ),
