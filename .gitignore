@@ -21,6 +21,10 @@
 # Secrets / keys — never commit the signing key (CLAUDE.md — hard rules)
 *.pem
 *.key
+*.pfx
+*.p12
+*.cer
+*.p7b
 docker/keys/
 
 # IDE / OS
