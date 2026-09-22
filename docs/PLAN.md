@@ -455,6 +455,8 @@ Exit: documents communicated to the AT test environment; SAF-T validates against
 
 ## Phase 4 — Movement of goods (§7.3)
 
+Prerequisites: ✅ transport documents webservice manual and WSDL in `docs/legal/` (`at-ws-transport.pdf`, `DocumentosTransporte.wsdl`).
+
 Scope for `docs/plans/phase-4.md`: GT, GR, GD with loading/unloading data; synchronous AT transport communication with AT code on the document; failure handling and retry UI; conversion GR → FT without double stock movement (flag prepared for Phase 5).
 
 Exit: transport documents obtain AT codes in the test environment.
