@@ -438,7 +438,7 @@ Exit: all fiscal test families green (golden, concurrency, integrity, vectors) �
 
 ## Phase 3 — Output and AT compliance (§7.5, §7.7, §7.8)
 
-Prerequisites: 🧑 trust service provider sandbox; 🧑 AT test environment access and certificates; 🧑 SAF-T XSD and AT webservice manuals in `docs/legal/`.
+Prerequisites: 🧑 trust service provider sandbox; ✅ AT test environment access and certificates (`TesteWebservices.pfx` + AT's public key, obtained from asi-cd@at.gov.pt — see `docs/legal/README.md`); ✅ SAF-T XSD and AT webservice manuals in `docs/legal/` (e-Fatura and series communication, both generic + specific halves, plus their WSDLs).
 
 Scope for `docs/plans/phase-3.md`:
 - `DocumentPdfRenderer` port with on-demand rendering (§7.8): spike both engines (mPDF vs Twig → Gotenberg) on the invoice template, 🧑 owner picks one; versioned templates with all legal mentions (hash characters + certification mention, ATCUD, QR image, "Este documento não serve de fatura" for working documents); rendering from stored data and snapshots only; `document_prints` log and copy mentions.
@@ -447,7 +447,7 @@ Scope for `docs/plans/phase-3.md`:
 - Email sending of documents (async).
 - SAF-T (PT) streaming generator + XSD validation in app and CI.
 - AT webservice clients: series register/finish/consult, invoice communication; SOAP security per manual; AT outbox (`at_communications`), async processing, retries, sweeper (§5.4, §7.5); AT status UI.
-- Series lifecycle with real AT validation codes (test environment).
+- Series lifecycle with real AT validation codes (test environment). **Carried over from Phase 2, catalogued so it isn't lost**: `Series::create()`/`update()` and `CreateSeriesRequest` (`api/src/Fiscal/Domain/Series.php`, `api/src/Fiscal/UI/Http/CreateSeriesRequest.php`) currently validate the series `code` with only `#[Assert\NotBlank]` — no check against `at-ws-series-aspetos-especificos.pdf` §1.3.2's actual construction rules (max 35 chars; `[A-Za-z0-9._-]` only; no leading/trailing/doubled separator; can't start with `AT`, reserved for AT's own programs). Add that validation as part of this phase's series-communication work, before wiring `registarSerie` — a series created earlier with an invalid code would otherwise only fail once it hits the real webservice.
 
 Exit: documents communicated to the AT test environment; SAF-T validates against XSD; sealed PDFs produced in sandbox.
 
