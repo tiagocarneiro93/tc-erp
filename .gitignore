@@ -25,7 +25,6 @@
 *.p12
 *.cer
 *.p7b
-docker/keys/
 
 # IDE / OS
 .idea/
