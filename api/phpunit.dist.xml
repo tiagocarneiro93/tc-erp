@@ -9,6 +9,20 @@
 >
     <php>
         <ini name="error_reporting" value="-1" />
+        <!--
+            Both <server> and <env> are needed: docker-compose.yml sets
+            APP_ENV=dev as a real container-wide environment variable (not
+            scoped to the web server), which PHP's CLI SAPI auto-populates
+            into $_ENV before this file is even read. Symfony's
+            KernelTestCase::createKernel() checks $_ENV['APP_ENV'] before
+            $_SERVER['APP_ENV'], so a <server>-only override is silently
+            ignored inside that container — WebTestCase then boots the
+            kernel as "dev", which never got framework.test: true
+            (config/packages/framework.yaml's when@test block), and
+            createClient() fails. <env force="true"> is the one that
+            actually overrides $_ENV.
+        -->
+        <env name="APP_ENV" value="test" force="true" />
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
         <server name="SYMFONY_DEPRECATIONS_HELPER" value="disabled" />
