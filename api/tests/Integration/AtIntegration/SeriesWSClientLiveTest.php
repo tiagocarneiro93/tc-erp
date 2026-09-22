@@ -43,8 +43,11 @@ final class SeriesWSClientLiveTest extends WebTestCase
 
     public function testRegisteringASeriesAgainstTheRealAtTestEnvironment(): void
     {
-        $subuser = getenv('AT_TEST_SUBUSER');
-        $password = getenv('AT_TEST_PASSWORD');
+        // Symfony's Dotenv only populates $_ENV/$_SERVER by default (no
+        // usePutenv() call anywhere in this app) — getenv() never sees
+        // these, same reasoning as tests/bootstrap.php's own lookup.
+        $subuser = $_SERVER['AT_TEST_SUBUSER'] ?? $_ENV['AT_TEST_SUBUSER'] ?? null;
+        $password = $_SERVER['AT_TEST_PASSWORD'] ?? $_ENV['AT_TEST_PASSWORD'] ?? null;
 
         if (!\is_string($subuser) || '' === $subuser || !\is_string($password) || '' === $password) {
             self::markTestSkipped('AT_TEST_SUBUSER / AT_TEST_PASSWORD not set — set them in api/.env.test.local to run this test against AT\'s real sandbox.');
