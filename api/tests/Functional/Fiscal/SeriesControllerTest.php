@@ -67,6 +67,24 @@ final class SeriesControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
+    /**
+     * docs/plans/phase-3.md task 3.1c, `at-ws-series-aspetos-especificos.pdf`
+     * §1.3.2 — "AT" is reserved for AT's own programs.
+     */
+    public function testCreatingWithAReservedAtPrefixedCodeIsRejected(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client);
+        $companyId = $this->createCompany($client);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/series", server: self::HEADERS, content: json_encode([
+            'document_type' => 'FT',
+            'code' => 'AT2026A',
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
     public function testCreatingADuplicateDocumentTypeAndCodeForTheSameCompanyFails(): void
     {
         $client = static::createClient();

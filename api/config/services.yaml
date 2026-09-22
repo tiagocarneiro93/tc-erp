@@ -158,6 +158,9 @@ services:
     App\Company\Infrastructure\Security\SodiumAtCredentialsEncryptor:
         arguments:
             $base64Key: '%env(AT_CREDENTIALS_ENCRYPTION_KEY)%'
+    App\Shared\Domain\Company\AtCredentialsProvider:
+        alias: App\Company\Infrastructure\Security\CompanyAtCredentialsProvider
+        public: true
     App\Parties\Domain\CustomerRepository:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true

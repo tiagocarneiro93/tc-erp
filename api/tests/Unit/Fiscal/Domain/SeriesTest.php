@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Fiscal\Domain;
 
 use App\Fiscal\Domain\Exception\ChronologyViolation;
+use App\Fiscal\Domain\Exception\InvalidSeriesCode;
 use App\Fiscal\Domain\Exception\InvalidSeriesStatusTransition;
 use App\Fiscal\Domain\Exception\SeriesCannotIssue;
 use App\Fiscal\Domain\Series;
 use App\Fiscal\Domain\SeriesId;
 use App\Fiscal\Domain\SeriesStatus;
 use App\Shared\Domain\CompanyId;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -224,6 +226,83 @@ final class SeriesTest extends TestCase
         $this->expectException(ChronologyViolation::class);
 
         $series->recordIssuance(2, 'HASH2', new \DateTimeImmutable('2026-01-02T10:00:01Z'), new \DateTimeImmutable('2026-01-02T09:59:59Z'));
+    }
+
+    /**
+     * docs/plans/phase-3.md task 3.1c, `at-ws-series-aspetos-especificos.pdf`
+     * §1.3.2.
+     */
+    public function testCreateRejectsACodeTooLong(): void
+    {
+        $this->expectException(InvalidSeriesCode::class);
+
+        Series::create(SeriesId::generate(), CompanyId::generate(), 'FT', str_repeat('A', 36), false, 1);
+    }
+
+    public function testCreateAcceptsACodeAtTheLengthLimit(): void
+    {
+        $series = Series::create(SeriesId::generate(), CompanyId::generate(), 'FT', str_repeat('A', 35), false, 1);
+
+        self::assertSame(str_repeat('A', 35), $series->code());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function invalidCodeProvider(): iterable
+    {
+        yield 'accented character' => ['2026Ã'];
+        yield 'cedilla' => ['SÉRIEÇ'];
+        yield 'space' => ['2026 A'];
+        yield 'slash' => ['2026/A'];
+        yield 'leading dot' => ['.2026A'];
+        yield 'leading underscore' => ['_2026A'];
+        yield 'leading dash' => ['-2026A'];
+        yield 'trailing dot' => ['2026A.'];
+        yield 'trailing dash' => ['2026A-'];
+        yield 'doubled separator' => ['2026--A'];
+        yield 'doubled separator, mixed' => ['2026._A'];
+        yield 'starts with AT, uppercase' => ['AT2026A'];
+        yield 'starts with AT, lowercase' => ['at2026A'];
+        yield 'starts with AT, mixed case' => ['At2026A'];
+        yield 'empty' => [''];
+    }
+
+    #[DataProvider('invalidCodeProvider')]
+    public function testCreateRejectsInvalidCodes(string $code): void
+    {
+        $this->expectException(InvalidSeriesCode::class);
+
+        Series::create(SeriesId::generate(), CompanyId::generate(), 'FT', $code, false, 1);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function validCodeProvider(): iterable
+    {
+        yield 'plain year+letter' => ['2026A'];
+        yield 'single character' => ['A'];
+        yield 'internal separators' => ['2026.A-1_2'];
+        yield 'lowercase' => ['loja-lisboa'];
+        yield 'contains AT, not starting with it' => ['LOJAAT'];
+    }
+
+    #[DataProvider('validCodeProvider')]
+    public function testCreateAcceptsValidCodes(string $code): void
+    {
+        $series = Series::create(SeriesId::generate(), CompanyId::generate(), 'FT', $code, false, 1);
+
+        self::assertSame($code, $series->code());
+    }
+
+    public function testUpdateRejectsAnInvalidCode(): void
+    {
+        $series = $this->newSeries();
+
+        $this->expectException(InvalidSeriesCode::class);
+
+        $series->update('AT-RESERVED', false, 1);
     }
 
     private function newSeries(): Series

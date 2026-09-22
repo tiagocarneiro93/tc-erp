@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Fiscal\Domain;
 
 use App\Fiscal\Domain\Exception\ChronologyViolation;
+use App\Fiscal\Domain\Exception\InvalidSeriesCode;
 use App\Fiscal\Domain\Exception\InvalidSeriesStatusTransition;
 use App\Fiscal\Domain\Exception\SeriesCannotIssue;
 use App\Shared\Domain\CompanyId;
@@ -50,7 +51,41 @@ final class Series
         bool $isTraining,
         int $firstNumber,
     ): self {
+        if (!self::isValidCode($code)) {
+            throw new InvalidSeriesCode($code);
+        }
+
         return new self($id, $companyId, $documentType, $code, $isTraining, null, SeriesStatus::Draft, $firstNumber, null, null, null, null, null, null);
+    }
+
+    /**
+     * `at-ws-series-aspetos-especificos.pdf` §1.3.2's construction rules —
+     * checked here (not only at the API boundary) so no path can create a
+     * series AT would refuse to register. Case-insensitive on the "AT"
+     * prefix: the manual states the reservation without saying whether
+     * capitalization matters, so this reads it conservatively (rejecting a
+     * borderline code costs nothing locally; accepting one AT then refuses
+     * would surface far later, at the actual `registarSerie` call).
+     */
+    public static function isValidCode(string $code): bool
+    {
+        if ('' === $code || 35 < \strlen($code)) {
+            return false;
+        }
+
+        if (1 !== preg_match('/^[A-Za-z0-9._-]+$/', $code)) {
+            return false;
+        }
+
+        if (\in_array($code[0], ['.', '_', '-'], true) || \in_array($code[-1], ['.', '_', '-'], true)) {
+            return false;
+        }
+
+        if (1 === preg_match('/[._-]{2}/', $code)) {
+            return false;
+        }
+
+        return !str_starts_with(strtoupper($code), 'AT');
     }
 
     /**
@@ -64,6 +99,10 @@ final class Series
     public function update(string $code, bool $isTraining, int $firstNumber): void
     {
         $this->guardStatus('update', SeriesStatus::Draft);
+
+        if (!self::isValidCode($code)) {
+            throw new InvalidSeriesCode($code);
+        }
 
         $this->code = $code;
         $this->isTraining = $isTraining;
