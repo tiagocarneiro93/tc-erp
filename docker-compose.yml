@@ -6,6 +6,12 @@ services:
         INSTALL_XDEBUG: "false"
     volumes:
       - ./api:/app
+      # AT_PUBLIC_KEY_PATH/AT_WEBSERVICES_CLIENT_CERT_PATH (api/.env) resolve
+      # relative to %kernel.project_dir%, i.e. /app — but docker/keys/ is a
+      # repo-root sibling of api/, so without this mount it never appears
+      # inside the container at all. Read-only: the app only ever reads
+      # these, never writes them.
+      - ./docker/keys/at-webservices:/app/docker/keys/at-webservices:ro
     environment:
       SERVER_NAME: ":80"
       APP_ENV: dev
