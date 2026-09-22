@@ -18,10 +18,13 @@ use App\Shared\Domain\CompanyId;
  * `ext-soap`, WS-Security header per {@see AtRequestCipher}, mutual TLS via
  * {@see AtMutualTlsCertificate}. docs/plans/phase-3.md task 3.1f.
  *
- * **Not verified against the real AT test environment from this sandbox**
- * — `ext-soap` can't be installed here (network policy blocks the only
- * package source). Written to the manuals' documented shapes as precisely
- * as they state them; task 3.1g's live test is the actual proof.
+ * **Verified against AT's real test environment** (2026-09-22, owner-run:
+ * `registarSerie` → `codResultOper: 2001`, real AT-issued
+ * `codValidacaoSerie` starting with `AA` as documented for the test
+ * environment). This also confirms {@see AtRequestCipher}'s RSA padding
+ * assumption was correct. The one real bug the live test caught — fixed
+ * here, see {@see self::buildSecurityHeader()} — was a missing
+ * `<wss:Security>` wrapper element, not the cipher itself.
  */
 final class SeriesWSClient implements SeriesWebserviceClient
 {
@@ -137,17 +140,33 @@ final class SeriesWSClient implements SeriesWebserviceClient
         return $response;
     }
 
+    /**
+     * The whole `<wss:Security>` element is built here, not just
+     * `<wss:UsernameToken>` — `SoapHeader` only auto-wraps its payload in
+     * an element named by its own 2nd constructor argument when that
+     * payload is a plain value; a `SoapVar` with `XSD_ANYXML` (needed here
+     * to inject raw, already-serialized XML) is inserted verbatim instead,
+     * so `SoapHeader`'s `'Security'` argument is silently ignored and no
+     * wrapper is added. Confirmed against AT's real test environment
+     * (2026-09-22, `registarSerie` → `codResultOper: 2001`): the earlier
+     * `UsernameToken`-only version produced a request with no `Security`
+     * element at all, which AT's WS-Security processor never recognized,
+     * always failing with a generic auth error before ever reaching this
+     * cipher's actual field values.
+     */
     private function buildSecurityHeader(string $subuser, string $password): \SoapHeader
     {
         $credentials = $this->cipher->buildCredentials($password, new \DateTimeImmutable('now', new \DateTimeZone('UTC')));
 
-        $usernameToken = \sprintf(
-            '<wss:UsernameToken xmlns:wss="http://schemas.xmlsoap.org/ws/2002/12/secext">'
+        $security = \sprintf(
+            '<wss:Security xmlns:wss="http://schemas.xmlsoap.org/ws/2002/12/secext">'
+            .'<wss:UsernameToken>'
             .'<wss:Username>%s</wss:Username>'
             .'<wss:Password>%s</wss:Password>'
             .'<wss:Nonce>%s</wss:Nonce>'
             .'<wss:Created>%s</wss:Created>'
-            .'</wss:UsernameToken>',
+            .'</wss:UsernameToken>'
+            .'</wss:Security>',
             htmlspecialchars($subuser, \ENT_XML1),
             htmlspecialchars($credentials->passwordBase64, \ENT_XML1),
             htmlspecialchars($credentials->nonceBase64, \ENT_XML1),
@@ -157,7 +176,7 @@ final class SeriesWSClient implements SeriesWebserviceClient
         return new \SoapHeader(
             'http://schemas.xmlsoap.org/ws/2002/12/secext',
             'Security',
-            new \SoapVar($usernameToken, \XSD_ANYXML),
+            new \SoapVar($security, \XSD_ANYXML),
             false,
         );
     }

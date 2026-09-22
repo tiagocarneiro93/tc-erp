@@ -177,16 +177,17 @@ tests for field shapes plus a round-trip self-test (decision 10);
 `at_communications` gets a row for every series register/finish/cancel
 attempt, successful or not.
 
-**Status: implemented, see `docs/PLAN.md` task 3.1 for the full breakdown.**
+**Status: done, verified against AT's real test environment (2026-09-22,
+owner-run) — see `docs/PLAN.md` task 3.1 for the full breakdown.**
 Everything above is built and covered by the everyday test suite (against
 `FakeSeriesWebserviceClient`, a plan refinement not in this write-up — see
-`docs/PLAN.md`). The one open item is the "verified against AT's test
-environment" half of the accept criterion: `ext-soap` isn't installable in
-this sandbox (network policy), so `SeriesWSClientLiveTest` — written,
-`markTestSkipped()`-guarded — has not actually been run against AT yet. 🧑
-Owner needs to run it locally with real `AT_TEST_SUBUSER`/`AT_TEST_PASSWORD`
-in `api/.env.test.local` to close this out and confirm the RSA-padding
-assumption in `OpenSslAtRequestCipher`.
+`docs/PLAN.md`). `registarSerie` returns `codResultOper: 2001` and a real
+`AA`-prefixed `codValidacaoSerie`, closing the accept criterion and
+confirming the RSA-padding assumption in `OpenSslAtRequestCipher` was
+correct. The real bug the live run caught was in
+`SeriesWSClient::buildSecurityHeader()` — a missing `<wss:Security>`
+wrapper element, not the cipher — see `docs/PLAN.md` for the full
+diagnosis.
 
 ### 3.2 Invoice/receipt AT communication (outbox consumer)
 

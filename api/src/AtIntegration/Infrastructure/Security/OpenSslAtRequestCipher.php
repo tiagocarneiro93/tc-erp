@@ -20,12 +20,12 @@ use App\AtIntegration\Domain\Security\AtWsSecurityCredentials;
  * ("chave pública do Sistema de Autenticação") but never a padding mode.
  * This uses `OPENSSL_PKCS1_PADDING` — OpenSSL's own default for
  * `openssl_public_encrypt()` and the conventional choice for this exact
- * "wrap a symmetric key" pattern in webservices of this vintage — as a
- * flagged assumption, not a confirmed fact (CLAUDE.md: never guess an AT
- * technical format without saying so). Per docs/plans/phase-3.md decision
- * 10, this can only really be verified by a live call against AT's test
- * environment; if that call fails on decryption specifically, this is the
- * first thing to change.
+ * "wrap a symmetric key" pattern in webservices of this vintage — flagged
+ * per CLAUDE.md ("never guess an AT technical format without saying so")
+ * until confirmed. **Confirmed correct** by a live `registarSerie` call
+ * against AT's test environment (2026-09-22, owner-run,
+ * `codResultOper: 2001`) — AT successfully decrypted a `Nonce` built this
+ * way, so no other padding mode needs to be tried.
  *
  * `openssl_encrypt()`'s default padding for `aes-128-ecb` is PKCS7, which
  * for a 16-byte AES block is byte-identical to what Java (and this
