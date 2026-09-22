@@ -158,10 +158,6 @@ export interface UpdateSeriesRequest {
   first_number?: number;
 }
 
-export interface ActivateSeriesRequest {
-  validation_code?: string;
-}
-
 export interface WarehouseRequest {
   code?: string;
   name?: string;
@@ -5061,29 +5057,14 @@ export const getPostSeriesActivateUrl = (companyId: string,
 }
 
 export const postSeriesActivate = async (companyId: string,
-    seriesId: string,
-    activateSeriesRequest: ActivateSeriesRequest, options?: RequestInit): Promise<void> => {
+    seriesId: string, options?: RequestInit): Promise<void> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return httpClient<void>(getPostSeriesActivateUrl(companyId,seriesId),
+  return httpClient<void>(getPostSeriesActivateUrl(companyId,seriesId),
   {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(activateSeriesRequest)
+    method: 'POST'
+
+
   }
 );}
 
@@ -5108,9 +5089,9 @@ const {mutation: mutationOptions} = options ?
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof postSeriesActivate>>, PostSeriesActivateMutationVariables> = (props) => {
-          const {companyId,seriesId,data} = props ?? {};
+          const {companyId,seriesId} = props ?? {};
 
-          return  postSeriesActivate(companyId,seriesId,data,)
+          return  postSeriesActivate(companyId,seriesId,)
         }
 
 
@@ -5121,9 +5102,9 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostSeriesActivateMutationResult = NonNullable<Awaited<ReturnType<typeof postSeriesActivate>>>
-    export type PostSeriesActivateMutationBody = ActivateSeriesRequest
+
     export type PostSeriesActivateMutationError = void
-    export type PostSeriesActivateMutationVariables = {companyId: string;seriesId: string;data: ActivateSeriesRequest}
+    export type PostSeriesActivateMutationVariables = {companyId: string;seriesId: string}
 
     export const usePostSeriesActivate = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postSeriesActivate>>, TError,PostSeriesActivateMutationVariables, TContext>, }

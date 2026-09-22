@@ -7,7 +7,9 @@ namespace App\Fiscal\Domain;
 use App\Fiscal\Domain\Exception\ChronologyViolation;
 use App\Fiscal\Domain\Exception\InvalidSeriesCode;
 use App\Fiscal\Domain\Exception\InvalidSeriesStatusTransition;
+use App\Fiscal\Domain\Exception\SeriesAlreadyIssuedDocuments;
 use App\Fiscal\Domain\Exception\SeriesCannotIssue;
+use App\Fiscal\Domain\Exception\SeriesHasNoIssuedDocuments;
 use App\Shared\Domain\CompanyId;
 
 /**
@@ -127,11 +129,19 @@ final class Series
     /**
      * The company is done with this series (docs/decisions/0005 — no
      * forced year rotation, so this is always a deliberate choice, never
-     * automatic).
+     * automatic). docs/plans/phase-3.md task 3.1,
+     * `at-ws-series-aspetos-especificos.pdf` §2.3.2: `finalizarSerie`
+     * requires a positive `seqUltimoDocEmitido` — there's no AT operation
+     * to "finish" a series that never issued anything, so this only makes
+     * sense once at least one document has been.
      */
     public function finish(\DateTimeImmutable $now): void
     {
         $this->guardStatus('finish', SeriesStatus::Active);
+
+        if (null === $this->lastNumber) {
+            throw new SeriesHasNoIssuedDocuments();
+        }
 
         $this->status = SeriesStatus::Finished;
         $this->atFinishedAt = $now;
@@ -142,12 +152,19 @@ final class Series
      * `draft` (never activated — nothing to discard beyond the record
      * itself) or `active` (per docs/plans/phase-2.md task 2.2's lifecycle
      * bullet, "active → finished/cancelled") — never from a terminal
-     * status.
+     * status. docs/plans/phase-3.md task 3.1,
+     * `at-ws-series-aspetos-especificos.pdf` §1.3.3: `anularSerie` is only
+     * legal for a series that has never issued a document — one that has
+     * must be {@see self::finish()}ed instead, never cancelled.
      */
     public function cancel(): void
     {
         if (SeriesStatus::Draft !== $this->status && SeriesStatus::Active !== $this->status) {
             throw new InvalidSeriesStatusTransition('cancel', $this->status);
+        }
+
+        if (SeriesStatus::Active === $this->status && null !== $this->lastNumber) {
+            throw new SeriesAlreadyIssuedDocuments();
         }
 
         $this->status = SeriesStatus::Cancelled;

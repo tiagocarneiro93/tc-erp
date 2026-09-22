@@ -161,6 +161,24 @@ services:
     App\Shared\Domain\Company\AtCredentialsProvider:
         alias: App\Company\Infrastructure\Security\CompanyAtCredentialsProvider
         public: true
+    App\AtIntegration\Domain\Security\AtRequestCipher:
+        alias: App\AtIntegration\Infrastructure\Security\OpenSslAtRequestCipher
+        public: true
+    App\AtIntegration\Infrastructure\Security\OpenSslAtRequestCipher:
+        arguments:
+            $publicKeyPath: '%kernel.project_dir%/%env(AT_PUBLIC_KEY_PATH)%'
+    App\AtIntegration\Infrastructure\Soap\AtMutualTlsCertificate:
+        arguments:
+            $pfxPath: '%kernel.project_dir%/%env(AT_WEBSERVICES_CLIENT_CERT_PATH)%'
+            $pfxPassword: '%env(AT_WEBSERVICES_CLIENT_CERT_PASSWORD)%'
+    App\Shared\Domain\AtIntegration\SeriesWebserviceClient:
+        alias: App\AtIntegration\Infrastructure\Soap\SeriesWSClient
+        public: true
+    App\AtIntegration\Infrastructure\Soap\SeriesWSClient:
+        public: true # fetched directly by task 3.1g's live-AT test, bypassing the test-env Fake alias above
+        arguments:
+            $wsdlPath: '%kernel.project_dir%/resources/wsdl/SeriesWS.wsdl'
+            $endpoint: '%env(AT_SERIES_WEBSERVICE_ENDPOINT)%'
     App\Parties\Domain\CustomerRepository:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true

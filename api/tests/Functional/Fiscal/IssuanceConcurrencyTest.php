@@ -231,9 +231,7 @@ final class IssuanceConcurrencyTest extends KernelTestCase
 
     private function activateSeries(string $companyId, string $seriesId): void
     {
-        $this->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", [
-            'validation_code' => 'ABC123',
-        ]);
+        $this->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", []);
     }
 
     private function createCompany(): string

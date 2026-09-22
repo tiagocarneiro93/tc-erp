@@ -33,4 +33,32 @@ final class DoctrineAtCommunicationQueue implements AtCommunicationQueue
             'updated_at' => $now->format('Y-m-d H:i:sP'),
         ]);
     }
+
+    public function recordResolved(
+        CompanyId $companyId,
+        string $kind,
+        string $subjectType,
+        string $subjectId,
+        string $status,
+        int $responseCode,
+        string $responseMessage,
+        ?string $atReference,
+        \DateTimeImmutable $now,
+    ): void {
+        $this->connection->insert('at_communications', [
+            'id' => Uuid::v7()->toRfc4122(),
+            'company_id' => $companyId->toString(),
+            'kind' => $kind,
+            'subject_type' => $subjectType,
+            'subject_id' => $subjectId,
+            'status' => $status,
+            'attempts' => 1,
+            'next_attempt_at' => $now->format('Y-m-d H:i:sP'),
+            'response_code' => (string) $responseCode,
+            'response_message' => $responseMessage,
+            'at_reference' => $atReference,
+            'created_at' => $now->format('Y-m-d H:i:sP'),
+            'updated_at' => $now->format('Y-m-d H:i:sP'),
+        ]);
+    }
 }

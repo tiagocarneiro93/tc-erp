@@ -7,7 +7,9 @@ namespace App\Tests\Unit\Fiscal\Domain;
 use App\Fiscal\Domain\Exception\ChronologyViolation;
 use App\Fiscal\Domain\Exception\InvalidSeriesCode;
 use App\Fiscal\Domain\Exception\InvalidSeriesStatusTransition;
+use App\Fiscal\Domain\Exception\SeriesAlreadyIssuedDocuments;
 use App\Fiscal\Domain\Exception\SeriesCannotIssue;
+use App\Fiscal\Domain\Exception\SeriesHasNoIssuedDocuments;
 use App\Fiscal\Domain\Series;
 use App\Fiscal\Domain\SeriesId;
 use App\Fiscal\Domain\SeriesStatus;
@@ -79,6 +81,7 @@ final class SeriesTest extends TestCase
     {
         $series = $this->newSeries();
         $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T10:00:00Z'));
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable('2026-01-02T10:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:00Z'));
         $series->finish(new \DateTimeImmutable('2026-06-01T10:00:00Z'));
 
         $this->expectException(InvalidSeriesStatusTransition::class);
@@ -90,6 +93,7 @@ final class SeriesTest extends TestCase
     {
         $series = $this->newSeries();
         $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T10:00:00Z'));
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable('2026-01-02T10:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:00Z'));
         $now = new \DateTimeImmutable('2026-06-01T10:00:00Z');
 
         $series->finish($now);
@@ -108,10 +112,25 @@ final class SeriesTest extends TestCase
         $series->finish(new \DateTimeImmutable('2026-01-01T10:00:00Z'));
     }
 
+    /**
+     * docs/plans/phase-3.md task 3.1, `at-ws-series-aspetos-especificos.pdf`
+     * §2.3.2: `finalizarSerie` needs a positive `seqUltimoDocEmitido`.
+     */
+    public function testFinishingASeriesThatNeverIssuedAnythingFails(): void
+    {
+        $series = $this->newSeries();
+        $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T10:00:00Z'));
+
+        $this->expectException(SeriesHasNoIssuedDocuments::class);
+
+        $series->finish(new \DateTimeImmutable('2026-06-01T10:00:00Z'));
+    }
+
     public function testFinishingAnAlreadyFinishedSeriesFails(): void
     {
         $series = $this->newSeries();
         $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T10:00:00Z'));
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable('2026-01-02T10:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:00Z'));
         $series->finish(new \DateTimeImmutable('2026-06-01T10:00:00Z'));
 
         $this->expectException(InvalidSeriesStatusTransition::class);
@@ -139,10 +158,27 @@ final class SeriesTest extends TestCase
         self::assertFalse($series->canIssue());
     }
 
+    /**
+     * docs/plans/phase-3.md task 3.1, `at-ws-series-aspetos-especificos.pdf`
+     * §1.3.3: `anularSerie` is only legal for a series that never issued a
+     * document.
+     */
+    public function testCancellingAnActiveSeriesThatAlreadyIssuedDocumentsFails(): void
+    {
+        $series = $this->newSeries();
+        $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T10:00:00Z'));
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable('2026-01-02T10:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:00Z'));
+
+        $this->expectException(SeriesAlreadyIssuedDocuments::class);
+
+        $series->cancel();
+    }
+
     public function testCancellingAFinishedSeriesFails(): void
     {
         $series = $this->newSeries();
         $series->activate('VALCODE1', new \DateTimeImmutable('2026-01-01T10:00:00Z'));
+        $series->recordIssuance(1, 'HASH1', new \DateTimeImmutable('2026-01-02T10:00:00Z'), new \DateTimeImmutable('2026-01-02T10:00:00Z'));
         $series->finish(new \DateTimeImmutable('2026-06-01T10:00:00Z'));
 
         $this->expectException(InvalidSeriesStatusTransition::class);

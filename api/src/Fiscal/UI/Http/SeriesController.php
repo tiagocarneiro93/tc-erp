@@ -136,16 +136,15 @@ final class SeriesController
     }
 
     #[Route('/api/v1/companies/{companyId}/series/{seriesId}/activate', name: 'series_activate', methods: ['POST'])]
-    #[OA\Response(response: 204, description: 'Series activated (status active).')]
+    #[OA\Response(response: 204, description: 'Series activated (status active), with a validation code obtained from AT in real time.')]
     #[OA\Response(response: 403, description: 'The caller lacks the series.manage permission.')]
     #[OA\Response(response: 404, description: 'No such series.')]
-    #[OA\Response(response: 422, description: 'The series is not draft, so it cannot be activated.')]
-    public function activate(string $seriesId, #[MapRequestPayload] ActivateSeriesRequest $request, Request $httpRequest): Response
+    #[OA\Response(response: 422, description: 'The series is not draft (so it cannot be activated), its code fails AT\'s construction rules, or AT rejected the registration.')]
+    public function activate(string $seriesId, Request $httpRequest): Response
     {
         $this->commandBus->dispatch(new ActivateSeries(
             $this->parseId($seriesId),
             $this->currentActorId->id(),
-            $request->validation_code,
             $httpRequest->getClientIp() ?? '',
             $httpRequest->headers->get('User-Agent', ''),
         ));

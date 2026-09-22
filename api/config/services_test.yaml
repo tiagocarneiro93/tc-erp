@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+
+# APP_ENV=test only (loaded on top of services.yaml — MicroKernelTrait's
+# own convention). docs/plans/phase-3.md task 3.1f: the regular test suite
+# gets FakeSeriesWebserviceClient instead of a real SOAP call to AT's test
+# environment — same "fake for the everyday suite, real adapter for the
+# genuinely live test" split the plan already uses for ElectronicSealer
+# (task 3.6). The live-AT test (task 3.1g) reaches the real
+# SeriesWSClient directly, bypassing this alias — see its own test class.
+services:
+    App\Shared\Domain\AtIntegration\SeriesWebserviceClient:
+        alias: App\AtIntegration\Infrastructure\Fake\FakeSeriesWebserviceClient
+        public: true
+    App\AtIntegration\Infrastructure\Fake\FakeSeriesWebserviceClient:
+        public: true

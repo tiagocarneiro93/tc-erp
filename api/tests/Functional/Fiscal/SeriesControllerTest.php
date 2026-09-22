@@ -123,28 +123,28 @@ final class SeriesControllerTest extends WebTestCase
         self::assertSame(10, $body['first_number']);
     }
 
-    public function testActivatingRequiresAValidationCodeAndEnablesIssuing(): void
+    /**
+     * docs/plans/phase-3.md task 3.1: activating no longer takes a
+     * manually-entered validation code — it's obtained from AT
+     * (`registarSerie`) synchronously. In the test suite that's
+     * `FakeSeriesWebserviceClient` (`config/services_test.yaml`), which
+     * always succeeds with an 8-hex-character code.
+     */
+    public function testActivatingObtainsAValidationCodeFromAtAndEnablesIssuing(): void
     {
         $client = static::createClient();
         $this->registerAndLogIn($client);
         $companyId = $this->createCompany($client);
         $seriesId = $this->createSeries($client, $companyId, 'FT', '2026A');
 
-        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS, content: json_encode([
-            'validation_code' => '',
-        ], \JSON_THROW_ON_ERROR));
-        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY, 'An empty validation code must be rejected.');
-
-        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS, content: json_encode([
-            'validation_code' => 'ABC123',
-        ], \JSON_THROW_ON_ERROR));
+        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
         $client->request('GET', "/api/v1/companies/{$companyId}/series/{$seriesId}", server: self::HEADERS);
         /** @var array{status: string, validation_code: ?string, can_issue: bool} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
         self::assertSame('active', $body['status']);
-        self::assertSame('ABC123', $body['validation_code']);
+        self::assertMatchesRegularExpression('/^[0-9A-F]{8}$/', (string) $body['validation_code']);
         self::assertTrue($body['can_issue']);
     }
 
@@ -156,9 +156,7 @@ final class SeriesControllerTest extends WebTestCase
         $seriesId = $this->createSeries($client, $companyId, 'FT', '2026A');
         $this->activateSeries($client, $companyId, $seriesId);
 
-        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS, content: json_encode([
-            'validation_code' => 'DEF456',
-        ], \JSON_THROW_ON_ERROR));
+        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS);
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
@@ -189,6 +187,11 @@ final class SeriesControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY, 'Finishing a draft series must be rejected.');
 
         $this->activateSeries($client, $companyId, $seriesId);
+
+        // docs/plans/phase-3.md task 3.1: finishing needs at least one
+        // issued document (at-ws-series-aspetos-especificos.pdf §2.3.2's
+        // seqUltimoDocEmitido must be positive).
+        $this->issueInvoice($client, $companyId, $seriesId);
 
         $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/finish", server: self::HEADERS);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
@@ -254,6 +257,32 @@ final class SeriesControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
+    private function issueInvoice(KernelBrowser $client, string $companyId, string $seriesId): string
+    {
+        $client->request('POST', "/api/v1/companies/{$companyId}/drafts", server: self::HEADERS, content: json_encode([
+            'document_type' => 'FT',
+            'payload' => [
+                'series_id' => $seriesId,
+                'pricing_mode' => 'net',
+                'rounding_method' => 'per_line',
+                'date' => '2026-01-01',
+                'lines' => [
+                    ['product_code' => 'SKU-1', 'description' => 'Widget', 'product_type' => 'P', 'unit_code' => 'UN', 'quantity' => '1', 'unit_price' => '10.00', 'tax_region' => 'PT', 'tax_code' => 'ISE', 'exemption_reason_code' => 'M99'],
+                ],
+            ],
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $draft */
+        $draft = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/documents/drafts/{$draft['id']}/issue", server: self::HEADERS + ['HTTP_Idempotency-Key' => 'issue-'.$draft['id']], content: '{}');
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $document */
+        $document = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        return $document['id'];
+    }
+
     private function createSeries(KernelBrowser $client, string $companyId, string $documentType, string $code): string
     {
         $client->request('POST', "/api/v1/companies/{$companyId}/series", server: self::HEADERS, content: json_encode([
@@ -269,9 +298,7 @@ final class SeriesControllerTest extends WebTestCase
 
     private function activateSeries(KernelBrowser $client, string $companyId, string $seriesId): void
     {
-        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS, content: json_encode([
-            'validation_code' => 'ABC123',
-        ], \JSON_THROW_ON_ERROR));
+        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 

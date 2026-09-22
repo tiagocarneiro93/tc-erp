@@ -10,6 +10,7 @@ import {
   usePostSeriesCreate,
   type GetSeriesList200ItemsItem,
 } from '@/api/generated'
+import { ApiError } from '@/api/http-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -17,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DataTable } from '@/components/data-table/DataTable'
+import { apiErrorMessage } from '@/lib/api-error'
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Rascunho',
@@ -27,24 +29,26 @@ const STATUS_LABELS: Record<string, string> = {
 
 /**
  * docs/plans/phase-2.md task 2.2's own screen: a series must be created
- * and, once the AT hands back its validation code (entered manually this
- * phase — the AT webservice call is Phase 3), activated before anything
- * can be issued on it (`Series::canIssue()`). Not one of task 2.11's
- * named screens, but load-bearing for its own accept criteria — without
- * this, the document editor and receipt form have nothing to offer in
- * their series pickers.
+ * and activated before anything can be issued on it (`Series::canIssue()`).
+ * Not one of task 2.11's named screens, but load-bearing for its own
+ * accept criteria — without this, the document editor and receipt form
+ * have nothing to offer in their series pickers.
+ *
+ * docs/plans/phase-3.md task 3.1: activating no longer takes a
+ * manually-entered validation code — "Ativar" calls AT directly
+ * (`registarSerie`) and stores whatever code AT hands back, surfacing
+ * AT's own rejection message on failure.
  */
 export function SeriesList({ companyId }: { companyId: string }) {
   const queryClient = useQueryClient()
   const { data, isLoading } = useGetSeriesList(companyId)
   const { data: documentTypesResponse } = useGetDocumentTypesList()
   const create = usePostSeriesCreate()
-  const activate = usePostSeriesActivate()
+  const activate = usePostSeriesActivate<ApiError>()
   const [creating, setCreating] = useState(false)
   const [newDocumentType, setNewDocumentType] = useState('')
   const [newCode, setNewCode] = useState('')
-  const [activatingId, setActivatingId] = useState<string | null>(null)
-  const [validationCode, setValidationCode] = useState('')
+  const [activationError, setActivationError] = useState<string | null>(null)
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getGetSeriesListQueryOptions(companyId).queryKey })
 
@@ -66,19 +70,20 @@ export function SeriesList({ companyId }: { companyId: string }) {
     )
   }
 
-  const handleActivate = () => {
-    if (!activatingId || '' === validationCode) {
-      return
-    }
+  const handleActivate = (seriesId: string) => {
+    setActivationError(null)
 
     activate.mutate(
-      { companyId, seriesId: activatingId, data: { validation_code: validationCode } },
+      { companyId, seriesId },
       {
-        onSuccess: () => {
-          setActivatingId(null)
-          setValidationCode('')
-          void invalidate()
-        },
+        onSuccess: () => void invalidate(),
+        onError: (error) =>
+          setActivationError(
+            apiErrorMessage(error, {
+              403: 'Sem permissão para gerir séries.',
+              422: 'A AT rejeitou o registo da série.',
+            }),
+          ),
       },
     )
   }
@@ -100,9 +105,14 @@ export function SeriesList({ companyId }: { companyId: string }) {
       id: 'actions',
       header: '',
       cell: ({ row }) =>
-        'draft' === row.original.status ? (
-          <Button variant="ghost" size="sm" onClick={() => row.original.id && setActivatingId(row.original.id)}>
-            Ativar
+        'draft' === row.original.status && row.original.id ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={activate.isPending}
+            onClick={() => row.original.id && handleActivate(row.original.id)}
+          >
+            {activate.isPending ? 'A ativar…' : 'Ativar'}
           </Button>
         ) : null,
     },
@@ -114,6 +124,12 @@ export function SeriesList({ companyId }: { companyId: string }) {
         <h1 className="text-xl font-semibold">Séries</h1>
         <Button onClick={() => setCreating(true)}>Nova série</Button>
       </div>
+
+      {activationError && (
+        <p className="text-destructive text-sm" role="alert">
+          {activationError}
+        </p>
+      )}
 
       <DataTable
         columns={columns}
@@ -149,27 +165,6 @@ export function SeriesList({ companyId }: { companyId: string }) {
             </div>
             <Button onClick={handleCreate} disabled={create.isPending}>
               {create.isPending ? 'A criar…' : 'Criar série'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={null !== activatingId} onOpenChange={(open) => !open && setActivatingId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ativar série</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="validation-code">Código de validação (AT)</Label>
-              <Input
-                id="validation-code"
-                value={validationCode}
-                onChange={(event) => setValidationCode(event.target.value)}
-              />
-            </div>
-            <Button onClick={handleActivate} disabled={activate.isPending}>
-              {activate.isPending ? 'A ativar…' : 'Ativar'}
             </Button>
           </div>
         </DialogContent>

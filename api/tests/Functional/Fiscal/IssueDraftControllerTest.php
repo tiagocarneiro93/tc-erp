@@ -53,7 +53,10 @@ final class IssueDraftControllerTest extends WebTestCase
         self::assertSame('FT 2026A/1', $row['document_no']);
         self::assertSame('1', (string) $row['number']);
         self::assertSame('N', $row['status']);
-        self::assertStringStartsWith('ABC123-', $row['atcud']);
+        // docs/plans/phase-3.md task 3.1f: the validation code now comes
+        // from FakeSeriesWebserviceClient (8 hex chars), not a fixed
+        // manually-entered one — assert the ATCUD's shape, not a literal.
+        self::assertMatchesRegularExpression('/^[0-9A-F]{8}-1$/', $row['atcud']);
         self::assertSame(172, \strlen($row['hash']));
 
         /** @var array{count: int|string} $statusEventCount */
@@ -236,9 +239,7 @@ final class IssueDraftControllerTest extends WebTestCase
 
     private function activateSeries(KernelBrowser $client, string $companyId, string $seriesId): void
     {
-        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS, content: json_encode([
-            'validation_code' => 'ABC123',
-        ], \JSON_THROW_ON_ERROR));
+        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 

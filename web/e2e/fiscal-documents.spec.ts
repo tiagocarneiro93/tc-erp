@@ -57,8 +57,10 @@ test('draft → issue → credit note → partial conversion → receipt across 
   await page.getByRole('button', { name: 'Criar produto' }).click()
   await expect(page.getByText('Produto E2E')).toBeVisible()
 
-  // Series: FT, NC, NE and RG, each activated with a dev-made-up
-  // validation code (the real AT webservice call is Phase 3).
+  // Series: FT, NC, NE and RG. "Ativar" now calls AT for real
+  // (docs/plans/phase-3.md task 3.1) — in this test environment that's
+  // FakeSeriesWebserviceClient (config/services_test.yaml), which always
+  // succeeds with a generated validation code, no manual entry needed.
   const createAndActivateSeries = async (documentType: string, code: string) => {
     await page.getByRole('link', { name: 'Séries' }).click()
     await page.getByRole('button', { name: 'Nova série' }).click()
@@ -70,9 +72,6 @@ test('draft → issue → credit note → partial conversion → receipt across 
     await expect(page.getByRole('cell', { name: code })).toBeVisible()
 
     await page.getByRole('row').filter({ hasText: code }).getByRole('button', { name: 'Ativar' }).click()
-    const activateDialog = page.getByRole('dialog')
-    await activateDialog.getByLabel('Código de validação (AT)').fill('E2E-VALIDATION')
-    await activateDialog.getByRole('button', { name: 'Ativar', exact: true }).click()
     await expect(page.getByRole('row').filter({ hasText: code }).getByText('Ativa')).toBeVisible()
   }
 

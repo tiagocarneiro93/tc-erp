@@ -246,9 +246,7 @@ final class IssueReceiptControllerTest extends WebTestCase
         /** @var array{id: string} $created */
         $created = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
 
-        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$created['id']}/activate", server: self::HEADERS, content: json_encode([
-            'validation_code' => 'ABC123',
-        ], \JSON_THROW_ON_ERROR));
+        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$created['id']}/activate", server: self::HEADERS);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
         return $created['id'];

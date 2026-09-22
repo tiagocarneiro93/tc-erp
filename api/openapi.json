@@ -2845,19 +2845,9 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ActivateSeriesRequest"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "204": {
-                        "description": "Series activated (status active)."
+                        "description": "Series activated (status active), with a validation code obtained from AT in real time."
                     },
                     "403": {
                         "description": "The caller lacks the series.manage permission."
@@ -2866,7 +2856,7 @@
                         "description": "No such series."
                     },
                     "422": {
-                        "description": "The series is not draft, so it cannot be activated."
+                        "description": "The series is not draft (so it cannot be activated), its code fails AT's construction rules, or AT rejected the registration."
                     }
                 }
             }
@@ -5027,15 +5017,6 @@
                         "default": 1,
                         "minimum": 0,
                         "exclusiveMinimum": true
-                    }
-                },
-                "type": "object"
-            },
-            "ActivateSeriesRequest": {
-                "properties": {
-                    "validation_code": {
-                        "type": "string",
-                        "default": ""
                     }
                 },
                 "type": "object"

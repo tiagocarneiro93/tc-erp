@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class OpenSslAtRequestCipherTest extends TestCase
 {
-    private static string $publicKeyPem;
+    private static string $publicKeyPath;
     private static string $privateKeyPem;
 
     public static function setUpBeforeClass(): void
@@ -35,12 +35,21 @@ final class OpenSslAtRequestCipherTest extends TestCase
         self::$privateKeyPem = $privateKeyPem;
         /** @var array{key: string} $details */
         $details = openssl_pkey_get_details($keyPair);
-        self::$publicKeyPem = $details['key'];
+
+        $path = tempnam(sys_get_temp_dir(), 'at-public-key-');
+        self::assertNotFalse($path);
+        file_put_contents($path, $details['key']);
+        self::$publicKeyPath = $path;
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        @unlink(self::$publicKeyPath);
     }
 
     public function testCredentialsAreBase64Encoded(): void
     {
-        $cipher = new OpenSslAtRequestCipher(self::$publicKeyPem);
+        $cipher = new OpenSslAtRequestCipher(self::$publicKeyPath);
 
         $credentials = $cipher->buildCredentials('SenhaPF123', new \DateTimeImmutable('2026-01-01T10:00:00Z'));
 
@@ -51,7 +60,7 @@ final class OpenSslAtRequestCipherTest extends TestCase
 
     public function testTwoRequestsNeverReuseTheSameKey(): void
     {
-        $cipher = new OpenSslAtRequestCipher(self::$publicKeyPem);
+        $cipher = new OpenSslAtRequestCipher(self::$publicKeyPath);
         $now = new \DateTimeImmutable('2026-01-01T10:00:00Z');
 
         $first = $cipher->buildCredentials('SenhaPF123', $now);
@@ -65,7 +74,7 @@ final class OpenSslAtRequestCipherTest extends TestCase
 
     public function testRoundTripRecoversTheOriginalPasswordAndTimestamp(): void
     {
-        $cipher = new OpenSslAtRequestCipher(self::$publicKeyPem);
+        $cipher = new OpenSslAtRequestCipher(self::$publicKeyPath);
         $now = new \DateTimeImmutable('2026-03-15T08:30:45.123Z');
 
         $credentials = $cipher->buildCredentials('S3nh@ComCaracteresEspeciais!', $now);

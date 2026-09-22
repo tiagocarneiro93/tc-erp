@@ -37,7 +37,7 @@ final class OpenSslAtRequestCipher implements AtRequestCipher
     private const AES_KEY_BYTES = 16;
 
     public function __construct(
-        private readonly string $publicKeyPem,
+        private readonly string $publicKeyPath,
     ) {
     }
 
@@ -54,10 +54,16 @@ final class OpenSslAtRequestCipher implements AtRequestCipher
 
     private function wrapKey(string $key): string
     {
-        $publicKey = openssl_pkey_get_public($this->publicKeyPem);
+        $pem = @file_get_contents($this->publicKeyPath);
+
+        if (false === $pem) {
+            throw new \RuntimeException(\sprintf('Cannot read the AT public key at "%s" — check AT_PUBLIC_KEY_PATH.', $this->publicKeyPath));
+        }
+
+        $publicKey = openssl_pkey_get_public($pem);
 
         if (false === $publicKey) {
-            throw new \RuntimeException('AT public key could not be loaded — check AT_PUBLIC_KEY_PATH.');
+            throw new \RuntimeException(\sprintf('"%s" is not a valid public key: %s', $this->publicKeyPath, openssl_error_string() ?: 'unknown error'));
         }
 
         if (!openssl_public_encrypt($key, $encrypted, $publicKey, \OPENSSL_PKCS1_PADDING) || !\is_string($encrypted)) {

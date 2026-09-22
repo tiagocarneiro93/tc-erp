@@ -25,4 +25,26 @@ interface AtCommunicationQueue
         string $subjectId,
         \DateTimeImmutable $now,
     ): void;
+
+    /**
+     * docs/plans/phase-3.md task 3.1/decision 3: series register/finish/cancel
+     * are synchronous — by the time this is called, AT has already answered,
+     * so the row is written with its outcome already known rather than
+     * `pending` for a sweeper to find. `$kind` extends §6.12's own
+     * illustrative `series_register|series_finish|invoice|transport` list
+     * with `series_cancel`, for the same audit-trail reason `series_finish`
+     * is there — that list reads as incomplete, not a fixed enum (the
+     * column itself is a plain string, no DB-level CHECK constraint).
+     */
+    public function recordResolved(
+        CompanyId $companyId,
+        string $kind,
+        string $subjectType,
+        string $subjectId,
+        string $status,
+        int $responseCode,
+        string $responseMessage,
+        ?string $atReference,
+        \DateTimeImmutable $now,
+    ): void;
 }

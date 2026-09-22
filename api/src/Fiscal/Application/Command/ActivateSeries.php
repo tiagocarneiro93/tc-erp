@@ -11,7 +11,6 @@ final class ActivateSeries
     public function __construct(
         public readonly SeriesId $seriesId,
         public readonly string $actingUserId,
-        public readonly string $validationCode,
         public readonly string $ip,
         public readonly string $userAgent,
     ) {
