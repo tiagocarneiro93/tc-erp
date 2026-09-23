@@ -525,3 +525,12 @@ Exit: first paying customers.
 ## After v1 (not planned in detail)
 
 CIUS-PT structured e-invoicing (B2G), POS, assembled products and production, lot traceability, integrations (e-commerce), MCP server.
+
+**Raised by the owner (2026-09-23), not yet scoped into any phase:**
+- Customers: a default payment *method* (distinct from payment terms, which already exists) that pre-fills the free-text field used today on receipts/documents.
+- Customers: multiple contacts (name/phone/email per contact — no such concept exists today) and a UI for the multiple addresses the schema already supports (`addresses` table, §6.3 — built for delivery/loading addresses, currently unexposed).
+- Customers: VAT exemption at the customer level. Needs owner input before design — exemption today lives on the product/transaction, not the customer; the case where the customer genuinely matters is cross-border EU (reverse-charge, VIES validation, possibly OSS), which is materially bigger than a checkbox and needs `docs/legal/` sources before any [VERIFY] work starts.
+- Products: images — a POS-style thumbnail and a gallery for eventual website integration. Natural to build once Phase 3's object storage (task 3.4, MinIO/S3) exists, reusing the same infrastructure rather than adding a separate one.
+- Products: a third `kind` beyond `simple`/`kit` for colour/size variants (SKU explosion, shared vs. per-variant price/stock/barcode) — adjacent to the already-listed "assembled products," needs its own design pass.
+- Price lists: a price-list-side bulk view (a grid of every product with an editable price for that one list), complementing the existing product-side flow (`ProductPricesSection`, product detail page → pick a list → price it) rather than replacing it — the product-side flow is right for "price this new product everywhere," the list-side view would be right for "bulk-adjust this one list."
+- Documents: auto-fill from context — selecting a customer doesn't yet carry their default price list or payment terms onto the draft; selecting a product already fills description/unit/tax rate/exemption but not a unit price from the customer's price list (the `product_prices` data and the customer→price-list link both already exist, just not wired into `DraftEditor`).
