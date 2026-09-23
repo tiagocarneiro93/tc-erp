@@ -34,6 +34,17 @@ doctrine:
             # Migrations run as app_owner (config/packages/doctrine_migrations.yaml).
             migrations:
                 url: '%env(resolve:DATABASE_MIGRATIONS_URL)%'
+            # A second, genuinely independent physical connection — same
+            # app_runtime credentials, no elevated privilege — for writes
+            # that must survive the "default" connection's transaction
+            # being rolled back by command.bus's doctrine_transaction
+            # middleware (e.g. AtCommunicationQueue recording an AT
+            # rejection right before the handler throws to signal it as a
+            # 422). A savepoint on the same connection wouldn't do this: it
+            # still unwinds when the outer transaction rolls back. Only a
+            # separate connection with its own commit actually survives.
+            audit_log:
+                url: '%env(resolve:DATABASE_URL)%'
     orm:
         default_entity_manager: default
         entity_managers:

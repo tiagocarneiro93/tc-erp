@@ -283,3 +283,6 @@ services:
         autoconfigure: false
         tags:
             - { name: 'doctrine.middleware', connection: default }
+            # Also on audit_log (config/packages/doctrine.yaml) — its writes
+            # are company-scoped too and need the same RLS company context.
+            - { name: 'doctrine.middleware', connection: audit_log }

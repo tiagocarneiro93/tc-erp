@@ -9,7 +9,7 @@ use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\Middleware;
 
 /**
- * Registered only for the `default` connection (config/packages/doctrine.yaml
+ * Registered for `default` and `audit_log` (config/packages/doctrine.yaml
  * / services.yaml) — the `migrations` connection runs DDL as app_owner and
  * never needs a company context.
  */

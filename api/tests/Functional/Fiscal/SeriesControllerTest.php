@@ -8,7 +8,15 @@ use App\Platform\Domain\PasswordHasher;
 use App\Platform\Domain\User;
 use App\Platform\Domain\UserId;
 use App\Platform\Domain\UserRepository;
+use App\Shared\Domain\AtIntegration\SeriesCancellation;
+use App\Shared\Domain\AtIntegration\SeriesFinalization;
+use App\Shared\Domain\AtIntegration\SeriesRegistration;
+use App\Shared\Domain\AtIntegration\SeriesWebserviceClient;
+use App\Shared\Domain\AtIntegration\SeriesWebserviceResult;
+use App\Shared\Domain\Company\CompanyContext;
+use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Nif;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -146,6 +154,74 @@ final class SeriesControllerTest extends WebTestCase
         self::assertSame('active', $body['status']);
         self::assertMatchesRegularExpression('/^[0-9A-F]{8}$/', (string) $body['validation_code']);
         self::assertTrue($body['can_issue']);
+    }
+
+    /**
+     * Found live (2026-09-23): a real AT rejection surfaced as 422 in the
+     * UI, but `at_communications` had no row for it at all — the exact
+     * audit trail that rejection was supposed to leave (§6.12,
+     * `docs/plans/phase-3.md` task 3.1's own accept criterion: "a row for
+     * every series register/finish/cancel attempt, successful or not").
+     * Root cause: `command.bus`'s `doctrine_transaction` middleware wraps
+     * the whole handler call in one transaction; `ActivateSeriesHandler`
+     * wrote the audit row via `recordResolved()` and then threw
+     * `SeriesWebserviceRejected` to signal the 422 — and that throw rolled
+     * the entire transaction back, undoing the very row meant to survive
+     * the rejection. Never caught before because `FakeSeriesWebserviceClient`
+     * always accepts, so this code path never actually ran in the everyday
+     * suite until a real AT rejection hit it.
+     */
+    public function testActivationRejectedByAtStillLeavesAnAuditRow(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client);
+        $companyId = $this->createCompany($client);
+        $seriesId = $this->createSeries($client, $companyId, 'FT', '2026A');
+
+        // Without this, KernelBrowser reboots the kernel (and rebuilds the
+        // container, discarding the override below) before the next request.
+        $client->disableReboot();
+
+        self::getContainer()->set(\App\AtIntegration\Infrastructure\Fake\FakeSeriesWebserviceClient::class, new class implements SeriesWebserviceClient {
+            public function register(CompanyId $companyId, SeriesRegistration $request): SeriesWebserviceResult
+            {
+                return new SeriesWebserviceResult(false, 4001, 'Rejected for test.', null);
+            }
+
+            public function finish(CompanyId $companyId, SeriesFinalization $request): SeriesWebserviceResult
+            {
+                throw new \LogicException('Not used by this test.');
+            }
+
+            public function cancel(CompanyId $companyId, SeriesCancellation $request): SeriesWebserviceResult
+            {
+                throw new \LogicException('Not used by this test.');
+            }
+        });
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/series/{$seriesId}/activate", server: self::HEADERS);
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        /** @var CompanyContext $companyContext */
+        $companyContext = self::getContainer()->get(CompanyContext::class);
+        $companyContext->set(CompanyId::fromString($companyId));
+        /** @var Connection $connection */
+        $connection = self::getContainer()->get('doctrine.dbal.default_connection');
+
+        $connection->beginTransaction();
+        try {
+            $row = $connection->fetchAssociative(
+                'SELECT status, response_code, response_message FROM at_communications WHERE subject_id = ? AND kind = ?',
+                [$seriesId, 'series_register'],
+            );
+        } finally {
+            $connection->rollBack();
+        }
+
+        self::assertIsArray($row, 'Expected an at_communications row for the rejected registration attempt.');
+        self::assertSame('rejected', $row['status']);
+        self::assertSame('4001', $row['response_code']);
+        self::assertSame('Rejected for test.', $row['response_message']);
     }
 
     public function testActivatingTwiceIsRejected(): void
