@@ -6,7 +6,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # openssl and zip's zlib dependency ship with the base image; the rest are
 # required by CLAUDE.md's stack list. redis is used by the health check
 # (task 0.3) and later by Messenger/rate-limiter (task 0.5). soap is for
-# the AT webservice clients (docs/plans/phase-3.md task 3.1).
+# the AT webservice clients (docs/plans/phase-3.md task 3.1). gd is mPDF's
+# requirement (PDF rendering, task 3.5).
 RUN install-php-extensions \
     intl \
     pdo_pgsql \
@@ -15,7 +16,8 @@ RUN install-php-extensions \
     zip \
     opcache \
     redis \
-    soap
+    soap \
+    gd
 
 ARG INSTALL_XDEBUG=false
 RUN if [ "$INSTALL_XDEBUG" = "true" ]; then install-php-extensions xdebug; fi

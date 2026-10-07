@@ -35,6 +35,7 @@ use App\Shared\Domain\AtIntegration\AtCommunicationDispatcher;
 use App\Shared\Domain\Audit\AuditLogger;
 use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
+use App\Shared\Domain\Company\CompanyFiscalIdentityProvider;
 use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Decimal\Money;
 use App\Shared\Domain\Decimal\Quantity;
@@ -81,6 +82,7 @@ final class IssueDraftHandler
         private readonly AtCommunicationDispatcher $atDispatcher,
         private readonly CustomerSnapshotProvider $customerSnapshots,
         private readonly IssuerSnapshotProvider $issuerSnapshots,
+        private readonly CompanyFiscalIdentityProvider $companyIdentities,
         private readonly ProductSnapshotProvider $productSnapshots,
         private readonly ExemptionReasonTextProvider $exemptionReasons,
         private readonly TransactionManager $transactions,
@@ -193,6 +195,7 @@ final class IssueDraftHandler
             ? ($this->customerSnapshots->snapshot($companyId, $customerId) ?? throw new \RuntimeException('Customer referenced by this draft no longer exists.'))
             : ['nif' => '999999990', 'name' => 'Consumidor final'];
         $issuerSnapshot = $this->issuerSnapshots->snapshot($companyId);
+        $issuerSnapshot['identity'] = $this->frozenIdentity($companyId);
 
         $qrPayload = QrPayloadBuilder::build(new QrPayloadInput(
             issuerNif: $this->stringOrDefault($issuerSnapshot['nif'] ?? null, ''),
@@ -436,6 +439,39 @@ final class IssueDraftHandler
         $this->documentWriter->updateStatus($companyId, DocumentId::fromString($source['id']), 'F', $reason, $now, $statusEvent);
 
         return $this->atCommunications->enqueueStatusChange($companyId, $source['id'], $now);
+    }
+
+    /**
+     * docs/plans/phase-3.md task 3.5: the company's own identification and
+     * fiscal regime as of this moment, under a key whose shape this code owns
+     * — what the PDF's header, the SAF-T `CashVATSchemeIndicator` and the AT
+     * request's cash-VAT flag all read later, so a change of address, name or
+     * VAT regime never alters a document already issued (Despacho 8632/2014
+     * §2.2.15). Documents issued before this existed have no `identity` key;
+     * their readers fall back to the company's current data.
+     *
+     * @return array{nif: string, legal_name: string, commercial_name: ?string, address: ?string, postal_code: ?string, city: ?string, country: string, email: ?string, phone: ?string, cash_vat: bool}|null
+     */
+    private function frozenIdentity(CompanyId $companyId): ?array
+    {
+        $identity = $this->companyIdentities->forCompany($companyId);
+
+        if (null === $identity) {
+            return null;
+        }
+
+        return [
+            'nif' => $identity->nif,
+            'legal_name' => $identity->legalName,
+            'commercial_name' => $identity->commercialName,
+            'address' => $identity->address,
+            'postal_code' => $identity->postalCode,
+            'city' => $identity->city,
+            'country' => $identity->country,
+            'email' => $identity->email,
+            'phone' => $identity->phone,
+            'cash_vat' => $identity->cashVat,
+        ];
     }
 
     private function stringOrDefault(mixed $value, string $default): string

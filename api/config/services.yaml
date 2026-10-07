@@ -235,6 +235,33 @@ services:
     App\Shared\Domain\Output\FileArchive:
         alias: App\Output\Application\StoredFiles
         public: true
+    # docs/plans/phase-3.md task 3.5: PDF rendering. mPDF is the provisional engine (decision 7 —
+    # owner picks after the spike); swapping it for Gotenberg is this one alias.
+    App\Output\Domain\PdfEngine:
+        alias: App\Output\Infrastructure\Pdf\MpdfPdfEngine
+    App\Output\Infrastructure\Pdf\MpdfPdfEngine:
+        arguments:
+            $tempDirectory: '%kernel.project_dir%/var/mpdf'
+    App\Output\Domain\DocumentPdfRenderer:
+        alias: App\Output\Infrastructure\Pdf\TwigDocumentPdfRenderer
+        public: true
+    App\Output\Infrastructure\Pdf\TwigDocumentPdfRenderer:
+        arguments:
+            $templateDirectory: '%kernel.project_dir%/templates/pdf'
+            # Despacho 8632/2014 §1.5: training documents show the *software producer's* identification.
+            $softwareProducer: !service
+                class: App\Shared\Domain\Fiscal\PrintableParty
+                arguments:
+                    $name: '%env(SOFTWARE_PRODUCER_NAME)%'
+                    $taxId: '%env(SAFT_PRODUCT_COMPANY_TAX_ID)%'
+                    $address: '%env(SOFTWARE_PRODUCER_ADDRESS)%'
+                    $postalCode: '%env(SOFTWARE_PRODUCER_POSTAL_CODE)%'
+                    $city: '%env(SOFTWARE_PRODUCER_CITY)%'
+                    $country: 'PT'
+    App\Output\Domain\DocumentPrintRepository:
+        alias: App\Output\Infrastructure\Persistence\DbalDocumentPrintRepository
+    App\Shared\Domain\Fiscal\PrintableDocumentReader:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrinePrintableDocumentReader
     App\Parties\Domain\CustomerRepository:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true

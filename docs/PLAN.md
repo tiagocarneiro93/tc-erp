@@ -504,7 +504,18 @@ Detailed breakdown and acceptance criteria: `docs/plans/phase-3.md`.
 - [x] Tests: 10 unit (in-memory fakes: round trip, ordering, tamper detection, cross-company, kinds, first-of-subject) and 7 integration against real PostgreSQL + real MinIO (binary round trip, 6 MB streaming, forged replacement refused, missing object, cross-company isolation, UPDATE/DELETE refused, kind CHECK). Full suite 592, PHPStan, Deptrac, CS-Fixer green.
 - 🧑 **Owner/infra:** production bucket with versioning + object lock (WORM, 10 years, DL 28/2019 Art. 27.º §2) and a physically/logically separate backup location is yours to create (§14.3 item 23); `docker-compose.yml` now pulls `quay.io/minio/minio` (Docker Hub's `minio/minio` is gone) and CI starts MinIO — neither verifiable from this sandbox.
 
-**Not yet started:** 3.5–3.8 (PDF renderer, `ElectronicSealer`, email, remaining web AT-status screens).
+### 3.5 `DocumentPdfRenderer` + templates
+- [x] **Spike**: the same invoice through mPDF and Gotenberg (Chromium) — both PDFs in `docs/plans/assets/phase-3-pdf-spike/`. Equivalent layout, both made byte-deterministic; **mPDF wired as the provisional engine, the `GotenbergPdfEngine` adapter kept** until the owner picks (phase-3.md decision 19). 🧑 **Owner: confirm the engine** (then delete the other adapter).
+- [x] `GET /companies/{c}/documents/{id}/pdf` (`documents.read`; `kind=download|print`), `PrintableDocumentReader` port (Fiscal) → `TwigDocumentPdfRenderer` (Output) → `PdfEngine`. Stored data only; template picked by the document's own `template_version` (`api/templates/pdf/v1/`), `strict_variables`. Drafts and other companies' documents are 404.
+- [x] Legal content (each cited in the template): hash mention §2.2.2, ISO dates §2.2.4, tax base/breakdown/total only on the last page §2.2.11, exemption wording tied to its line §2.2.14, original/copy §2.2.15, "não serve de fatura" §1.2, training header + "Documento emitido para fins de Formação" §1.5, ATCUD, QR to `at-qrcode-spec.pdf` §2 (ECC M, Byte, v≥9, 30 mm + 2.5 mm margin).
+- [x] **`[VERIFY]` resolved from `despacho-8632-2014.pdf`**: §2.2.15 requires a copy to be marked as not the original but prescribes no wording — house convention "Original / Duplicado / Triplicado / n.ª via" (decision 20).
+- [x] `document_prints` (`Version20261007110000`): insert-only, RLS, `kind` CHECK; every request logged and the log decides the label; advisory lock per document.
+- [x] **Issuer identity frozen at issuance** (`issuer_snapshot.identity`, decision 21) — also closes 3.2's cash-VAT item.
+- [x] Dependencies: `mpdf/mpdf` (needs `ext-gd`: added to the Dockerfile and CI), `twig/twig`, `chillerlan/php-qrcode`. 
+- [x] Tests: 56 unit (copy labels, determinism rewrite, Twig HTML per legal mention, formatting, QR spec, mPDF + Gotenberg adapters), 5 integration (print log), 7 functional (labels, drafts, other company, byte-identical re-render unchanged by a later customer/company change, frozen identity). Full suite 650, PHPStan, Deptrac, CS-Fixer green.
+- 🧑 **Owner:** engine decision; the software producer's address for training documents (`SOFTWARE_PRODUCER_*`) and TCWeb's NIF; receipts' PDF waits on task 2.9's QR question.
+
+**Not yet started:** 3.6–3.8 (`ElectronicSealer`, email, remaining web AT-status screens).
 
 Exit: documents communicated to the AT test environment; SAF-T validates against XSD; sealed PDFs produced in sandbox.
 

@@ -235,6 +235,37 @@ Still open, not blocking the plan but blocking part of the work:
     still `[VERIFY]` — no prose spec in `docs/legal/`), customers taken from
     the documents' frozen `customer_snapshot`, never from Parties.
 
+19. **PDF engine — spike done, provisional pick: mPDF, owner to confirm**
+    (replaces decision 7's "spike, then ask"; `docs/plans/assets/phase-3-pdf-spike/`
+    has the same 40-line invoice rendered by both engines). Same Twig HTML, run
+    through both: **layout equivalent** (tables, totals block, QR, accents,
+    pt-PT amounts); mPDF ~0.2 s in-process, Gotenberg ~0.25–0.5 s over HTTP;
+    **both made byte-deterministic** by `PdfDeterminism` (they stamp the current
+    time and a random file id — rewritten in place at the same length, so the
+    cross-reference table stays valid). Differences that matter: mPDF is a PHP
+    library (needs `ext-gd`, now in the Dockerfile and CI) with a CSS 2.1-level
+    renderer — no flexbox/grid, so templates stay table-based, as v1 is;
+    Gotenberg is full Chromium CSS but is one more container (large image) to run,
+    monitor and patch, and it needed one extra CSS rule (`tr { page-break-inside:
+    avoid }`, harmless for mPDF) to stop a table row splitting across pages.
+    mPDF is wired (`PdfEngine` alias); `GotenbergPdfEngine` stays in the tree,
+    swapped in by changing that one alias. Delete whichever loses once decided.
+20. **Original / copy marking** (resolves the `[VERIFY]` on "exact copy/reprint
+    mention rules"): Despacho 8632/2014 §2.2.15 requires a second copy to keep
+    the original content and carry *some* expression showing it is not the
+    original — it prescribes **no wording**. House convention: the first thing
+    handed out (print, download or e-mail — every one is logged in
+    `document_prints`) is "Original", then "Duplicado", "Triplicado", "n.ª via".
+    ("Cópia do documento original", §2.4/§2.5, is the different case of
+    documents re-created from a backup.)
+21. **Issuer identity is frozen at issuance** (`documents.issuer_snapshot.identity`,
+    written by `IssueDraftHandler` from the new `CompanyFiscalIdentityProvider`):
+    name, NIF, address, contacts and the cash-VAT regime as of that moment. The
+    PDF header, the SAF-T `CashVATSchemeIndicator` and the AT request all read it
+    first; documents issued before it fall back to the company's current data.
+    This closes 3.2's "cash-VAT flag is not frozen" item without touching the
+    existing snapshot provider.
+
 ---
 
 ### 3.1 AT webservice client foundation + series communication
@@ -341,7 +372,7 @@ the original write-up. Also fixed here: a regression where
 issuance rolled back (orphan `pending` rows); only `recordResolved()` needs the
 independent connection.
 
-**Open, needs the owner:** `CashVATSchemeIndicator` is always `0` for now —
+**Resolved by decision 21 (task 3.5) — kept for the record:** `CashVATSchemeIndicator` was always `0` —
 the issuer snapshot frozen at issuance (`documents.issuer_snapshot`) does not
 carry the company's cash-VAT flag, so a company under IVA de Caixa is
 communicated as if it were not. The fix belongs in the Company module's
@@ -475,6 +506,27 @@ still renders correctly after its customer's name/address changes
 (snapshot data proven, not live data); every render is logged in
 `document_prints` with the right `kind`; a working document's PDF carries
 "Este documento não serve de fatura" and an invoice's doesn't.
+
+**Status: built and covered** — `GET /companies/{c}/documents/{id}/pdf?kind=download|print`
+(`documents.read`), `PrintableDocumentReader` port (stored data only; only
+*issued* documents exist behind it, so a draft is a 404), `TwigDocumentPdfRenderer`
+(template chosen by the document's own recorded `template_version`; `strict_variables`;
+v1 = `api/templates/pdf/v1/document.html.twig`), `PdfEngine` port with mPDF and
+Gotenberg adapters, QR built to `at-qrcode-spec.pdf` §2 (ECC M, Byte, version ≥ 9;
+30 mm image with 2.5 mm margin), `document_prints` (`Version20261007110000`, insert-only,
+RLS, `kind` CHECK) with an advisory lock per document so two concurrent requests
+cannot both be the "Original". Legal content, by source, is listed in the
+template's header comment: hash mention (§2.2.2), date format (§2.2.4), tax base /
+breakdown / total on the last page only (§2.2.11), exemption wording tied to the line
+(§2.2.14), original/copy (§2.2.15), "Este documento não serve de fatura" (§1.2), training
+header and mention (§1.5), QR, ATCUD. Proven: byte-identical repeat renders (seconds
+apart), a PDF unchanged after the customer's address and the company's name/address/
+VAT regime change, every request logged with kind and label, 404 for drafts,
+unknown ids and other companies' documents.
+**Not covered:** PDFs of receipts (`RG`) — their QR requirement is the open question
+of task 2.9, not guessed here; company logos (need object storage wiring, a later
+task); the software producer's address for training documents is blank until set in
+`SOFTWARE_PRODUCER_*` (the NIF is `SAFT_PRODUCT_COMPANY_TAX_ID`, still a placeholder).
 
 ### 3.6 `ElectronicSealer`
 

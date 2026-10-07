@@ -176,7 +176,7 @@ final class DoctrineSaftDataSource implements SaftDataSource
                     new \DateTimeImmutable($this->string($row['issue_date'])),
                     $systemEntryAt,
                     $this->nullableString($row['customer_id']),
-                    \is_bool($issuer['cash_vat'] ?? null) ? $issuer['cash_vat'] : null,
+                    \is_array($issuer['identity'] ?? null) && \is_bool($issuer['identity']['cash_vat'] ?? null) ? $issuer['identity']['cash_vat'] : null,
                     $this->string($row['tax_total']),
                     $this->string($row['net_total']),
                     $this->string($row['gross_total']),

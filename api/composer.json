@@ -16,9 +16,11 @@
         "async-aws/s3": "^3.5",
         "brick/math": "^0.20.0",
         "brick/money": "^0.15.0",
+        "chillerlan/php-qrcode": "^6.0",
         "doctrine/doctrine-bundle": "^3.3.2",
         "doctrine/doctrine-migrations-bundle": "^4.0.1",
         "doctrine/orm": "^3.7",
+        "mpdf/mpdf": "^8.3",
         "nelmio/api-doc-bundle": "^5.12.1",
         "phpdocumentor/reflection-docblock": "^6.0.3",
         "phpstan/phpdoc-parser": "^2.3.5",
@@ -38,7 +40,8 @@
         "symfony/serializer": "7.4.*",
         "symfony/uid": "7.4.*",
         "symfony/validator": "7.4.*",
-        "symfony/yaml": "7.4.*"
+        "symfony/yaml": "7.4.*",
+        "twig/twig": "^3.30"
     },
     "config": {
         "allow-plugins": {

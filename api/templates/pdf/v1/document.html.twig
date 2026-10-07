@@ -1,0 +1,194 @@
+{#-
+  Template version v1 — docs/plans/phase-3.md task 3.5. A document records the
+  version it was issued with (`documents.template_version`) and is always
+  re-rendered with that version, so this file is never edited in a way that
+  changes how an issued document looks: a new layout is a new `vN` directory.
+
+  Renders stored values only. No arithmetic here (CLAUDE.md: PriceCalculator is
+  the only code that computes), no live lookups. Layout is tables and plain
+  CSS 2.1 so the same HTML renders in mPDF and in Chromium (Gotenberg).
+
+  Legal content, by source:
+    - Despacho 8632/2014 §2.2.2  hash characters + "Processado por programa certificado n.º …/AT"
+    - §2.2.4                     date AAAA-MM-DD, document type + series + sequence
+    - §2.2.11                    tax base, tax breakdown and total only on the last page
+    - §2.2.14                    the exemption wording (or its code) next to the exempt line
+    - §2.2.15                    original / copy marking
+    - §1.2                       "Este documento não serve de fatura" on working documents
+    - §1.5                       training documents: software producer's header + "Documento emitido para fins de Formação"
+    - at-qrcode-spec.pdf §2      QR ≥ 30×30 mm with a 0.25 cm margin, on the first or last page
+    - Portaria 195/2020          ATCUD
+-#}
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>{{ document.documentTypeName }} {{ document.documentNo }}</title>
+<style>
+  body { font-family: dejavusans, sans-serif; font-size: 9pt; color: #111; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { vertical-align: top; }
+  .header td { padding: 0; }
+  .doc-title { font-size: 15pt; font-weight: bold; margin: 0 0 2mm 0; }
+  .muted { color: #555; }
+  .copy { text-align: right; font-weight: bold; font-size: 10pt; }
+  .banner { border: 0.4mm solid #111; padding: 1.5mm; text-align: center; font-weight: bold; margin: 3mm 0; }
+  td.party { border: 0.2mm solid #999; padding: 2mm; }
+  .party-title { font-size: 7pt; text-transform: uppercase; color: #555; }
+  table.lines { margin-top: 4mm; }
+  table.lines th { background: #eee; border-bottom: 0.3mm solid #111; padding: 1mm; font-size: 8pt; text-align: left; }
+  table.lines td { padding: 1mm; border-bottom: 0.1mm solid #ccc; }
+  table.lines tr { page-break-inside: avoid; }
+  .num { text-align: right; }
+  .footnote { font-size: 7.5pt; margin-top: 2mm; }
+  table.totals { margin-top: 5mm; width: 100%; }
+  table.summary { width: 60%; }
+  table.summary th { font-size: 8pt; text-align: left; border-bottom: 0.3mm solid #111; padding: 1mm; }
+  table.summary td { padding: 1mm; }
+  table.grand td { padding: 1mm; }
+  .grand .label { text-align: right; }
+  .grand .total { font-weight: bold; font-size: 11pt; border-top: 0.3mm solid #111; }
+  .legal { margin-top: 5mm; font-size: 8pt; }
+  .qr-box { padding: 2.5mm; }
+</style>
+</head>
+<body>
+{% set producer = software_producer %}
+{% set header_party = document.isTraining ? producer : document.issuer %}
+
+<table class="header">
+  <tr>
+    <td style="width: 55%;">
+      <div style="font-size: 12pt; font-weight: bold;">{{ header_party.name }}</div>
+      {% if header_party.taxId %}<div>NIF {{ header_party.taxId }}</div>{% endif %}
+      {% if header_party.address %}<div>{{ header_party.address }}</div>{% endif %}
+      {% if header_party.postalCode or header_party.city %}<div>{{ header_party.postalCode }} {{ header_party.city }}</div>{% endif %}
+      {% if header_party.email %}<div class="muted">{{ header_party.email }}</div>{% endif %}
+      {% if header_party.phone %}<div class="muted">{{ header_party.phone }}</div>{% endif %}
+    </td>
+    <td style="width: 45%;">
+      <div class="doc-title">{{ document.documentTypeName }}</div>
+      <div><strong>{{ document.documentNo }}</strong></div>
+      <div>Data: {{ document.issueDate|iso_date }}</div>
+      {% if document.dueDate %}<div>Vencimento: {{ document.dueDate|iso_date }}</div>{% endif %}
+      <div>ATCUD: {{ document.atcud }}</div>
+      <div class="copy">{{ copy_label }}</div>
+    </td>
+  </tr>
+</table>
+
+{% if document.isTraining %}
+<div class="banner">Documento emitido para fins de Formação</div>
+{% endif %}
+{% if document.status == 'A' %}
+<div class="banner">DOCUMENTO ANULADO{% if document.statusReason %} — {{ document.statusReason }}{% endif %}</div>
+{% endif %}
+
+<table style="margin-top: 3mm;">
+  <tr>
+    <td class="party" style="width: 55%;">
+      <div class="party-title">Cliente</div>
+      <div><strong>{{ document.customer.name }}</strong></div>
+      <div>NIF {{ document.customer.taxId }}</div>
+      {% if document.customer.address %}<div>{{ document.customer.address }}</div>{% endif %}
+      {% if document.customer.postalCode or document.customer.city %}<div>{{ document.customer.postalCode }} {{ document.customer.city }}</div>{% endif %}
+      {% if document.customer.country and document.customer.country != 'PT' %}<div>{{ document.customer.country }}</div>{% endif %}
+    </td>
+    <td style="width: 45%; padding-left: 4mm;">
+      {% if document.referencedDocumentNos %}
+        <div class="muted">Referente a:</div>
+        {% for reference in document.referencedDocumentNos %}<div>{{ reference }}</div>{% endfor %}
+      {% endif %}
+      {% if document.paymentTerms %}
+        <div class="muted">Condições de pagamento:</div>
+        <div>{{ document.paymentTerms.name ?? document.paymentTerms.description ?? '' }}</div>
+      {% endif %}
+    </td>
+  </tr>
+</table>
+
+{% set exemption_notes = {} %}
+<table class="lines">
+  <thead>
+    <tr>
+      <th style="width: 12%;">Código</th>
+      <th>Descrição</th>
+      <th class="num" style="width: 9%;">Qtd.</th>
+      <th style="width: 6%;">Un.</th>
+      <th class="num" style="width: 13%;">Preço unit.</th>
+      <th class="num" style="width: 8%;">Desc.</th>
+      <th class="num" style="width: 8%;">IVA</th>
+      <th class="num" style="width: 14%;">Valor</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for line in document.lines %}
+    {% if line.exemptionCode %}{% set exemption_notes = exemption_notes|merge({(line.exemptionCode): line.exemptionText ?? line.exemptionCode}) %}{% endif %}
+    <tr>
+      <td>{{ line.productCode }}</td>
+      <td>
+        {{ line.description }}
+        {% for origin in line.originDocumentNos %}<br><span class="muted">Ref. {{ origin }}</span>{% endfor %}
+      </td>
+      <td class="num">{{ line.quantity|quantity }}</td>
+      <td>{{ line.unitCode }}</td>
+      <td class="num">{{ line.unitPrice|price }}</td>
+      <td class="num">{% if line.discountPercent %}{{ line.discountPercent|percent }}{% endif %}</td>
+      <td class="num">{{ line.taxPercentage|percent }}{% if line.exemptionCode %} <sup>[{{ line.exemptionCode }}]</sup>{% endif %}</td>
+      <td class="num">{{ line.netAmount|money }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if exemption_notes %}
+<div class="footnote">
+  {% for code, wording in exemption_notes %}<div><sup>[{{ code }}]</sup> {{ wording }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{# §2.2.11: the tax base, the tax breakdown and the total go together, last. #}
+<table class="totals" nobreak="true" style="page-break-inside: avoid;">
+  <tr>
+    <td style="width: 60%;">
+      <table class="summary">
+        <thead>
+          <tr><th>Taxa</th><th class="num">Base</th><th class="num">IVA</th></tr>
+        </thead>
+        <tbody>
+        {% for entry in document.taxSummary %}
+          <tr>
+            <td>{{ entry.percentage|percent }}{% if entry.region != 'PT' %} ({{ entry.region }}){% endif %}</td>
+            <td class="num">{{ entry.taxableBase|money }}</td>
+            <td class="num">{{ entry.taxAmount|money }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </td>
+    <td style="width: 40%;">
+      <table class="grand">
+        {% if document.globalDiscountPercent %}
+        <tr><td class="label">Desconto global</td><td class="num">{{ document.globalDiscountPercent|percent }}</td></tr>
+        {% endif %}
+        <tr><td class="label">Total sem IVA</td><td class="num">{{ document.netTotal|money }}</td></tr>
+        <tr><td class="label">IVA</td><td class="num">{{ document.taxTotal|money }}</td></tr>
+        <tr><td class="label total">Total</td><td class="num total">{{ document.grossTotal|money }}</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table class="legal">
+  <tr>
+    <td style="width: 78%;">
+      {% if document.notAnInvoiceMention %}<div><strong>{{ document.notAnInvoiceMention }}</strong></div>{% endif %}
+      {% if document.hashMention %}<div>{{ document.hashMention }}</div>{% endif %}
+    </td>
+    <td style="width: 22%; text-align: center;">
+      <div class="qr-box"><img src="{{ qr_code(document.qrPayload) }}" style="width: 30mm; height: 30mm;" alt="QR"></div>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

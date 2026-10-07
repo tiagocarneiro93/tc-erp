@@ -115,10 +115,9 @@ final class DoctrineAtCommunicableDocumentReader implements AtCommunicableDocume
             status: $this->string($row['status']),
             statusAt: new \DateTimeImmutable($this->string($row['status_at'])),
             hashCharacters: PrintedHashMention::fourCharacters($this->string($row['hash'])),
-            // Frozen at issuance when the issuer snapshot carries it; otherwise (documents issued before
-            // it did — in fact all of them today, docs/plans/phase-3.md task 3.2's open item) the company's
-            // *current* regime, which is right unless the regime changed since the document was issued.
-            cashVatScheme: \is_bool($issuer['cash_vat'] ?? null) ? $issuer['cash_vat'] : ($this->companies->forCompany($companyId)->cashVat ?? false),
+            // Frozen at issuance (`issuer_snapshot.identity`, task 3.5); documents issued before that
+            // carry none, and fall back to the company's *current* regime — right unless it changed since.
+            cashVatScheme: $this->frozenCashVat($issuer) ?? ($this->companies->forCompany($companyId)->cashVat ?? false),
             netTotal: $this->string($row['net_total']),
             taxTotal: $this->string($row['tax_total']),
             grossTotal: $this->string($row['gross_total']),
@@ -126,6 +125,16 @@ final class DoctrineAtCommunicableDocumentReader implements AtCommunicableDocume
             lines: $lines,
             taxSummary: $taxSummary,
         );
+    }
+
+    /**
+     * @param array<mixed> $issuerSnapshot
+     */
+    private function frozenCashVat(array $issuerSnapshot): ?bool
+    {
+        $identity = $issuerSnapshot['identity'] ?? null;
+
+        return \is_array($identity) && \is_bool($identity['cash_vat'] ?? null) ? $identity['cash_vat'] : null;
     }
 
     /**

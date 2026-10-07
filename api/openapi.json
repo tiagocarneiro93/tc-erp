@@ -3331,6 +3331,64 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/documents/{documentId}/pdf": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "get_documents_pdf",
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "query",
+                        "description": "How it will be used: `download` (attachment) or `print` (inline). Both are logged and both count as handing the document out.",
+                        "schema": {
+                            "type": "string",
+                            "default": "download",
+                            "enum": [
+                                "download",
+                                "print"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The PDF. `X-Copy-Label` says whether it is the original or which copy.",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.read permission."
+                    },
+                    "404": {
+                        "description": "No such issued document (a draft is not a document)."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/customers": {
             "get": {
                 "tags": [
