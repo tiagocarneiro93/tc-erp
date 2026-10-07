@@ -791,6 +791,21 @@ export type GetWarehousesGet200 = {
   active?: boolean;
 };
 
+export type GetDocumentsPdfParams = {
+/**
+ * How it will be used: `download` (attachment) or `print` (inline). Both are logged and both count as handing the document out.
+ */
+kind?: GetDocumentsPdfKind;
+};
+
+export type GetDocumentsPdfKind = typeof GetDocumentsPdfKind[keyof typeof GetDocumentsPdfKind];
+
+
+export const GetDocumentsPdfKind = {
+  download: 'download',
+  print: 'print',
+} as const;
+
 export type GetCustomersListParams = {
 search?: string;
 cursor?: string;
@@ -5918,6 +5933,124 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getDeleteWarehousesDeactivateMutationOptions(options), queryClient);
     }
+
+export const getGetDocumentsPdfUrl = (companyId: string,
+    documentId: string,
+    params?: GetDocumentsPdfParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/companies/${companyId}/documents/${documentId}/pdf?${stringifiedParams}` : `/api/v1/companies/${companyId}/documents/${documentId}/pdf`
+}
+
+export const getDocumentsPdf = async (companyId: string,
+    documentId: string,
+    params?: GetDocumentsPdfParams, options?: RequestInit): Promise<Blob> => {
+
+  return httpClient<Blob>(getGetDocumentsPdfUrl(companyId,documentId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDocumentsPdfQueryKey = (companyId: string,
+    documentId: string,
+    params?: GetDocumentsPdfParams,) => {
+    return [
+    `/api/v1/companies/${companyId}/documents/${documentId}/pdf`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetDocumentsPdfQueryOptions = <TData = Awaited<ReturnType<typeof getDocumentsPdf>>, TError = void>(companyId: string,
+    documentId: string,
+    params?: GetDocumentsPdfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentsPdf>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDocumentsPdfQueryKey(companyId,documentId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDocumentsPdf>>> = ({ signal }) => getDocumentsPdf(companyId,documentId,params, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined && documentId !== null && documentId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDocumentsPdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDocumentsPdfQueryResult = NonNullable<Awaited<ReturnType<typeof getDocumentsPdf>>>
+export type GetDocumentsPdfQueryError = void
+
+
+export function useGetDocumentsPdf<TData = Awaited<ReturnType<typeof getDocumentsPdf>>, TError = void>(
+ companyId: string,
+    documentId: string,
+    params: undefined |  GetDocumentsPdfParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentsPdf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDocumentsPdf>>,
+          TError,
+          Awaited<ReturnType<typeof getDocumentsPdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDocumentsPdf<TData = Awaited<ReturnType<typeof getDocumentsPdf>>, TError = void>(
+ companyId: string,
+    documentId: string,
+    params?: GetDocumentsPdfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentsPdf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDocumentsPdf>>,
+          TError,
+          Awaited<ReturnType<typeof getDocumentsPdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDocumentsPdf<TData = Awaited<ReturnType<typeof getDocumentsPdf>>, TError = void>(
+ companyId: string,
+    documentId: string,
+    params?: GetDocumentsPdfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentsPdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetDocumentsPdf<TData = Awaited<ReturnType<typeof getDocumentsPdf>>, TError = void>(
+ companyId: string,
+    documentId: string,
+    params?: GetDocumentsPdfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentsPdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDocumentsPdfQueryOptions(companyId,documentId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetCustomersListUrl = (companyId: string,
     params?: GetCustomersListParams,) => {
