@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import {
   getGetDocumentsGetQueryOptions,
+  getGetDocumentsPdfUrl,
   useGetDocumentsGet,
   usePostDocumentsCancel,
   usePostDocumentsConvert,
@@ -17,6 +18,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { apiErrorMessage } from '@/lib/api-error'
 import { formatMoney, formatQuantity } from '@/lib/format/decimal'
+
+import { DocumentAtStatus } from './DocumentAtStatus'
+import { EmailDocumentDialog } from './EmailDocumentDialog'
 
 const STATUS_LABELS: Record<string, string> = { N: 'Normal', A: 'Anulado', F: 'Totalmente convertido' }
 
@@ -34,7 +38,17 @@ const STATUS_LABELS: Record<string, string> = { N: 'Normal', A: 'Anulado', F: 'T
 export function DocumentDetail({ companyId, documentId }: { companyId: string; documentId: string }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { data: document, isLoading } = useGetDocumentsGet(companyId, documentId)
+  // The AT answers asynchronously: keep looking while the communication is still in flight.
+  const { data: document, isLoading } = useGetDocumentsGet(companyId, documentId, {
+    query: {
+      refetchInterval: (query) => {
+        const status = query.state.data?.at_communication?.status
+
+        return 'pending' === status || 'sending' === status ? 5000 : false
+      },
+    },
+  })
+  const [emailOpen, setEmailOpen] = useState(false)
   const [convertOpen, setConvertOpen] = useState(false)
   const [convertTarget, setConvertTarget] = useState<string>('')
   const [actionError, setActionError] = useState<string | null>(null)
@@ -138,6 +152,19 @@ export function DocumentDetail({ companyId, documentId }: { companyId: string; d
           </Badge>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <a href={getGetDocumentsPdfUrl(companyId, documentId)} download>
+              Descarregar PDF
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href={getGetDocumentsPdfUrl(companyId, documentId, { kind: 'print' })} target="_blank" rel="noreferrer">
+              Imprimir
+            </a>
+          </Button>
+          <Button variant="outline" onClick={() => setEmailOpen(true)}>
+            Enviar por email
+          </Button>
           {canCreditNote && (
             <Button variant="outline" onClick={handleCreditNote} disabled={creditNote.isPending}>
               Nota de crédito
@@ -155,6 +182,8 @@ export function DocumentDetail({ companyId, documentId }: { companyId: string; d
           )}
         </div>
       </div>
+
+      <DocumentAtStatus companyId={companyId} documentId={documentId} communication={document.at_communication} />
 
       {actionError && (
         <p className="text-destructive text-sm" role="alert">
@@ -188,6 +217,8 @@ export function DocumentDetail({ companyId, documentId }: { companyId: string; d
       <p className="ml-auto text-base">
         Total: <span className="font-semibold">{formatMoney(document.gross_total ?? '0')}</span>
       </p>
+
+      <EmailDocumentDialog companyId={companyId} documentId={documentId} open={emailOpen} onOpenChange={setEmailOpen} />
 
       <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
         <DialogContent>

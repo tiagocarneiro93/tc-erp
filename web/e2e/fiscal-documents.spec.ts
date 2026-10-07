@@ -23,6 +23,9 @@ function randomValidNif(): string {
  * vectors (task 2.1) already cover exhaustively.
  */
 test('draft → issue → credit note → partial conversion → receipt across two invoices', async ({ page }) => {
+  // One long business flow through a real browser, API and database: well over the 30 s default.
+  test.setTimeout(120_000)
+
   await page.goto('/login')
   await page.getByLabel('Email').fill('owner@demo.tc-erp.test')
   await page.getByLabel('Palavra-passe').fill('demo-password')
@@ -57,10 +60,18 @@ test('draft → issue → credit note → partial conversion → receipt across 
   await page.getByRole('button', { name: 'Criar produto' }).click()
   await expect(page.getByText('Produto E2E')).toBeVisible()
 
-  // Series: FT, NC, NE and RG. "Ativar" now calls AT for real
-  // (docs/plans/phase-3.md task 3.1) — in this test environment that's
-  // FakeSeriesWebserviceClient (config/services_test.yaml), which always
-  // succeeds with a generated validation code, no manual entry needed.
+  // Activating a series calls AT with the company's own sub-user credentials
+  // (docs/plans/phase-3.md task 3.1), so they must exist first. The API runs
+  // as APP_ENV=e2e (config/services_e2e.yaml): the AT clients are the scripted
+  // fakes, which accept anything, and the queue is synchronous.
+  await page.getByRole('link', { name: 'Definições' }).click()
+  await page.getByLabel('Subutilizador AT').fill('508025090/1')
+  await page.getByLabel('Palavra-passe').fill('e2e-not-a-real-password')
+  await page.getByRole('button', { name: 'Guardar credenciais' }).click()
+  await expect(page.getByText('Credenciais guardadas.')).toBeVisible()
+
+  // Series: FT, NC, NE and RG. "Ativar" calls AT (the fake here) and shows the
+  // result; the fake always succeeds with a generated validation code.
   const createAndActivateSeries = async (documentType: string, code: string) => {
     await page.getByRole('link', { name: 'Séries' }).click()
     await page.getByRole('button', { name: 'Nova série' }).click()
@@ -121,8 +132,25 @@ test('draft → issue → credit note → partial conversion → receipt across 
   const invoice1 = await issueInvoice('1', '100.00')
   const invoice2 = await issueInvoice('1', '50.00')
 
-  // Credit note against the first invoice.
+  // Document detail (docs/plans/phase-3.md task 3.8): AT status, PDF, e-mail.
   await page.getByRole('link', { name: invoice1 }).click()
+  await expect(page.getByTestId('at-status').getByText('Comunicado à AT')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByRole('button', { name: 'Tentar novamente' })).toHaveCount(0)
+
+  const pdfLink = page.getByRole('link', { name: 'Descarregar PDF' })
+  const pdf = await page.request.get((await pdfLink.getAttribute('href')) ?? '')
+  expect(pdf.status()).toBe(200)
+  expect(pdf.headers()['content-type']).toContain('application/pdf')
+  expect((await pdf.body()).subarray(0, 5).toString()).toBe('%PDF-')
+
+  await page.getByRole('button', { name: 'Enviar por email' }).click()
+  const emailDialog = page.getByRole('dialog')
+  await emailDialog.getByLabel('Destinatários').fill('cliente@example.pt')
+  await emailDialog.getByRole('button', { name: 'Enviar' }).click()
+  await expect(emailDialog.getByText('Envio agendado.')).toBeVisible()
+  await emailDialog.getByRole('button', { name: 'Fechar' }).first().click()
+
+  // Credit note against the first invoice.
   await page.getByRole('button', { name: 'Nota de crédito' }).click()
   await expect(page).toHaveURL(/\/documents\/drafts\/[^/]+$/)
   await page.getByLabel('Série').click()

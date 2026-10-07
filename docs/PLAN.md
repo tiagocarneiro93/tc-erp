@@ -527,7 +527,13 @@ Detailed breakdown and acceptance criteria: `docs/plans/phase-3.md`.
 - [x] Tests: 22 unit + 7 functional (HTTP + queue + PostgreSQL + MinIO); `api/openapi.json` and the web client regenerated.
 - 🧑 **Owner:** nothing blocking; no dead-letter view yet; the web UI is 3.8.
 
-**Not yet started:** 3.8 (remaining web AT-status screens, download/email actions).
+### 3.8 Web: AT status and series screens
+- [x] Series screen: nothing left (done in 3.1). Document detail: AT-communication badge with AT's answer and attempts, polling while in flight, "Tentar novamente" when the backend's `can_retry` says so (with `Idempotency-Key`); PDF download/print links; "Enviar por email" dialog (blank recipients = customer's address).
+- [x] Tests: 10 Vitest (`DocumentAtStatus`) + Playwright extended; all three e2e specs run green locally against an `APP_ENV=e2e` API.
+- [x] **Fixed a broken e2e job** (pre-existing since 3.1): AT credentials step missing in the spec, and CI ran the API as `dev` (real AT). New `APP_ENV=e2e` (fake AT clients + sealer, synchronous queue); CI gets MinIO + `gd` and `php -S -d variables_order=EGPCS`. The GitHub job itself has not run yet.
+- Deviations: e2e uses fake AT (not AT's test environment); rejected→retry→accepted is covered by Vitest + the backend flow test, not in the browser.
+
+**Phase 3 status:** all eight tasks built. Exit criteria: live AT test-environment run for each document type is **owner-run** (see the task 3.1g/3.2 notes); sealed PDFs are fake-sealed until a trust provider is chosen.
 
 Exit: documents communicated to the AT test environment; SAF-T validates against XSD; sealed PDFs produced in sandbox.
 

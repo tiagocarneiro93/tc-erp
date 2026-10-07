@@ -636,6 +636,40 @@ confirm the legal mentions are present; a deliberately `rejected`
 communication is retryable from the UI and moves to `accepted` once
 whatever caused the rejection is fixed.
 
+**Status: built; e2e run and green locally (all three specs).**
+- Series screen: already done in 3.1 (no validation-code field; "Ativar" calls the backend,
+  which calls AT, and shows 404 → "configure the AT credentials first" / 422 → "AT
+  rejected the registration"). Nothing more to build there.
+- Document detail (`DocumentDetail.tsx`): `DocumentAtStatus` (pt-PT badge per
+  `pending|sending|accepted|rejected|failed`, AT's own response code/message and the
+  attempt count, "Tentar novamente" only when the backend says `can_retry`, with an
+  `Idempotency-Key`; polls every 5 s while the communication is in flight; a document
+  with no communication — training series — says so); "Descarregar PDF" and "Imprimir"
+  (plain links to `/pdf`, so no hand-written `fetch`; both are logged as hand-outs by the
+  backend); "Enviar por email" (`EmailDocumentDialog`: recipients, optional message; blank
+  recipients = the customer's address, resolved by the backend; "Envio agendado." on 202).
+- Tests: `DocumentAtStatus.test.tsx` (10 Vitest: every status label, AT answer shown, no retry
+  unless `can_retry`, retry sends an `Idempotency-Key`, refused retry reported) and the
+  Playwright flow extended (AT credentials step, "Comunicado à AT" on the first invoice, a
+  real PDF fetched through the link, the e-mail dialog).
+- **Deviations from the accept criterion above, on purpose:** (a) the e2e runs against fake AT
+  clients, not AT's test environment — a browser test must not depend on a government
+  server, and the live check stays the owner-run test of task 3.1g/3.2; (b) a `rejected →
+  retry → accepted` run is covered by the Vitest component test and by the backend flow
+  test (`AtCommunicationFlowTest`), not in the browser, because the fake cannot be scripted
+  from a browser session; (c) that the PDF carries the legal mentions is proven by task 3.5's
+  tests; the e2e only checks that the link serves a PDF.
+- **The e2e job was not actually working before this task** and is fixed here: activating a
+  series needs the company's AT credentials (the spec never entered them), and CI started the
+  API as `dev`, i.e. against the real AT. New `APP_ENV=e2e` (`config/services_e2e.yaml`,
+  `when@e2e` blocks in `messenger.yaml`/`monolog.yaml`): fake AT clients and sealer, a
+  **synchronous** queue (documents are "communicated" and e-mails sent inside the request —
+  there is no worker in that job), real sessions. CI also now starts MinIO and has `gd`,
+  because sealing/PDF run in that flow, and starts `php -S` with `variables_order=EGPCS`
+  (without it the built-in server did not see the `APP_ENV` etc. it was started with and
+  silently ran as `dev`). The spec's timeout is raised to 120 s (the flow takes ~50 s).
+  The CI job itself has not run on GitHub — only the equivalent commands locally.
+
 ---
 
 ## Phase 3 exit criteria

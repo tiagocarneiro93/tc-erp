@@ -60,3 +60,10 @@ when@test:
                 # Lets tests dispatch a message and consume it in-process,
                 # with no real broker, to exercise RestoreCompanyContextMiddleware.
                 async: 'in-memory://'
+
+when@e2e:
+    framework:
+        messenger:
+            transports:
+                # No worker in the Playwright job: handle everything inside the request.
+                async: 'sync://'

@@ -389,5 +389,6 @@ services:
 when@dev:
     services:
         # The fake seal (a marker, not a signature) so the e-mail flow can be tried locally.
+        # (services_e2e.yaml does the same for the e2e environment.)
         App\Output\Domain\ElectronicSealer:
             alias: App\Output\Infrastructure\Sealing\FakeElectronicSealer

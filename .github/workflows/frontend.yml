@@ -59,8 +59,23 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: intl, pdo_pgsql, bcmath, sodium, zip, opcache, redis
+          extensions: intl, pdo_pgsql, bcmath, sodium, zip, opcache, redis, gd
           coverage: none
+
+      # Sealed PDFs are archived in object storage (docs/plans/phase-3.md tasks 3.4/3.6/3.7), which
+      # the document screen's e-mail action exercises. Same MinIO as backend.yml.
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            quay.io/minio/minio:latest server /data
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:9000/minio/health/live && exit 0
+            sleep 1
+          done
+          echo "MinIO did not become healthy" >&2
+          docker logs minio
+          exit 1
 
       - name: Install API dependencies
         working-directory: api
@@ -82,15 +97,22 @@ jobs:
           php bin/console doctrine:migrations:migrate --no-interaction
           php bin/console app:seed --no-interaction
 
+      # APP_ENV=e2e (api/config/services_e2e.yaml): the AT webservices are the
+      # scripted fakes, the queue is synchronous and mail goes nowhere — a real
+      # HTTP server with real sessions, but never the real AT. The migrate/seed
+      # step above stays `dev` (same database, same schema). variables_order
+      # makes the built-in server see these environment variables at all.
       - name: Start the API
         working-directory: api
         env:
-          APP_ENV: dev
+          APP_ENV: e2e
+          APP_DEBUG: '0'
+          MAILER_DSN: 'null://null'
           DATABASE_URL: postgresql://app_runtime:app_runtime@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
           DATABASE_MIGRATIONS_URL: postgresql://app_owner:app_owner@127.0.0.1:5432/tc_erp?serverVersion=17&charset=utf8
           REDIS_URL: redis://127.0.0.1:6379
         run: |
-          php -S 127.0.0.1:8080 -t public &
+          php -d variables_order=EGPCS -S 127.0.0.1:8080 -t public &
           for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/api/v1/health && break || sleep 1; done
 
       - name: Install Playwright browsers

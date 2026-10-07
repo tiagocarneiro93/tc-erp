@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+
+# APP_ENV=e2e only: the API the Playwright suite (web/e2e) talks to in CI.
+# A real HTTP server with real sessions, so not APP_ENV=test (whose mock
+# session storage is for PHPUnit) — but also not the real AT: series
+# activation and document communication use the same scripted fakes as the
+# PHPUnit suite, and the Messenger transport is synchronous (config/packages/
+# messenger.yaml), so an issued document is "communicated" and a queued e-mail
+# is sent (to the null transport) within the request that caused them. The
+# FakeElectronicSealer is already the default outside production (dev/test).
+services:
+    App\Shared\Domain\AtIntegration\SeriesWebserviceClient:
+        alias: App\AtIntegration\Infrastructure\Fake\FakeSeriesWebserviceClient
+        public: true
+    App\AtIntegration\Infrastructure\Fake\FakeSeriesWebserviceClient:
+        public: true
+    App\AtIntegration\Domain\Webservice\AtDocumentWebserviceClient:
+        alias: App\AtIntegration\Infrastructure\Fake\FakeAtDocumentWebserviceClient
+        public: true
+    App\AtIntegration\Infrastructure\Fake\FakeAtDocumentWebserviceClient:
+        autowire: true
+        public: true
+    App\Output\Domain\ElectronicSealer:
+        alias: App\Output\Infrastructure\Sealing\FakeElectronicSealer
