@@ -162,6 +162,57 @@ Still open, not blocking the plan but blocking part of the work:
       "friendly" client-facing error would be less consistent with the
       codebase, not more.
 
+12. **Receipts (`RG`) are not communicated — reverses decision 8** (found
+    while building task 3.2). `Fatcorews.wsdl`'s `PaymentTypeType` enumerates
+    **only `RC`** ("Recibo emitido no âmbito do regime de IVA de Caixa"), and
+    `at-ws-efatura-aspetos-especificos.pdf` §2.1.7.1 item 1.6.4 says the same.
+    `RegisterPayment` can therefore never carry this system's `RG` receipts —
+    AT would reject every one, and no other operation takes them.
+    `IssueReceiptHandler` correctly stays without an `enqueue()`; decision 8's
+    "gap" was never a gap. Consequences: the phase exit criterion's "one
+    document of each type … RG" cannot be met for `RG` and is amended below;
+    cash-VAT `RC` receipts (a different document type, not issued by this
+    system yet) would be the only receipts ever communicated.
+13. **Task 3.2's e-Fatura client uses hand-built SOAP envelopes, not
+    `ext-soap` — deviation from decision 4**, for e-Fatura only (series stays on
+    `SeriesWSClient`, which is live-verified). Reason: the request body is built
+    by `EFaturaRequestBuilder` and every output is validated in the unit suite
+    against the XSD embedded in `Fatcorews.wsdl` itself (`tests/Support/
+    FatcorewsSchema`), and the client's envelope/response handling runs against
+    a fake HTTP transport — neither is possible through `SoapClient`'s
+    WSDL-driven array serialisation without `ext-soap` and a live AT. The wire
+    format is the WSDL's own: SOAP 1.1, document/literal, empty `SOAPAction`.
+14. **Field decisions for the e-Fatura bodies**, each cited in
+    `EFaturaRequestBuilder`'s docblock: `HashCharacters` is `0` while the
+    certificate number is `0` (manual item 1.6.9: "ou o valor «0» … caso o
+    documento seja gerado por um programa não certificado"); `ATCUD` is the
+    document's real ATCUD (the manual's "preenchido com 0 até à sua
+    regulamentação" predates Portaria 195/2020; the WSDL accepts any 1–100
+    character string); `DebitCreditIndicator` is `D` for `NC`, `C` otherwise
+    (AT's own `saft-pt-sample-instance.xml`); `Amount`, not `TotalTaxBase`;
+    `LineSummary` amounts are reconciled to `document_tax_summary` (per-line
+    amounts are informational under `per_group` rounding, §7.9.5) so they
+    always add up to `NetTotal`.
+15. **Outcome classification** (`AtCommunicationOutcome`, from the manual's
+    response-code tables): `0` → accepted; the operation's own "already
+    registered" code (`-10` invoice, `-22` work) → accepted (a re-send after a
+    crash between AT's answer and our write); positive codes (1–99:
+    authentication/envelope) and `-97`/`-99` → `failed`, retried with
+    exponential backoff (2, 4 … 256, then 360 minutes, 10 automatic attempts,
+    then a person retries); every other negative code → `rejected`, never
+    retried automatically. A manual retry (`POST …/documents/{id}/at-
+    communication/retry`, 202) resets the attempt budget.
+16. **Cancellation and `ChangeInvoiceStatus`**: no `ChangeInvoiceStatus`/
+    `DeleteInvoice` call is built. Task 2.10 only lets a document be cancelled
+    before AT confirmed it (`pending`/`failed`/`rejected`), and the consumer
+    reads the document's *current* status when it sends, so a cancelled
+    document is simply registered with `InvoiceStatus = A`. What *does* change
+    status after acceptance is a working document reaching `F` once fully
+    converted (task 2.8) — that is `ChangeWorkStatus`, enqueued as a
+    `document_status` outbox row only when the registration was already
+    `accepted`. Training-series documents (`tipoSerie F`) are never enqueued —
+    the manuals are silent; conservative default, owner may override.
+
 ---
 
 ### 3.1 AT webservice client foundation + series communication
@@ -248,14 +299,34 @@ diagnosis.
   `at_communications` summary alongside `can_cancel`/`can_credit_note`/
   `convert_targets`).
 
-**Accept:** issuing any of FT/FS/FR/NC/ND/OR/PF/NE/RG results in exactly one
+**Accept:** issuing any of FT/FS/FR/NC/ND/OR/PF/NE results in exactly one
 `at_communications` row that the consumer picks up and sends to AT's test
 environment, verified as actually accepted there (decision 10); a
 deliberately malformed request (e.g. missing required field) comes back
 `rejected` with AT's own message stored, not retried forever; killing the
 worker mid-processing and restarting it doesn't lose or duplicate the row
-(the sweeper's safety-net role, tested directly); the receipt-enqueue gap
-(decision 8) has a regression test so it can't silently regress again.
+(the sweeper's safety-net role, tested directly); a receipt is never
+enqueued (decision 12), with a regression test so nobody "fixes" that later.
+
+**Status: built and covered by the everyday suite (against
+`FakeAtDocumentWebserviceClient`); live verification against AT's test
+environment is the owner-run step still to do** (`SeriesWSClientLiveTest`'s
+counterpart is not written — it needs the owner's AT sub-user, see
+`docs/PLAN.md` task 3.2). See decisions 12–16 above for what changed against
+the original write-up. Also fixed here: a regression where
+`DoctrineAtCommunicationQueue::enqueue()` had been moved onto the independent
+`audit_log` connection, which let an invoice's outbox row commit even when
+issuance rolled back (orphan `pending` rows); only `recordResolved()` needs the
+independent connection.
+
+**Open, needs the owner:** `CashVATSchemeIndicator` is always `0` for now —
+the issuer snapshot frozen at issuance (`documents.issuer_snapshot`) does not
+carry the company's cash-VAT flag, so a company under IVA de Caixa is
+communicated as if it were not. The fix belongs in the Company module's
+`IssuerSnapshotProvider` (add `cash_vat`; `DoctrineAtCommunicableDocumentReader`
+already reads it). Not done: the file could not be read in this session.
+Must be fixed before any cash-VAT company is onboarded, and before 3.3 (SAF-T
+has the same field).
 
 ### 3.3 SAF-T (PT) export + XSD validation
 
@@ -401,9 +472,10 @@ whatever caused the rejection is fixed.
 
 ## Phase 3 exit criteria
 
-- Series register/finish/cancel and invoice/work/payment communication all
-  proven against AT's **real test environment** — not simulated — for at
-  least one document of each type (FT, FS, FR, NC, ND, OR, PF, NE, RG).
+- Series register/finish/cancel and invoice/work communication all proven
+  against AT's **real test environment** — not simulated — for at least one
+  document of each type (FT, FS, FR, NC, ND, OR, PF, NE). `RG` is excluded:
+  AT's webservice has no operation for it (decision 12).
 - SAF-T (PT) export validates against the official XSD for a company with a
   representative document mix.
 - A sealed PDF is produced in sandbox (fake adapter acceptable if the trust
