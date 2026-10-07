@@ -6,12 +6,16 @@ namespace App\Output\Application;
 
 use App\Output\Domain\CopyLabel;
 use App\Output\Domain\DocumentPdfRenderer;
+use App\Output\Domain\DocumentPrint;
+use App\Output\Domain\DocumentPrintKind;
 use App\Output\Domain\DocumentPrintRepository;
 use App\Output\Domain\ElectronicSealer;
 use App\Output\Domain\PrintableDocumentNotFound;
+use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Fiscal\PrintableDocumentReader;
 use App\Shared\Domain\Output\FileArchive;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * docs/plans/phase-3.md task 3.6: the sealed PDF of an issued document, made
@@ -32,6 +36,13 @@ use App\Shared\Domain\Output\FileArchive;
  * The copy label printed in the sealed file is the one the document's print
  * log yields at the moment of sealing (the first thing ever handed out is the
  * "Original"); it is then fixed for good, being part of the signed bytes.
+ * Sealing logs that hand-out in `document_prints` (kind `email`) in the same
+ * transaction, which is also how the label is found again later: it is the
+ * one on the document's earliest `email` row. Sending the identical sealed
+ * file again is not a new rendering and logs no new row (the send itself is
+ * in the audit log); and if a send then fails for good, the document still
+ * counts as handed out — the safe direction, since it can only make a later
+ * PDF a "copy", never a second "Original".
  */
 final class SealedDocumentPdfs
 {
@@ -44,6 +55,7 @@ final class SealedDocumentPdfs
         private readonly ElectronicSealer $sealer,
         private readonly FileArchive $archive,
         private readonly DocumentPrintRepository $prints,
+        private readonly Clock $clock,
     ) {
     }
 
@@ -51,7 +63,7 @@ final class SealedDocumentPdfs
      * @throws PrintableDocumentNotFound        when no such issued document exists (a draft never does)
      * @throws \App\Output\Domain\SealingFailed when it has to be sealed and cannot be — nothing is stored, nothing unsealed is returned
      */
-    public function obtain(CompanyId $companyId, string $documentId): SealedPdf
+    public function obtain(CompanyId $companyId, string $documentId, string $actingUserId): SealedPdf
     {
         $document = $this->documents->find($companyId, $documentId) ?? throw new PrintableDocumentNotFound();
 
@@ -60,13 +72,18 @@ final class SealedDocumentPdfs
         $existing = $this->archive->findBySubject($companyId, self::KIND, self::SUBJECT_TYPE, $document->id);
 
         if (null !== $existing) {
-            return new SealedPdf($this->archive->contents($companyId, $existing->id), $existing, null, false);
+            $label = $this->prints->firstLabelOf($companyId, $document->id, DocumentPrintKind::Email)
+                ?? throw new \LogicException(\sprintf('The sealed PDF of document %s has no print record.', $document->id));
+
+            return new SealedPdf($this->archive->contents($companyId, $existing->id), $existing, $label, false, $document);
         }
 
         $copyLabel = CopyLabel::forNextCopy($this->prints->countFor($companyId, $document->id));
         $sealed = $this->sealer->seal($companyId, $this->renderer->render($document, $copyLabel));
         $archived = $this->archive->storeContents($companyId, self::KIND, self::SUBJECT_TYPE, $document->id, $sealed);
 
-        return new SealedPdf($sealed, $archived, $copyLabel, true);
+        $this->prints->add(new DocumentPrint(Uuid::v7()->toRfc4122(), $companyId, $document->id, DocumentPrintKind::Email, $copyLabel, $actingUserId, $this->clock->now()));
+
+        return new SealedPdf($sealed, $archived, $copyLabel, true, $document);
     }
 }

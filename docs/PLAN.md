@@ -520,7 +520,14 @@ Detailed breakdown and acceptance criteria: `docs/plans/phase-3.md`.
 - [x] Tests: 7 unit + 1 functional on a real issued document (PostgreSQL + MinIO): one `stored_files` row, identical bytes on every call.
 - 🧑 **Owner:** the real PAdES adapter waits on the trust-provider choice (§14.3 item 15), including one platform certificate vs one per company.
 
-**Not yet started:** 3.7–3.8 (email, remaining web AT-status screens).
+### 3.7 Email sending of documents
+- [x] `POST /companies/{c}/documents/{id}/send` (`documents.issue`, `Idempotency-Key`; recipients default to the customer's address; 202 queued). `EmailDocumentHandler` (request) → `SendDocumentEmailHandler` on the new `output.bus`: seal once in its own committed transaction, then mail the stored file; audit `document.email_requested`/`email_sent`.
+- [x] Retries never re-seal (mail failure → Messenger retry finds the stored file); undeliverable address / vanished document are unrecoverable; at-least-once delivery.
+- [x] `document_prints` kind `email`: one row per sealed file (written at sealing, also where the file's label is recovered from); each send is in the audit log. Deptrac: `Output.UIHttp` → `Shared.Infrastructure` for `IdempotencyKeyGuard` only (same as Fiscal/AtIntegration).
+- [x] Tests: 22 unit + 7 functional (HTTP + queue + PostgreSQL + MinIO); `api/openapi.json` and the web client regenerated.
+- 🧑 **Owner:** nothing blocking; no dead-letter view yet; the web UI is 3.8.
+
+**Not yet started:** 3.8 (remaining web AT-status screens, download/email actions).
 
 Exit: documents communicated to the AT test environment; SAF-T validates against XSD; sealed PDFs produced in sandbox.
 

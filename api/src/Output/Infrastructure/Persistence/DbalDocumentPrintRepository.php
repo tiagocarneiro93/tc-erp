@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Output\Infrastructure\Persistence;
 
 use App\Output\Domain\DocumentPrint;
+use App\Output\Domain\DocumentPrintKind;
 use App\Output\Domain\DocumentPrintRepository;
 use App\Shared\Domain\CompanyId;
 use Doctrine\DBAL\Connection;
@@ -44,5 +45,15 @@ final class DbalDocumentPrintRepository implements DocumentPrintRepository
         );
 
         return is_numeric($count) ? (int) $count : 0;
+    }
+
+    public function firstLabelOf(CompanyId $companyId, string $documentId, DocumentPrintKind $kind): ?string
+    {
+        $label = $this->connection->fetchOne(
+            'SELECT copy_label FROM document_prints WHERE company_id = ? AND document_id = ? AND kind = ? ORDER BY occurred_at, id LIMIT 1',
+            [$companyId->toString(), $documentId, $kind->value],
+        );
+
+        return \is_string($label) ? $label : null;
     }
 }

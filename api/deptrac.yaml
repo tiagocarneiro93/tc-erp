@@ -365,11 +365,15 @@ deptrac:
             - Output.Domain
             - Shared.Domain
             - Shared.Infrastructure
+        # Shared.Infrastructure only for IdempotencyKeyGuard (task 3.7: e-mailing
+        # a document communicates outwards, §9.1) — the same narrow exception
+        # Fiscal.UIHttp and AtIntegration.UIHttp have.
         Output.UIHttp:
             - Output.UIHttp
             - Output.Application
             - Output.Domain
             - Shared.Domain
+            - Shared.Infrastructure
 
         Shared.Domain:
             - Shared.Domain

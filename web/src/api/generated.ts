@@ -166,6 +166,16 @@ export interface WarehouseRequest {
   is_default?: boolean;
 }
 
+export interface EmailDocumentRequest {
+  /** @maxItems 10 */
+  recipients?: string[];
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  message?: string | null;
+}
+
 export interface CustomerRequest {
   code?: string;
   nif?: string;
@@ -6051,6 +6061,91 @@ export function useGetDocumentsPdf<TData = Awaited<ReturnType<typeof getDocument
 
 
 
+
+export const getPostDocumentsSendUrl = (companyId: string,
+    documentId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/documents/${documentId}/send`
+}
+
+export const postDocumentsSend = async (companyId: string,
+    documentId: string,
+    emailDocumentRequest: EmailDocumentRequest, options?: RequestInit): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return httpClient<void>(getPostDocumentsSendUrl(companyId,documentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(emailDocumentRequest)
+  }
+);}
+
+
+
+
+
+export const getPostDocumentsSendMutationKey = () => ['postDocumentsSend'] as const;
+
+export const getPostDocumentsSendMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsSend>>, TError,PostDocumentsSendMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postDocumentsSend>>, TError,PostDocumentsSendMutationVariables, TContext> => {
+
+const mutationKey = getPostDocumentsSendMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postDocumentsSend>>, PostDocumentsSendMutationVariables> = (props) => {
+          const {companyId,documentId,data} = props ?? {};
+
+          return  postDocumentsSend(companyId,documentId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostDocumentsSendMutationResult = NonNullable<Awaited<ReturnType<typeof postDocumentsSend>>>
+    export type PostDocumentsSendMutationBody = EmailDocumentRequest
+    export type PostDocumentsSendMutationError = void
+    export type PostDocumentsSendMutationVariables = {companyId: string;documentId: string;data: EmailDocumentRequest}
+
+    export const usePostDocumentsSend = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsSend>>, TError,PostDocumentsSendMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postDocumentsSend>>,
+        TError,
+        PostDocumentsSendMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostDocumentsSendMutationOptions(options), queryClient);
+    }
 
 export const getGetCustomersListUrl = (companyId: string,
     params?: GetCustomersListParams,) => {

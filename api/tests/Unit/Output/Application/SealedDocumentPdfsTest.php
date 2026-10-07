@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Output\Application;
 
 use App\Output\Application\SealedDocumentPdfs;
-use App\Output\Domain\DocumentPdfRenderer;
 use App\Output\Domain\DocumentPrint;
-use App\Output\Domain\DocumentPrintRepository;
-use App\Output\Domain\ElectronicSealer;
+use App\Output\Domain\DocumentPrintKind;
 use App\Output\Domain\PrintableDocumentNotFound;
 use App\Output\Domain\SealingFailed;
+use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Fiscal\PrintableDocument;
 use App\Shared\Domain\Fiscal\PrintableDocumentReader;
-use App\Shared\Domain\Output\ArchivedFile;
-use App\Shared\Domain\Output\FileArchive;
+use App\Tests\Support\Output\CountingRenderer;
+use App\Tests\Support\Output\CountingSealer;
+use App\Tests\Support\Output\MemoryArchive;
+use App\Tests\Support\Output\MemoryPrints;
 use App\Tests\Support\PrintableDocuments;
 use PHPUnit\Framework\TestCase;
 
@@ -52,12 +53,18 @@ final class SealedDocumentPdfsTest extends TestCase
                 return $documentId === $this->document->id ? $this->document : null;
             }
         };
-        $this->sealed = new SealedDocumentPdfs($reader, $this->renderer, $this->sealer, $this->archive, $this->prints);
+        $clock = new class implements Clock {
+            public function now(): \DateTimeImmutable
+            {
+                return new \DateTimeImmutable('2026-10-07T10:00:00+00:00');
+            }
+        };
+        $this->sealed = new SealedDocumentPdfs($reader, $this->renderer, $this->sealer, $this->archive, $this->prints, $clock);
     }
 
     public function testTheFirstCallRendersSealsAndArchivesTheSealedBytes(): void
     {
-        $result = $this->sealed->obtain($this->company, $this->document->id);
+        $result = $this->sealed->obtain($this->company, $this->document->id, 'user-1');
 
         self::assertTrue($result->sealedNow);
         self::assertSame('Original', $result->copyLabel);
@@ -70,14 +77,14 @@ final class SealedDocumentPdfsTest extends TestCase
 
     public function testLaterCallsReturnTheStoredBytesWithoutRenderingOrSealingAgain(): void
     {
-        $first = $this->sealed->obtain($this->company, $this->document->id);
-        $second = $this->sealed->obtain($this->company, $this->document->id);
-        $third = $this->sealed->obtain($this->company, $this->document->id);
+        $first = $this->sealed->obtain($this->company, $this->document->id, 'user-1');
+        $second = $this->sealed->obtain($this->company, $this->document->id, 'user-1');
+        $third = $this->sealed->obtain($this->company, $this->document->id, 'user-1');
 
         self::assertSame($first->bytes, $second->bytes);
         self::assertSame($first->bytes, $third->bytes);
         self::assertFalse($second->sealedNow);
-        self::assertNull($second->copyLabel, 'The label is part of the stored bytes, not recorded separately.');
+        self::assertSame('Original', $second->copyLabel, 'The label of the stored file is recovered from its print record.');
         self::assertSame($first->file->id, $second->file->id);
         self::assertSame(1, $this->sealer->calls);
         self::assertSame(1, $this->renderer->calls);
@@ -86,9 +93,24 @@ final class SealedDocumentPdfsTest extends TestCase
 
     public function testTheSealedFileCarriesTheLabelTheDocumentsPrintLogYieldsAtThatMoment(): void
     {
-        $this->prints->count = 1;
+        $this->prints->add(new DocumentPrint('p-1', $this->company, $this->document->id, DocumentPrintKind::Download, 'Original', 'user-1', new \DateTimeImmutable('2026-10-06T10:00:00+00:00')));
 
-        self::assertSame('Duplicado', $this->sealed->obtain($this->company, $this->document->id)->copyLabel);
+        $first = $this->sealed->obtain($this->company, $this->document->id, 'user-1');
+
+        self::assertSame('Duplicado', $first->copyLabel);
+        self::assertSame('sealed(pdf:Duplicado)', $first->bytes);
+        self::assertSame('Duplicado', $this->sealed->obtain($this->company, $this->document->id, 'user-2')->copyLabel);
+    }
+
+    public function testSealingLogsOneElectronicHandOutAndLaterObtainsLogNothingMore(): void
+    {
+        $this->sealed->obtain($this->company, $this->document->id, 'user-1');
+        $this->sealed->obtain($this->company, $this->document->id, 'user-2');
+
+        self::assertCount(1, $this->prints->rows);
+        self::assertSame(DocumentPrintKind::Email, $this->prints->rows[0]->kind);
+        self::assertSame('Original', $this->prints->rows[0]->copyLabel);
+        self::assertSame('user-1', $this->prints->rows[0]->userId);
     }
 
     public function testAFailedSealStoresNothingAndReturnsNothingUnsealed(): void
@@ -96,7 +118,7 @@ final class SealedDocumentPdfsTest extends TestCase
         $this->sealer->failing = true;
 
         try {
-            $this->sealed->obtain($this->company, $this->document->id);
+            $this->sealed->obtain($this->company, $this->document->id, 'user-1');
             self::fail('Sealing was expected to fail.');
         } catch (SealingFailed) {
             self::assertCount(0, $this->archive->files);
@@ -104,7 +126,7 @@ final class SealedDocumentPdfsTest extends TestCase
 
         $this->sealer->failing = false;
 
-        self::assertTrue($this->sealed->obtain($this->company, $this->document->id)->sealedNow, 'A later attempt starts clean.');
+        self::assertTrue($this->sealed->obtain($this->company, $this->document->id, 'user-1')->sealedNow, 'A later attempt starts clean.');
     }
 
     public function testADocumentThatIsNotIssuedCannotBeSealed(): void
@@ -112,7 +134,7 @@ final class SealedDocumentPdfsTest extends TestCase
         $this->expectException(PrintableDocumentNotFound::class);
 
         try {
-            $this->sealed->obtain($this->company, '0192e0f0-0000-7000-8000-00000000dead');
+            $this->sealed->obtain($this->company, '0192e0f0-0000-7000-8000-00000000dead', 'user-1');
         } finally {
             self::assertSame(0, $this->sealer->calls);
             self::assertCount(0, $this->archive->files);
@@ -121,100 +143,8 @@ final class SealedDocumentPdfsTest extends TestCase
 
     public function testTheDocumentIsLockedBeforeLookingForAnExistingFile(): void
     {
-        $this->sealed->obtain($this->company, $this->document->id);
+        $this->sealed->obtain($this->company, $this->document->id, 'user-1');
 
         self::assertSame([$this->document->id], $this->prints->locked);
-    }
-}
-
-final class CountingRenderer implements DocumentPdfRenderer
-{
-    public int $calls = 0;
-
-    public function render(PrintableDocument $document, string $copyLabel): string
-    {
-        ++$this->calls;
-
-        return 'pdf:'.$copyLabel;
-    }
-}
-
-final class CountingSealer implements ElectronicSealer
-{
-    public int $calls = 0;
-    public bool $failing = false;
-
-    public function seal(CompanyId $companyId, string $pdf): string
-    {
-        ++$this->calls;
-
-        if ($this->failing) {
-            throw new SealingFailed('provider down');
-        }
-
-        return 'sealed('.$pdf.')';
-    }
-}
-
-final class MemoryPrints implements DocumentPrintRepository
-{
-    public int $count = 0;
-    /** @var list<string> */
-    public array $locked = [];
-
-    public function add(DocumentPrint $print): void
-    {
-        ++$this->count;
-    }
-
-    public function lockDocument(CompanyId $companyId, string $documentId): void
-    {
-        $this->locked[] = $documentId;
-    }
-
-    public function countFor(CompanyId $companyId, string $documentId): int
-    {
-        return $this->count;
-    }
-}
-
-final class MemoryArchive implements FileArchive
-{
-    /** @var array<string, array{file: ArchivedFile, subject: string, contents: string}> */
-    public array $files = [];
-
-    public function storeFile(CompanyId $companyId, string $kind, string $subjectType, string $subjectId, string $sourcePath): ArchivedFile
-    {
-        return $this->storeContents($companyId, $kind, $subjectType, $subjectId, (string) file_get_contents($sourcePath));
-    }
-
-    public function storeContents(CompanyId $companyId, string $kind, string $subjectType, string $subjectId, string $contents): ArchivedFile
-    {
-        $id = 'file-'.(\count($this->files) + 1);
-        $file = new ArchivedFile($id, $kind, hash('sha256', $contents), \strlen($contents), new \DateTimeImmutable('2026-10-07T10:00:00+00:00'));
-        $this->files[$id] = ['file' => $file, 'subject' => $kind.'|'.$subjectType.'|'.$subjectId, 'contents' => $contents];
-
-        return $file;
-    }
-
-    public function findBySubject(CompanyId $companyId, string $kind, string $subjectType, string $subjectId): ?ArchivedFile
-    {
-        foreach ($this->files as $entry) {
-            if ($entry['subject'] === $kind.'|'.$subjectType.'|'.$subjectId) {
-                return $entry['file'];
-            }
-        }
-
-        return null;
-    }
-
-    public function contents(CompanyId $companyId, string $fileId): string
-    {
-        return $this->files[$fileId]['contents'];
-    }
-
-    public function copyTo(CompanyId $companyId, string $fileId, string $targetPath): void
-    {
-        file_put_contents($targetPath, $this->contents($companyId, $fileId));
     }
 }

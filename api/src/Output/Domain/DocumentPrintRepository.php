@@ -21,4 +21,9 @@ interface DocumentPrintRepository
     public function lockDocument(CompanyId $companyId, string $documentId): void;
 
     public function countFor(CompanyId $companyId, string $documentId): int;
+
+    /**
+     * The copy label on the earliest row of this kind for the document.
+     */
+    public function firstLabelOf(CompanyId $companyId, string $documentId, DocumentPrintKind $kind): ?string;
 }

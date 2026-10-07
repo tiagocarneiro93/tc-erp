@@ -38,6 +38,12 @@ framework:
             at.bus:
                 middleware:
                     - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
+            # Sealing and e-mailing of documents (task 3.7): same reasoning as
+            # at.bus — the handler seals in a short transaction of its own and
+            # mails outside any transaction.
+            output.bus:
+                middleware:
+                    - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
 
         # AT communication outbox (docs/plans/phase-3.md task 3.2).
         transports:
@@ -45,6 +51,7 @@ framework:
 
         routing:
             App\AtIntegration\Application\Command\CommunicateToAt: async
+            App\Output\Application\SendDocumentEmail: async
 
 when@test:
     framework:

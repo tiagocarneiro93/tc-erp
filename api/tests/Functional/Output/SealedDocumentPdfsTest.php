@@ -43,7 +43,12 @@ final class SealedDocumentPdfsTest extends WebTestCase
 
         $rows = $this->connection($companyId)->fetchAllAssociative("SELECT kind, subject_type, subject_id FROM stored_files WHERE company_id = ? AND kind = 'sealed_pdf'", [$companyId]);
         self::assertSame([['kind' => 'sealed_pdf', 'subject_type' => 'Document', 'subject_id' => $documentId]], $rows, 'Exactly one sealed file per document.');
-        self::assertSame([], $this->connection($companyId)->fetchAllAssociative('SELECT 1 FROM document_prints WHERE company_id = ?', [$companyId]), 'Sealing is not a hand-out: the print log is untouched.');
+        self::assertSame(
+            [['kind' => 'email', 'copy_label' => 'Original']],
+            $this->connection($companyId)->fetchAllAssociative('SELECT kind, copy_label FROM document_prints WHERE company_id = ?', [$companyId]),
+            'Sealing logs the one electronic hand-out; fetching the stored file again logs nothing.',
+        );
+        self::assertSame($first->copyLabel, $second->copyLabel);
     }
 
     public function testADraftCannotBeSealed(): void
@@ -70,7 +75,7 @@ final class SealedDocumentPdfsTest extends WebTestCase
         $context->set($company);
 
         try {
-            return $transactions->transactional(static fn () => $sealed->obtain($company, $documentId));
+            return $transactions->transactional(static fn () => $sealed->obtain($company, $documentId, 'user-1'));
         } finally {
             $context->clear();
         }

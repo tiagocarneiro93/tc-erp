@@ -3389,6 +3389,56 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/documents/{documentId}/send": {
+            "post": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "post_documents_send",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Queued: the sealed PDF is made (once) and mailed in the background."
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "No such issued document (a draft is not a document)."
+                    },
+                    "422": {
+                        "description": "No recipient given and the customer has no e-mail address, or an address is invalid."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/customers": {
             "get": {
                 "tags": [
@@ -5231,6 +5281,25 @@
                     "is_default": {
                         "type": "boolean",
                         "default": false
+                    }
+                },
+                "type": "object"
+            },
+            "EmailDocumentRequest": {
+                "properties": {
+                    "recipients": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "maxItems": 10
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null,
+                        "maxLength": 2000
                     }
                 },
                 "type": "object"

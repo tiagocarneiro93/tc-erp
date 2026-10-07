@@ -561,9 +561,11 @@ else: sealing fails loudly rather than letting an unsealed PDF go out as if seal
 `SealedDocumentPdfs::obtain()` is the only way to a sealed PDF: lock the document
 (advisory lock shared with the print log) → return the archived `sealed_pdf` if there is
 one (verified against its SHA-256, never re-rendered or re-sealed) → otherwise render with
-the label the print log yields, seal, archive. A failed seal stores nothing. Sealing is
-not a hand-out, so it does not write `document_prints`; plain downloads/prints never
-come through here (the "send electronically" path only — task 3.7).
+the label the print log yields, seal, archive. A failed seal stores nothing. Sealing *is*
+the document's electronic hand-out, so in the same transaction it logs one
+`document_prints` row (kind `email`) — which is also how the label of the stored file is
+found again (the earliest `email` row). Plain downloads/prints never come through here
+(the "send electronically" path only — task 3.7).
 Proven: unit tests (sealer called once across repeated calls, same bytes, failure stores
 nothing, drafts refused) and a functional test on a real issued document with PostgreSQL
 and MinIO (one `stored_files` row per document, identical bytes).
@@ -584,6 +586,35 @@ already receives the `CompanyId`). Swapping it in is the one alias in `config/se
 and, if sent electronically, results in exactly one stored sealed PDF
 referenced by the email, not re-rendered/re-sealed per retry; a transient
 mail-server failure retries without re-sealing.
+
+**Status: built and covered** — `POST /companies/{c}/documents/{id}/send` (the route
+`technical-scope.md` §9 names; `documents.issue`, `Idempotency-Key` required, body
+`recipients[]` (default: the customer's address) + optional `message`; 202 = queued).
+Two halves: `EmailDocumentHandler` (`command.bus`: permission, the document is issued —
+a draft is a 404 —, somebody to send to, audit `document.email_requested`, dispatch after
+commit) and `SendDocumentEmailHandler` on a new `output.bus` (no surrounding transaction,
+like `at.bus`): step 1 obtains the sealed PDF in a transaction of its own, so the seal,
+its stored file and its print record are committed *before* anything is mailed; step 2
+mails it (`SymfonyDocumentMailer`: platform From address — a company's domain would fail
+SPF/DKIM —, the company in Reply-To, PDF attached; subject/body in pt-PT) and audits
+`document.email_sent` with the stored file's SHA-256. A mail-system refusal
+(`DocumentMailFailed`) propagates and Messenger retries the whole message — step 1 then
+just finds the stored file: **never re-sealed on retry**. An undeliverable address or a
+vanished document is `Unrecoverable` (no pointless retries).
+Decisions: (a) `document_prints` gets one `email` row per *sealed file* (written when it
+is sealed), not per send: re-sending the identical file is not a new rendering, and each
+send is in the audit log with recipients and hash; if every send of a sealed file fails
+for good, the document still counts as handed out — the safe direction, since it can only
+make a later PDF a "copy", never a second "Original". (b) Delivery is at-least-once: a
+crash between a successful send and its audit record mails the same sealed file again.
+(c) Deptrac: `Output.UIHttp` may use `Shared.Infrastructure` for `IdempotencyKeyGuard`
+only — the same narrow exception `Fiscal.UIHttp` and `AtIntegration.UIHttp` already have.
+Proven: unit (handlers, mailer adapter, retry-without-resealing, unrecoverable cases) and
+functional through HTTP + queue + real PostgreSQL/MinIO (attachment is the archived file,
+second send reuses it, idempotent replay queues nothing, drafts/invalid/missing key refused).
+**Not covered:** the web UI for this (task 3.8); a failure transport/dead-letter view
+(a message that exhausts its retries is only logged by Messenger today); per-company
+sender names.
 
 ### 3.8 Web: AT status and series screens
 

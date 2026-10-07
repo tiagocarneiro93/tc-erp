@@ -263,6 +263,14 @@ services:
         alias: App\Output\Infrastructure\Sealing\UnconfiguredElectronicSealer
     App\Output\Application\SealedDocumentPdfs:
         public: true
+    # Task 3.7: e-mailing documents.
+    App\Output\Domain\DocumentMailer:
+        alias: App\Output\Infrastructure\Mail\SymfonyDocumentMailer
+    App\Output\Infrastructure\Mail\SymfonyDocumentMailer:
+        arguments:
+            $fromAddress: '%app.mailer_from_address%'
+    App\Output\Domain\DocumentEmailDispatcher:
+        alias: App\Output\Infrastructure\Messaging\MessengerDocumentEmailDispatcher
     App\Output\Domain\DocumentPrintRepository:
         alias: App\Output\Infrastructure\Persistence\DbalDocumentPrintRepository
     App\Shared\Domain\Fiscal\PrintableDocumentReader:
