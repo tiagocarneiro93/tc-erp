@@ -64,6 +64,27 @@ final class AtCommunicationFlowTest extends WebTestCase
         self::assertStringContainsString('<doc:GrossTotal>12.30</doc:GrossTotal>', $calls[0]['body']);
     }
 
+    public function testTheCashVatIndicatorFollowsTheCompanysCurrentRegime(): void
+    {
+        $client = static::createClient();
+        $this->registerAndLogIn($client);
+        $companyId = $this->createCompany($client);
+
+        $client->request('GET', "/api/v1/companies/{$companyId}/profile", server: self::HEADERS);
+        /** @var array<string, mixed> $profile */
+        $profile = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        $profile['cash_vat'] = true;
+        $client->request('PUT', "/api/v1/companies/{$companyId}/profile", server: self::HEADERS, content: json_encode($profile, \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        $this->issueOfType($client, $companyId, 'FT');
+        $this->consumeAsyncMessages();
+
+        $calls = FakeAtDocumentWebserviceClient::calls();
+        self::assertCount(1, $calls);
+        self::assertStringContainsString('<doc:CashVATSchemeIndicator>1</doc:CashVATSchemeIndicator>', $calls[0]['body']);
+    }
+
     public function testAWorkingDocumentIsRegisteredAsWork(): void
     {
         $client = static::createClient();

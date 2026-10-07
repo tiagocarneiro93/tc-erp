@@ -688,6 +688,17 @@ export type GetReceiptsGet200 = {
   allocations?: GetReceiptsGet200AllocationsItem[];
 };
 
+export type GetSaftExportParams = {
+/**
+ * First day of the period (inclusive).
+ */
+from: string;
+/**
+ * Last day of the period (inclusive); same calendar year as `from`.
+ */
+to: string;
+};
+
 export type GetSeriesList200ItemsItemStatus = typeof GetSeriesList200ItemsItemStatus[keyof typeof GetSeriesList200ItemsItemStatus];
 
 
@@ -4774,6 +4785,116 @@ export function useGetReceiptsGet<TData = Awaited<ReturnType<typeof getReceiptsG
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetReceiptsGetQueryOptions(companyId,receiptId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSaftExportUrl = (companyId: string,
+    params: GetSaftExportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/companies/${companyId}/saft?${stringifiedParams}` : `/api/v1/companies/${companyId}/saft`
+}
+
+export const getSaftExport = async (companyId: string,
+    params: GetSaftExportParams, options?: RequestInit): Promise<Blob> => {
+
+  return httpClient<Blob>(getGetSaftExportUrl(companyId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSaftExportQueryKey = (companyId: string,
+    params?: GetSaftExportParams,) => {
+    return [
+    `/api/v1/companies/${companyId}/saft`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSaftExportQueryOptions = <TData = Awaited<ReturnType<typeof getSaftExport>>, TError = void>(companyId: string,
+    params: GetSaftExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSaftExport>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSaftExportQueryKey(companyId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSaftExport>>> = ({ signal }) => getSaftExport(companyId,params, { signal });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSaftExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSaftExportQueryResult = NonNullable<Awaited<ReturnType<typeof getSaftExport>>>
+export type GetSaftExportQueryError = void
+
+
+export function useGetSaftExport<TData = Awaited<ReturnType<typeof getSaftExport>>, TError = void>(
+ companyId: string,
+    params: GetSaftExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSaftExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSaftExport>>,
+          TError,
+          Awaited<ReturnType<typeof getSaftExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSaftExport<TData = Awaited<ReturnType<typeof getSaftExport>>, TError = void>(
+ companyId: string,
+    params: GetSaftExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSaftExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSaftExport>>,
+          TError,
+          Awaited<ReturnType<typeof getSaftExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSaftExport<TData = Awaited<ReturnType<typeof getSaftExport>>, TError = void>(
+ companyId: string,
+    params: GetSaftExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSaftExport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSaftExport<TData = Awaited<ReturnType<typeof getSaftExport>>, TError = void>(
+ companyId: string,
+    params: GetSaftExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSaftExport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSaftExportQueryOptions(companyId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

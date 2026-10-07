@@ -158,6 +158,9 @@ services:
     App\Company\Infrastructure\Security\SodiumAtCredentialsEncryptor:
         arguments:
             $base64Key: '%env(AT_CREDENTIALS_ENCRYPTION_KEY)%'
+    App\Shared\Domain\Company\CompanyFiscalIdentityProvider:
+        alias: App\Company\Infrastructure\Persistence\Doctrine\Repository\CompanyProfileFiscalIdentityProvider
+        public: true
     App\Shared\Domain\Company\AtCredentialsProvider:
         alias: App\Company\Infrastructure\Security\CompanyAtCredentialsProvider
         public: true
@@ -194,6 +197,24 @@ services:
     App\AtIntegration\Domain\Efatura\EFaturaRequestBuilder:
         arguments:
             $softwareCertificateNumber: '%env(int:DOCUMENT_SIGNING_CERTIFICATE_NUMBER)%'
+    # docs/plans/phase-3.md task 3.3: SAF-T (PT) export. ProductCompanyTaxID is the
+    # software producer's own NIF (TCWeb) — a placeholder in api/.env until the owner sets it.
+    App\Fiscal\Domain\Saft\SaftDataSource:
+        alias: App\Fiscal\Infrastructure\Persistence\Doctrine\DoctrineSaftDataSource
+    App\Fiscal\Domain\Saft\SaftFileGenerator:
+        alias: App\Fiscal\Infrastructure\Saft\SaftXmlWriter
+    App\Fiscal\Infrastructure\Saft\SaftXmlWriter:
+        arguments:
+            $producerTaxId: '%env(SAFT_PRODUCT_COMPANY_TAX_ID)%'
+            $productId: '%env(SAFT_PRODUCT_ID)%'
+            $productVersion: '%env(SAFT_PRODUCT_VERSION)%'
+            $softwareCertificateNumber: '%env(int:DOCUMENT_SIGNING_CERTIFICATE_NUMBER)%'
+            $hashControl: '%env(DOCUMENT_SIGNING_KEY_VERSION)%'
+    App\Fiscal\Domain\Saft\SaftSchemaValidator:
+        alias: App\Fiscal\Infrastructure\Saft\XmlReaderSaftSchemaValidator
+    App\Fiscal\Infrastructure\Saft\XmlReaderSaftSchemaValidator:
+        arguments:
+            $schemaPath: '%kernel.project_dir%/resources/saft/SAFTPT1.04_01.xsd'
     App\Parties\Domain\CustomerRepository:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true
@@ -213,6 +234,9 @@ services:
         alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineTaxRateRepository
         public: true
     App\Shared\Domain\Tax\ExemptionReasonExistenceChecker:
+        alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineExemptionReasonRepository
+        public: true
+    App\Shared\Domain\Tax\ExemptionReasonTextProvider:
         alias: App\Tax\Infrastructure\Persistence\Doctrine\Repository\DoctrineExemptionReasonRepository
         public: true
     App\Catalog\Domain\ProductFamilyRepository:

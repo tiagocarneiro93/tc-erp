@@ -2625,6 +2625,63 @@
                 }
             }
         },
+        "/api/v1/companies/{companyId}/saft": {
+            "get": {
+                "tags": [
+                    "SAF-T"
+                ],
+                "operationId": "get_saft_export",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "First day of the period (inclusive).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Last day of the period (inclusive); same calendar year as `from`.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The SAF-T (PT) 1.04_01 billing file for the period.",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller lacks the reports.read permission."
+                    },
+                    "422": {
+                        "description": "The period is malformed, ends before it starts or crosses New Year, or the company profile is incomplete."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/series": {
             "get": {
                 "tags": [
@@ -5362,6 +5419,9 @@
         },
         {
             "name": "Receipts"
+        },
+        {
+            "name": "SAF-T"
         },
         {
             "name": "Series"

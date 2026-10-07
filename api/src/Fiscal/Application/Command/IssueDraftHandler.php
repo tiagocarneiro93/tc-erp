@@ -43,6 +43,7 @@ use App\Shared\Domain\Fiscal\CustomerSnapshotProvider;
 use App\Shared\Domain\Fiscal\IssuerSnapshotProvider;
 use App\Shared\Domain\Fiscal\ProductSnapshotProvider;
 use App\Shared\Domain\Security\PermissionChecker;
+use App\Shared\Domain\Tax\ExemptionReasonTextProvider;
 use App\Shared\Domain\Tax\PriceCalculationService;
 use App\Shared\Domain\TransactionManager;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -81,6 +82,7 @@ final class IssueDraftHandler
         private readonly CustomerSnapshotProvider $customerSnapshots,
         private readonly IssuerSnapshotProvider $issuerSnapshots,
         private readonly ProductSnapshotProvider $productSnapshots,
+        private readonly ExemptionReasonTextProvider $exemptionReasons,
         private readonly TransactionManager $transactions,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
@@ -342,7 +344,7 @@ final class IssueDraftHandler
                 'tax_percentage' => $calculated['tax_percentage'],
                 'tax_amount' => $calculated['tax_amount'],
                 'exemption_reason_code' => $calculated['exemption_reason_code'],
-                'exemption_reason_text' => null,
+                'exemption_reason_text' => \is_string($calculated['exemption_reason_code']) ? $this->exemptionReasons->wordingFor($calculated['exemption_reason_code']) : null,
                 'tax_point_date' => null,
                 'origin_references' => $this->buildOriginReferences($rawLine, $quantity),
             ];

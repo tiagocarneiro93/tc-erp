@@ -111,7 +111,7 @@ trait FiscalFlowHelpers
 
     /**
      * @param list<array<string, mixed>> $lines
-     * @param array<string, mixed>       $extraPayload merged into the draft payload (e.g. `references` for a credit note)
+     * @param array<string, mixed>       $extraPayload merged into the draft payload (e.g. `references` for a credit note, `customer_id`)
      */
     private function issueDocument(KernelBrowser $client, string $companyId, string $seriesId, string $documentType, array $lines = [], string $idempotencyKey = '', array $extraPayload = []): string
     {
@@ -143,6 +143,32 @@ trait FiscalFlowHelpers
     private function widgetLine(string $quantity = '1', string $unitPrice = '10.00'): array
     {
         return ['product_code' => 'SKU-1', 'description' => 'Widget', 'product_type' => 'P', 'unit_code' => 'UN', 'quantity' => $quantity, 'unit_price' => $unitPrice, 'tax_region' => 'PT', 'tax_code' => 'NOR'];
+    }
+
+    /**
+     * @return string the new customer's id
+     */
+    private function createCustomer(KernelBrowser $client, string $companyId, string $name, string $nif, string $code = 'C001'): string
+    {
+        $client->request('GET', "/api/v1/companies/{$companyId}/payment-terms", server: self::HEADERS);
+        /** @var array{items: list<array{id: string}>} $terms */
+        $terms = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        $client->request('POST', "/api/v1/companies/{$companyId}/customers", server: self::HEADERS, content: json_encode([
+            'code' => $code,
+            'nif' => $nif,
+            'name' => $name,
+            'address' => 'Rua das Flores 12',
+            'postal_code' => '4000-100',
+            'city' => 'Porto',
+            'country' => 'PT',
+            'payment_terms_id' => $terms['items'][0]['id'],
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        /** @var array{id: string} $created */
+        $created = json_decode((string) $client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        return $created['id'];
     }
 
     private function createActiveSeries(KernelBrowser $client, string $companyId, string $documentType, string $code, bool $training = false): string

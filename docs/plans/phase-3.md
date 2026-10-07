@@ -213,6 +213,28 @@ Still open, not blocking the plan but blocking part of the work:
     `accepted`. Training-series documents (`tipoSerie F`) are never enqueued —
     the manuals are silent; conservative default, owner may override.
 
+17. **SAF-T validation approach** (task 3.3). AT's `SAFTPT1.04_01.xsd` is an
+    **XSD 1.1** schema (`vc:minVersion="1.1"`, `xs:assert` business rules); PHP
+    validates through libxml2, which only speaks XSD 1.0 and refuses to compile
+    it. The official file is kept byte-identical (`api/resources/saft/`, a test
+    enforces it); `Xsd10Projection` derives a 1.0 projection at runtime (drops
+    the `xs:assert`s, turns the one `xs:all` with unbounded children — the
+    unused ledger lines — into a `choice`), and `SaftAssertionChecker` re-
+    implements the assertions that apply to the billing sections (zero-tax ⇔
+    exemption reason, reason and code together, `TaxBase` exclusivity, `RC`
+    payments need `Tax`), each with a passing and a failing test. Proven on
+    AT's own `saft-pt-sample-instance.xml` (0 errors) and on mutated copies of
+    it (duplicate `CustomerID`, stripped exemption reason → reported).
+18. **SAF-T field mapping** follows AT's own sample where the XSD is silent:
+    line `CreditAmount`/`DebitAmount` = the line's taxable value after all
+    discounts (`net_amount`; `DebitAmount` for `NC`), `UnitPrice` = the price
+    after discounts, line `SettlementAmount` = total discount on the line;
+    section `TotalDebit`/`TotalCredit` leave out cancelled (`A`) documents but
+    `NumberOfEntries` counts them (verified by recomputing the sample's own
+    headers). Master data lists only what the period references (scope §7.7,
+    still `[VERIFY]` — no prose spec in `docs/legal/`), customers taken from
+    the documents' frozen `customer_snapshot`, never from Parties.
+
 ---
 
 ### 3.1 AT webservice client foundation + series communication
@@ -356,6 +378,29 @@ documents (task 2.6–2.9's own test fixtures), not synthetic XML; a
 deliberately invalid document state (if one can even be constructed — task
 2.3's immutability should make this hard) fails validation loudly rather
 than producing a file AT would reject.
+
+**Status: built and covered by the everyday suite** — `GET /companies/{c}/saft?from=&to=`
+(permission `reports.read`), streaming `XMLWriter` generator, validated against
+the official schema before the file is offered (a file that does not validate
+is a 500 and is deleted, never a download). Full-period billing export
+(`TaxAccountingBasis` = `F`) only; **the monthly-communication export is not
+built**: nothing in `docs/legal/` says how it differs (the prose SAF-T spec is
+still unobtained) — 🧑 owner to supply it or confirm the full export is what the
+monthly submission uses. Found and fixed on the way: `document_lines.
+exemption_reason_text` was never populated at issuance (always `NULL`); issuance
+now freezes AT's "Menção que consta da fatura" wording into it (the column is
+in scope §6.6) — the schema requires it and printed documents will too.
+**Open for the owner / follow-ups:** (1) `ProductCompanyTaxID` is a placeholder
+(`999999990`) until TCWeb's real NIF is set in `SAFT_PRODUCT_COMPANY_TAX_ID`;
+(2) `HashControl` is the *current* configured signing-key version because
+documents do not record the version that signed them (scope §6.6 says
+`hash_control` is the key version; the implementation stores the printed
+mention there) — fine until the first key rotation, needs a new column before
+it; (3) the cash-VAT flag is taken from the company's *current* regime until the
+issuer snapshot carries it (see 3.2); (4) not covered: `MovementOfGoods`
+(Phase 4), supplier master data, withholding tax, foreign currency;
+(5) the file is returned as a download — persisting it as a `stored_files` row
+is task 3.4's wiring.
 
 ### 3.4 Object storage (`stored_files`)
 

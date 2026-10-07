@@ -9,6 +9,7 @@ use App\Shared\Domain\AtIntegration\AtCommunicableDocument;
 use App\Shared\Domain\AtIntegration\AtCommunicableDocumentReader;
 use App\Shared\Domain\AtIntegration\AtCommunicableLine;
 use App\Shared\Domain\AtIntegration\AtCommunicableTaxBucket;
+use App\Shared\Domain\Company\CompanyFiscalIdentityProvider;
 use App\Shared\Domain\CompanyId;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -26,6 +27,7 @@ final class DoctrineAtCommunicableDocumentReader implements AtCommunicableDocume
     public function __construct(
         #[Autowire(service: 'doctrine.dbal.default_connection')]
         private readonly Connection $connection,
+        private readonly CompanyFiscalIdentityProvider $companies,
     ) {
     }
 
@@ -113,7 +115,10 @@ final class DoctrineAtCommunicableDocumentReader implements AtCommunicableDocume
             status: $this->string($row['status']),
             statusAt: new \DateTimeImmutable($this->string($row['status_at'])),
             hashCharacters: PrintedHashMention::fourCharacters($this->string($row['hash'])),
-            cashVatScheme: true === ($issuer['cash_vat'] ?? false),
+            // Frozen at issuance when the issuer snapshot carries it; otherwise (documents issued before
+            // it did — in fact all of them today, docs/plans/phase-3.md task 3.2's open item) the company's
+            // *current* regime, which is right unless the regime changed since the document was issued.
+            cashVatScheme: \is_bool($issuer['cash_vat'] ?? null) ? $issuer['cash_vat'] : ($this->companies->forCompany($companyId)->cashVat ?? false),
             netTotal: $this->string($row['net_total']),
             taxTotal: $this->string($row['tax_total']),
             grossTotal: $this->string($row['gross_total']),
