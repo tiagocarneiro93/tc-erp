@@ -161,6 +161,22 @@ deptrac:
           collectors:
               - type: classNameRegex
                 value: '#^App\\AtIntegration\\UI\\Http\\.*#'
+        - name: Output.Domain
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Output\\Domain\\.*#'
+        - name: Output.Application
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Output\\Application\\.*#'
+        - name: Output.Infrastructure
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Output\\Infrastructure\\.*#'
+        - name: Output.UIHttp
+          collectors:
+              - type: classNameRegex
+                value: '#^App\\Output\\UI\\Http\\.*#'
     ruleset:
         # Domain: nothing but itself and Shared.Domain (CLAUDE.md: "Domain
         # depends on nothing outside Domain and Shared/Domain").
@@ -335,6 +351,25 @@ deptrac:
             - AtIntegration.Domain
             - Shared.Domain
             - Shared.Infrastructure
+
+        Output.Domain:
+            - Output.Domain
+            - Shared.Domain
+        Output.Application:
+            - Output.Application
+            - Output.Domain
+            - Shared.Domain
+        Output.Infrastructure:
+            - Output.Infrastructure
+            - Output.Application
+            - Output.Domain
+            - Shared.Domain
+            - Shared.Infrastructure
+        Output.UIHttp:
+            - Output.UIHttp
+            - Output.Application
+            - Output.Domain
+            - Shared.Domain
 
         Shared.Domain:
             - Shared.Domain

@@ -215,6 +215,26 @@ services:
     App\Fiscal\Infrastructure\Saft\XmlReaderSaftSchemaValidator:
         arguments:
             $schemaPath: '%kernel.project_dir%/resources/saft/SAFTPT1.04_01.xsd'
+    # docs/plans/phase-3.md task 3.4: object storage (MinIO in dev/test, any S3 API in production).
+    AsyncAws\S3\S3Client:
+        arguments:
+            $configuration:
+                endpoint: '%env(S3_ENDPOINT)%'
+                accessKeyId: '%env(S3_ACCESS_KEY)%'
+                accessKeySecret: '%env(S3_SECRET_KEY)%'
+                region: '%env(S3_REGION)%'
+                pathStyleEndpoint: true
+    App\Output\Domain\ObjectStorage:
+        alias: App\Output\Infrastructure\Storage\S3ObjectStorage
+    App\Output\Infrastructure\Storage\S3ObjectStorage:
+        arguments:
+            $bucket: '%env(S3_BUCKET)%'
+            $autoCreateBucket: '%env(bool:S3_AUTO_CREATE_BUCKET)%'
+    App\Output\Domain\StoredFileRepository:
+        alias: App\Output\Infrastructure\Persistence\DbalStoredFileRepository
+    App\Shared\Domain\Output\FileArchive:
+        alias: App\Output\Application\StoredFiles
+        public: true
     App\Parties\Domain\CustomerRepository:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true

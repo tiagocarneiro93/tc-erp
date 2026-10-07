@@ -46,6 +46,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Object storage for the stored_files tests (docs/plans/phase-3.md task 3.4). A plain
+      # `docker run` rather than a service container: MinIO needs a `server /data` command,
+      # which service containers cannot pass.
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            quay.io/minio/minio:latest server /data
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:9000/minio/health/live && exit 0
+            sleep 1
+          done
+          echo "MinIO did not become healthy" >&2
+          docker logs minio
+          exit 1
+        working-directory: .
+
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'

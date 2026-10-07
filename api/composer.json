@@ -13,6 +13,7 @@
         "ext-redis": "*",
         "ext-sodium": "*",
         "ext-zip": "*",
+        "async-aws/s3": "^3.5",
         "brick/math": "^0.20.0",
         "brick/money": "^0.15.0",
         "doctrine/doctrine-bundle": "^3.3.2",

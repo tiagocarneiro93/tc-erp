@@ -420,6 +420,28 @@ read; a SHA-256 mismatch on read is a hard failure, not silently ignored;
 company isolation test (a `stored_files` row belongs to exactly one company,
 RLS-enforced like every other company-scoped table).
 
+**Status: built and covered by the suite against real PostgreSQL and a real
+MinIO** — `Output` module (own four Deptrac layers), `stored_files` migration
+(`Version20261007100000`: insert-only, RLS, `kind`/`sha256`/`size` CHECK
+constraints in the database itself), `FileArchive` cross-module port in front
+of `StoredFiles` (object uploaded **before** its row is written, SHA-256 from
+the bytes handed in, recomputed on every read — a mismatch is a hard
+`StoredFileIntegrityViolation`, and a failed `copyTo` deletes the partial
+file), `S3ObjectStorage` on `async-aws/s3` (new dependency, 4 packages).
+Keys are `<company>/<kind>/<year>/<id>`; reaching a file at all requires seeing
+its RLS-protected row. The SAF-T export (3.3) is now archived: every export is
+kept, `X-Stored-File-Id` returned. **Not here, by design:** bucket policy —
+versioning, object lock/WORM for the 10-year retention (DL 28/2019 Art. 27.º
+§2), lifecycle rules, separate backup location — is infrastructure, to be set
+where the production bucket is created (scope §14.3 item 23). `attachment` has
+no caller yet.
+**Environment finding:** `docker-compose.yml`'s `minio/minio:latest` is no
+longer pullable from Docker Hub ("pull access denied"); switched to MinIO's
+official `quay.io/minio/minio:latest` (not verifiable from this sandbox, which
+blocks quay.io — the integration tests ran against `bitnamilegacy/minio`, also
+a real MinIO). CI (`backend.yml`) now starts MinIO for the tests; also not
+verifiable from here.
+
 ### 3.5 `DocumentPdfRenderer` + templates
 
 - Spike (decision 7): render one invoice through both mPDF and Twig →

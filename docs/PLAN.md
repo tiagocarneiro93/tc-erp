@@ -497,7 +497,14 @@ Detailed breakdown and acceptance criteria: `docs/plans/phase-3.md`.
 - [x] Tests: format/period/projection/assertion/validator/handler unit tests (31 + 5 + …), and a functional test that issues a representative mix through the real use cases (named + anonymous customer, 23% and exempt lines, a cancelled FT, an NC, an OR, a receipt) and validates the downloaded bytes independently with `DOMDocument`. Full suite (575), PHPStan, Deptrac, CS-Fixer green.
 - 🧑 **Owner:** `SAFT_PRODUCT_COMPANY_TAX_ID` is a placeholder (999999990) — set TCWeb's real NIF; the **monthly-communication export** is not built (no source in `docs/legal/` says how it differs — supply the SAF-T technical notes or confirm); `HashControl` uses the current key version (documents don't record theirs — needs a column before the first key rotation); the cash-VAT flag should be frozen into the issuer snapshot (needs a look at Company's snapshot provider).
 
-**Not yet started:** 3.4–3.8 (object storage, PDF renderer, `ElectronicSealer`, email, remaining web AT-status screens).
+### 3.4 Object storage (`stored_files`)
+- [x] New `Output` module (own four Deptrac layers). `stored_files` (`Version20261007100000`): insert-only, RLS, `kind IN (sealed_pdf, saft, attachment)`, `sha256` format and `size` CHECK constraints enforced by the database. No `content_type` column — §6.12's column list is kept as is; content type follows from `kind`.
+- [x] `FileArchive` port (Shared) → `StoredFiles` (Output): `storeFile`/`storeContents`/`findBySubject`/`contents`/`copyTo`. Object first, row second; SHA-256 computed on write and re-checked on every read (hard `StoredFileIntegrityViolation`; `copyTo` deletes a partial file on mismatch). `S3ObjectStorage` over `async-aws/s3` (new dependency) against MinIO/any S3 API; keys `<company>/<kind>/<year>/<id>`.
+- [x] SAF-T exports (3.3) are archived (`X-Stored-File-Id`); a file that fails validation is never archived.
+- [x] Tests: 10 unit (in-memory fakes: round trip, ordering, tamper detection, cross-company, kinds, first-of-subject) and 7 integration against real PostgreSQL + real MinIO (binary round trip, 6 MB streaming, forged replacement refused, missing object, cross-company isolation, UPDATE/DELETE refused, kind CHECK). Full suite 592, PHPStan, Deptrac, CS-Fixer green.
+- 🧑 **Owner/infra:** production bucket with versioning + object lock (WORM, 10 years, DL 28/2019 Art. 27.º §2) and a physically/logically separate backup location is yours to create (§14.3 item 23); `docker-compose.yml` now pulls `quay.io/minio/minio` (Docker Hub's `minio/minio` is gone) and CI starts MinIO — neither verifiable from this sandbox.
+
+**Not yet started:** 3.5–3.8 (PDF renderer, `ElectronicSealer`, email, remaining web AT-status screens).
 
 Exit: documents communicated to the AT test environment; SAF-T validates against XSD; sealed PDFs produced in sandbox.
 

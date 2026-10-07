@@ -46,6 +46,7 @@ final class SaftExportController
         $response = new BinaryFileResponse($export->path, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
         $response->setContentDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $export->filename);
         $response->headers->set('X-Content-SHA256', $export->sha256);
+        $response->headers->set('X-Stored-File-Id', $export->storedFileId);
         $response->deleteFileAfterSend(true);
 
         return $response;

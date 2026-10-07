@@ -19,6 +19,8 @@ use App\Shared\Domain\Company\CompanyFiscalIdentity;
 use App\Shared\Domain\Company\CompanyFiscalIdentityProvider;
 use App\Shared\Domain\CompanyId;
 use App\Shared\Domain\Exception\PermissionDenied;
+use App\Shared\Domain\Output\ArchivedFile;
+use App\Shared\Domain\Output\FileArchive;
 use App\Shared\Domain\Security\PermissionChecker;
 use PHPUnit\Framework\TestCase;
 
@@ -47,13 +49,14 @@ final class ExportSaftHandlerTest extends TestCase
         self::assertSame('SAFT_508025090_20260101_20260331.xml', $result->filename);
         self::assertSame(hash_file('sha256', $result->path), $result->sha256);
         self::assertSame(\strlen('<AuditFile/>'), $result->sizeBytes);
+        self::assertSame('0192e0f0-0000-7000-8000-0000000000aa', $result->storedFileId);
         self::assertSame(2, $result->summary->invoices);
         @unlink($result->path);
     }
 
-    public function testAFileThatDoesNotValidateIsNeverOfferedAndIsDeleted(): void
+    public function testAFileThatDoesNotValidateIsNeverOfferedArchivedOrKept(): void
     {
-        $handler = $this->handler(errors: ['line 2: Element \'Header\': missing']);
+        $handler = $this->handler(errors: ['line 2: Element \'Header\': missing'], archiveMustNotBeUsed: true);
 
         try {
             $handler(new ExportSaft('2026-01-01', '2026-03-31'));
@@ -98,7 +101,7 @@ final class ExportSaftHandlerTest extends TestCase
     /**
      * @param list<string> $errors
      */
-    private function handler(array $errors, bool $granted = true, ?CompanyFiscalIdentity $identity = new CompanyFiscalIdentity('508025090', 'Empresa Lda', null, null, null, null, 'PT', null, null, false)): ExportSaftHandler
+    private function handler(array $errors, bool $granted = true, ?CompanyFiscalIdentity $identity = new CompanyFiscalIdentity('508025090', 'Empresa Lda', null, null, null, null, 'PT', null, null, false), bool $archiveMustNotBeUsed = false): ExportSaftHandler
     {
         $generator = new class($this) implements SaftFileGenerator {
             public function __construct(private readonly ExportSaftHandlerTest $test)
@@ -142,6 +145,14 @@ final class ExportSaftHandlerTest extends TestCase
             }
         };
 
-        return new ExportSaftHandler($generator, $validator, $companies, $permissions, $context, $clock);
+        if ($archiveMustNotBeUsed) {
+            $archive = $this->createMock(FileArchive::class);
+            $archive->expects(self::never())->method('storeFile');
+        } else {
+            $archive = $this->createStub(FileArchive::class);
+            $archive->method('storeFile')->willReturn(new ArchivedFile('0192e0f0-0000-7000-8000-0000000000aa', 'saft', str_repeat('a', 64), 12, new \DateTimeImmutable('2026-04-01T09:00:00+00:00')));
+        }
+
+        return new ExportSaftHandler($generator, $validator, $companies, $archive, $permissions, $context, $clock);
     }
 }

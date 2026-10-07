@@ -14,13 +14,15 @@ use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
 use App\Shared\Domain\Company\CompanyFiscalIdentityProvider;
 use App\Shared\Domain\Exception\PermissionDenied;
+use App\Shared\Domain\Output\FileArchive;
 use App\Shared\Domain\Security\PermissionChecker;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 /**
  * technical-scope.md §7.7: generate, then validate against the official XSD
  * *before* offering the file (a file AT would reject is never handed out),
- * then hand it over. Runs on `query.bus`, whose `doctrine_transaction`
+ * archive it (every export is kept, with its SHA-256, in object storage —
+ * docs/plans/phase-3.md task 3.4), then hand it over. Runs on `query.bus`, whose `doctrine_transaction`
  * middleware gives the whole generation one consistent read transaction with
  * the company's RLS scope.
  */
@@ -31,6 +33,7 @@ final class ExportSaftHandler
         private readonly SaftFileGenerator $generator,
         private readonly SaftSchemaValidator $validator,
         private readonly CompanyFiscalIdentityProvider $companies,
+        private readonly FileArchive $archive,
         private readonly PermissionChecker $permissionChecker,
         private readonly CompanyContext $companyContext,
         private readonly Clock $clock,
@@ -69,11 +72,15 @@ final class ExportSaftHandler
                 throw new \RuntimeException('Could not hash the generated SAF-T file.');
             }
 
+            // Subject: the period, so every export of the same period is findable together.
+            $archived = $this->archive->storeFile($companyId, 'saft', 'SaftExport', $period->start->format('Y-m-d').'_'.$period->end->format('Y-m-d'), $path);
+
             return new SaftExport(
                 $path,
                 \sprintf('SAFT_%s_%s_%s.xml', $company->nif, $period->start->format('Ymd'), $period->end->format('Ymd')),
                 (int) filesize($path),
                 $sha256,
+                $archived->id,
                 $summary,
             );
         } catch (\Throwable $e) {

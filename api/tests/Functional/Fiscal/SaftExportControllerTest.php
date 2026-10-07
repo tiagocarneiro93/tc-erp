@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Fiscal;
 
 use App\Fiscal\Infrastructure\Saft\Xsd10Projection;
+use App\Output\Domain\ObjectStorage;
 use App\Tests\Support\Dom;
 use App\Tests\Support\FiscalFlowHelpers;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -76,6 +77,24 @@ final class SaftExportControllerTest extends WebTestCase
         self::assertSame(hash('sha256', $xml), $response->headers->get('X-Content-SHA256'));
 
         $this->assertValidAgainstOfficialSchema($xml);
+
+        // The export is archived in object storage, byte-for-byte what was served.
+        $storedFileId = $response->headers->get('X-Stored-File-Id');
+        self::assertNotNull($storedFileId);
+        $stored = $this->connection($companyId)->fetchAssociative('SELECT kind, sha256, size, storage_key FROM stored_files WHERE company_id = ? AND id = ?', [$companyId, $storedFileId]);
+        self::assertIsArray($stored);
+        self::assertSame('saft', $stored['kind']);
+        self::assertSame(hash('sha256', $xml), $stored['sha256']);
+        $size = $stored['size'];
+        $storageKey = $stored['storage_key'];
+        \assert(\is_int($size) || \is_string($size));
+        \assert(\is_string($storageKey));
+        self::assertSame(\strlen($xml), (int) $size);
+        /** @var ObjectStorage $storage */
+        $storage = static::getContainer()->get(ObjectStorage::class);
+        $stream = $storage->get($storageKey);
+        self::assertSame($xml, stream_get_contents($stream));
+        fclose($stream);
 
         $document = new \DOMDocument();
         $document->loadXML($xml);
