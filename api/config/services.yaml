@@ -258,6 +258,11 @@ services:
                     $postalCode: '%env(SOFTWARE_PRODUCER_POSTAL_CODE)%'
                     $city: '%env(SOFTWARE_PRODUCER_CITY)%'
                     $country: 'PT'
+    # docs/plans/phase-3.md task 3.6: no real seal provider yet — outside dev/test sealing fails loudly.
+    App\Output\Domain\ElectronicSealer:
+        alias: App\Output\Infrastructure\Sealing\UnconfiguredElectronicSealer
+    App\Output\Application\SealedDocumentPdfs:
+        public: true
     App\Output\Domain\DocumentPrintRepository:
         alias: App\Output\Infrastructure\Persistence\DbalDocumentPrintRepository
     App\Shared\Domain\Fiscal\PrintableDocumentReader:
@@ -372,3 +377,9 @@ services:
             # Also on audit_log (config/packages/doctrine.yaml) — its writes
             # are company-scoped too and need the same RLS company context.
             - { name: 'doctrine.middleware', connection: audit_log }
+
+when@dev:
+    services:
+        # The fake seal (a marker, not a signature) so the e-mail flow can be tried locally.
+        App\Output\Domain\ElectronicSealer:
+            alias: App\Output\Infrastructure\Sealing\FakeElectronicSealer

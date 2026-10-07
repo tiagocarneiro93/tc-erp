@@ -515,7 +515,12 @@ Detailed breakdown and acceptance criteria: `docs/plans/phase-3.md`.
 - [x] Tests: 56 unit (copy labels, determinism rewrite, Twig HTML per legal mention, formatting, QR spec, mPDF + Gotenberg adapters), 5 integration (print log), 7 functional (labels, drafts, other company, byte-identical re-render unchanged by a later customer/company change, frozen identity). Full suite 650, PHPStan, Deptrac, CS-Fixer green.
 - 🧑 **Owner:** engine decision; the software producer's address for training documents (`SOFTWARE_PRODUCER_*`) and TCWeb's NIF; receipts' PDF waits on task 2.9's QR question.
 
-**Not yet started:** 3.6–3.8 (`ElectronicSealer`, email, remaining web AT-status screens).
+### 3.6 `ElectronicSealer`
+- [x] `ElectronicSealer` port (Output) + `FakeElectronicSealer` (dev/test; marker, not a signature) + `UnconfiguredElectronicSealer` (default elsewhere: fails loudly). `SealedDocumentPdfs::obtain()`: per-document advisory lock, then the archived `sealed_pdf` if any (hash-verified, never re-rendered/re-sealed), else render → seal → archive; a failed seal stores nothing; drafts refused.
+- [x] Tests: 7 unit + 1 functional on a real issued document (PostgreSQL + MinIO): one `stored_files` row, identical bytes on every call.
+- 🧑 **Owner:** the real PAdES adapter waits on the trust-provider choice (§14.3 item 15), including one platform certificate vs one per company.
+
+**Not yet started:** 3.7–3.8 (email, remaining web AT-status screens).
 
 Exit: documents communicated to the AT test environment; SAF-T validates against XSD; sealed PDFs produced in sandbox.
 

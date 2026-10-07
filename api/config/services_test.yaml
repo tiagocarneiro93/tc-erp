@@ -20,3 +20,9 @@ services:
     App\AtIntegration\Infrastructure\Fake\FakeAtDocumentWebserviceClient:
         autowire: true
         public: true
+    # docs/plans/phase-3.md task 3.6: the fake seal (a marker, not a signature).
+    App\Output\Domain\ElectronicSealer:
+        alias: App\Output\Infrastructure\Sealing\FakeElectronicSealer
+        public: true
+    App\Output\Infrastructure\Sealing\FakeElectronicSealer:
+        public: true

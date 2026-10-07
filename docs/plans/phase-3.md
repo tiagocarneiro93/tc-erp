@@ -553,6 +553,24 @@ on every render; when a real provider exists, the port makes swapping
 adapters a config change, not a rewrite (proven by the fake/real split
 existing from day one, not retrofitted).
 
+**Status: fake-only, built and covered** — `ElectronicSealer` port (Output domain:
+`seal(CompanyId, pdf): string`, `SealingFailed`), `FakeElectronicSealer` (appends a
+visibly-fake marker, the SHA-256 and the company id; **not a signature**; bound in
+`APP_ENV=dev` and `test`) and `UnconfiguredElectronicSealer` (the default everywhere
+else: sealing fails loudly rather than letting an unsealed PDF go out as if sealed).
+`SealedDocumentPdfs::obtain()` is the only way to a sealed PDF: lock the document
+(advisory lock shared with the print log) → return the archived `sealed_pdf` if there is
+one (verified against its SHA-256, never re-rendered or re-sealed) → otherwise render with
+the label the print log yields, seal, archive. A failed seal stores nothing. Sealing is
+not a hand-out, so it does not write `document_prints`; plain downloads/prints never
+come through here (the "send electronically" path only — task 3.7).
+Proven: unit tests (sealer called once across repeated calls, same bytes, failure stores
+nothing, drafts refused) and a functional test on a real issued document with PostgreSQL
+and MinIO (one `stored_files` row per document, identical bytes).
+**Open:** the real PAdES adapter is blocked on the trust-provider decision (§14.3 item 15),
+and so is whether the seal uses one platform certificate or a per-company one (the port
+already receives the `CompanyId`). Swapping it in is the one alias in `config/services.yaml`.
+
 ### 3.7 Email sending of documents
 
 - Async (Messenger, Redis transport — already provisioned, `PLAN.md` task
