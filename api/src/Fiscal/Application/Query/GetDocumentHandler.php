@@ -46,7 +46,7 @@ final class GetDocumentHandler
     }
 
     /**
-     * @return array{id: string, document_type: string, document_no: string, status: string, customer_id: ?string, pricing_mode: string, rounding_method: string, gross_total: string, lines: list<array<string, mixed>>, can_cancel: bool, can_credit_note: bool, convert_targets: list<string>}
+     * @return array{id: string, document_type: string, document_no: string, status: string, customer_id: ?string, pricing_mode: string, rounding_method: string, gross_total: string, lines: list<array<string, mixed>>, can_cancel: bool, can_credit_note: bool, convert_targets: list<string>, at_communication: array{status: string, attempts: int, response_code: ?string, response_message: ?string, updated_at: string, can_retry: bool}|null}
      */
     public function __invoke(GetDocument $query): array
     {
@@ -66,6 +66,7 @@ final class GetDocumentHandler
             'can_cancel' => $this->canCancel($companyId, $query, $document),
             'can_credit_note' => $this->canCreditNote($companyId, $document),
             'convert_targets' => $this->convertTargets($document),
+            'at_communication' => $this->documents->findAtCommunication($companyId, $query->documentId),
         ];
     }
 

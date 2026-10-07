@@ -31,6 +31,7 @@ use App\Fiscal\Domain\Signing\QrPayloadBuilder;
 use App\Fiscal\Domain\Signing\QrPayloadInput;
 use App\Fiscal\Domain\Signing\QrRegionalTaxAmounts;
 use App\Fiscal\Domain\Signing\SigningMessage;
+use App\Shared\Domain\AtIntegration\AtCommunicationDispatcher;
 use App\Shared\Domain\Audit\AuditLogger;
 use App\Shared\Domain\Clock\Clock;
 use App\Shared\Domain\Company\CompanyContext;
@@ -76,6 +77,7 @@ final class IssueDraftHandler
         private readonly DocumentWriter $documentWriter,
         private readonly IssuedDocumentReader $issuedDocuments,
         private readonly AtCommunicationQueue $atCommunications,
+        private readonly AtCommunicationDispatcher $atDispatcher,
         private readonly CustomerSnapshotProvider $customerSnapshots,
         private readonly IssuerSnapshotProvider $issuerSnapshots,
         private readonly ProductSnapshotProvider $productSnapshots,
@@ -128,12 +130,19 @@ final class IssueDraftHandler
 
         $documentId = DocumentId::generate();
 
-        $this->transactions->transactional(fn () => $this->issue($companyId, $draft, $seriesId, $documentType, $documentId, $command));
+        $communicationIds = $this->transactions->transactional(fn () => $this->issue($companyId, $draft, $seriesId, $documentType, $documentId, $command));
+
+        foreach ($communicationIds as $communicationId) {
+            $this->atDispatcher->dispatchAfterCommit($companyId, $communicationId);
+        }
 
         return $documentId;
     }
 
-    private function issue(CompanyId $companyId, DocumentDraft $draft, SeriesId $seriesId, DocumentType $documentType, DocumentId $documentId, IssueDraft $command): void
+    /**
+     * @return list<string> the `at_communications` rows written, to be woken once the transaction commits
+     */
+    private function issue(CompanyId $companyId, DocumentDraft $draft, SeriesId $seriesId, DocumentType $documentType, DocumentId $documentId, IssueDraft $command): array
     {
         $series = $this->seriesRepository->findForUpdate($companyId, $seriesId);
 
@@ -257,13 +266,25 @@ final class IssueDraftHandler
 
         // §7.1 step 12 / §6.12: every issued document gets a `pending`
         // outbox row in the same transaction, so the async communication
-        // (Phase 3) always has something to pick up. `kind` follows §6.12's
-        // own enum ("series_register|series_finish|invoice|transport") —
-        // GT/GR/GD (transport) aren't issued through this handler yet.
-        $this->atCommunications->enqueue($companyId, 'invoice', 'Document', $documentId->toString(), $now);
+        // (docs/plans/phase-3.md task 3.2) always has something to pick up.
+        // `kind` follows §6.12's own enum ("series_register|series_finish|
+        // invoice|transport") — GT/GR/GD (transport) aren't issued through
+        // this handler yet. A training series (`tipoSerie` F, series manual
+        // §1.3.6) never carries real fiscal documents, so nothing from one is
+        // communicated — not stated in AT's manuals either way, a
+        // conservative default flagged in docs/plans/phase-3.md task 3.2.
+        $communicationIds = [];
+
+        if (!$series->isTraining()) {
+            $communicationIds[] = $this->atCommunications->enqueue($companyId, 'invoice', 'Document', $documentId->toString(), $now);
+        }
 
         foreach ($this->collectOriginDocumentNumbers($payload) as $sourceDocumentNo) {
-            $this->closeIfFullyConverted($companyId, $sourceDocumentNo, $command->actingUserId, $now);
+            $statusChangeId = $this->closeIfFullyConverted($companyId, $sourceDocumentNo, $command->actingUserId, $now);
+
+            if (null !== $statusChangeId) {
+                $communicationIds[] = $statusChangeId;
+            }
         }
 
         $this->auditLogger->log(
@@ -278,6 +299,8 @@ final class IssueDraftHandler
         );
 
         $this->drafts->remove($draft);
+
+        return $communicationIds;
     }
 
     /**
@@ -379,19 +402,22 @@ final class IssueDraftHandler
      * conversions completing it together) serialize rather than both
      * reading pending quantities that don't yet reflect each other.
      */
-    private function closeIfFullyConverted(CompanyId $companyId, string $documentNo, string $actingUserId, \DateTimeImmutable $now): void
+    /**
+     * @return string|null the `at_communications` row enqueued for the source document's new status, if any
+     */
+    private function closeIfFullyConverted(CompanyId $companyId, string $documentNo, string $actingUserId, \DateTimeImmutable $now): ?string
     {
         $this->documentWriter->lockByDocumentNo($companyId, $documentNo);
 
         $source = $this->issuedDocuments->findByDocumentNo($companyId, $documentNo);
 
         if (null === $source || 'N' !== $source['status']) {
-            return;
+            return null;
         }
 
         foreach ($source['lines'] as $line) {
             if (Quantity::fromString($line['pending_quantity'])->isPositive()) {
-                return;
+                return null;
             }
         }
 
@@ -406,6 +432,8 @@ final class IssueDraftHandler
         ];
 
         $this->documentWriter->updateStatus($companyId, DocumentId::fromString($source['id']), 'F', $reason, $now, $statusEvent);
+
+        return $this->atCommunications->enqueueStatusChange($companyId, $source['id'], $now);
     }
 
     private function stringOrDefault(mixed $value, string $default): string

@@ -91,6 +91,14 @@ final class DocumentsController
         new OA\Property(property: 'can_cancel', type: 'boolean', description: 'Whether POST .../cancel would currently succeed for this document.'),
         new OA\Property(property: 'can_credit_note', type: 'boolean', description: 'Whether POST .../credit-note would currently succeed for this document.'),
         new OA\Property(property: 'convert_targets', type: 'array', items: new OA\Items(type: 'string'), description: 'Document types POST .../convert would currently accept for this document; empty if it cannot be converted at all.'),
+        new OA\Property(property: 'at_communication', type: 'object', nullable: true, description: 'Where this document stands with the AT (technical-scope.md §7.5); null when it is never communicated (training series).', properties: [
+            new OA\Property(property: 'status', type: 'string', enum: ['pending', 'sending', 'accepted', 'rejected', 'failed']),
+            new OA\Property(property: 'attempts', type: 'integer'),
+            new OA\Property(property: 'response_code', type: 'string', nullable: true, description: "The AT's own CodigoResposta of the last attempt."),
+            new OA\Property(property: 'response_message', type: 'string', nullable: true),
+            new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+            new OA\Property(property: 'can_retry', type: 'boolean', description: 'Whether POST .../at-communication/retry would currently succeed.'),
+        ]),
         new OA\Property(property: 'lines', type: 'array', items: new OA\Items(properties: [
             new OA\Property(property: 'line_number', type: 'integer'),
             new OA\Property(property: 'pending_quantity', type: 'string'),

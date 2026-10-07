@@ -6,7 +6,7 @@ services:
         INSTALL_XDEBUG: "false"
     volumes:
       - ./api:/app
-    environment:
+    environment: &php-environment
       SERVER_NAME: ":80"
       APP_ENV: dev
       # Overrides api/.env for the Docker network (service hostnames, not 127.0.0.1).
@@ -29,6 +29,39 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
+
+  # docs/plans/phase-3.md task 3.2: consumes the Redis `async` transport — the AT
+  # outbox wake-ups (CommunicateToAt), and later PDF/seal/email jobs.
+  worker:
+    build:
+      context: ./docker/php
+    command: php bin/console messenger:consume async -vv --time-limit=3600 --memory-limit=256M
+    restart: unless-stopped
+    volumes:
+      - ./api:/app
+    environment: *php-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # technical-scope.md §5.4/§7.5: the AT outbox safety net, once a minute —
+  # re-wakes anything pending/failed that is due, and `sending` rows whose
+  # worker died. Only queues work; the `worker` service sends it.
+  at-sweeper:
+    build:
+      context: ./docker/php
+    command: sh -c 'while true; do php bin/console app:at:sweep; sleep 60; done'
+    restart: unless-stopped
+    volumes:
+      - ./api:/app
+    environment: *php-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   postgres:
     image: postgres:17-alpine

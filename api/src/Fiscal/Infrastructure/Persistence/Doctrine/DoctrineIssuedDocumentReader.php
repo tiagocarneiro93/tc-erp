@@ -130,6 +130,37 @@ final class DoctrineIssuedDocumentReader implements IssuedDocumentReader
         return false !== $found;
     }
 
+    public function findAtCommunication(CompanyId $companyId, DocumentId $documentId): ?array
+    {
+        /** @var array{status: string, attempts: int|string, response_code: ?string, response_message: ?string, updated_at: string}|false $registration */
+        $registration = $this->connection->fetchAssociative(
+            "SELECT status, attempts, response_code, response_message, updated_at FROM at_communications
+             WHERE company_id = ? AND subject_type = 'Document' AND subject_id = ? AND kind = 'invoice'
+             ORDER BY created_at DESC LIMIT 1",
+            [$companyId->toString(), $documentId->toString()],
+        );
+
+        if (false === $registration) {
+            return null;
+        }
+
+        $canRetry = false !== $this->connection->fetchOne(
+            "SELECT 1 FROM at_communications
+             WHERE company_id = ? AND subject_type = 'Document' AND subject_id = ? AND status IN ('failed', 'rejected')
+             LIMIT 1",
+            [$companyId->toString(), $documentId->toString()],
+        );
+
+        return [
+            'status' => $registration['status'],
+            'attempts' => (int) $registration['attempts'],
+            'response_code' => $registration['response_code'],
+            'response_message' => $registration['response_message'],
+            'updated_at' => (new \DateTimeImmutable($registration['updated_at']))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z'),
+            'can_retry' => $canRetry,
+        ];
+    }
+
     public function search(CompanyId $companyId, ?string $documentType, ?string $status, ?string $customerId, ?string $from, ?string $to): array
     {
         $conditions = ['d.company_id = ?'];

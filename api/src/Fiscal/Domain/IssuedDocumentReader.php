@@ -69,6 +69,18 @@ interface IssuedDocumentReader
     public function hasBlockingAtCommunication(CompanyId $companyId, DocumentId $documentId): bool;
 
     /**
+     * docs/plans/phase-3.md task 3.2: where this document stands with the AT,
+     * for the detail screen (technical-scope.md §7.5 — "surface in the UI").
+     * The registration row (`kind = invoice`) decides `status`; `can_retry`
+     * is true when *any* of the document's communications `failed` or was
+     * `rejected` (a status-change row can fail on its own). Null when the
+     * document never entered the outbox (a training-series document).
+     *
+     * @return array{status: string, attempts: int, response_code: ?string, response_message: ?string, updated_at: string, can_retry: bool}|null
+     */
+    public function findAtCommunication(CompanyId $companyId, DocumentId $documentId): ?array;
+
+    /**
      * task 2.11: the document list screen (technical-scope.md §9's
      * `GET /companies/{c}/documents?type=&status=&customer=&from=&to=`).
      * `open_amount` (`gross_total` minus {@see self::sumSettledAmount()})

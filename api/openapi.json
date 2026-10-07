@@ -6,6 +6,46 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/v1/companies/{companyId}/documents/{documentId}/at-communication/retry": {
+            "post": {
+                "tags": [
+                    "Documents"
+                ],
+                "operationId": "post_documents_at_communication_retry",
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Queued for another attempt."
+                    },
+                    "403": {
+                        "description": "The caller lacks the documents.issue permission."
+                    },
+                    "404": {
+                        "description": "No such document."
+                    },
+                    "422": {
+                        "description": "The document has no failed or rejected AT communication to retry."
+                    }
+                }
+            }
+        },
         "/api/v1/companies/{companyId}/price-lists": {
             "get": {
                 "tags": [
@@ -1854,6 +1894,43 @@
                                             "items": {
                                                 "type": "string"
                                             }
+                                        },
+                                        "at_communication": {
+                                            "description": "Where this document stands with the AT (technical-scope.md \u00a77.5); null when it is never communicated (training series).",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "pending",
+                                                        "sending",
+                                                        "accepted",
+                                                        "rejected",
+                                                        "failed"
+                                                    ]
+                                                },
+                                                "attempts": {
+                                                    "type": "integer"
+                                                },
+                                                "response_code": {
+                                                    "description": "The AT's own CodigoResposta of the last attempt.",
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "response_message": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "can_retry": {
+                                                    "description": "Whether POST .../at-communication/retry would currently succeed.",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
                                         },
                                         "lines": {
                                             "type": "array",
@@ -5269,6 +5346,9 @@
     },
     "tags": [
         {
+            "name": "Documents"
+        },
+        {
             "name": "Products"
         },
         {
@@ -5276,9 +5356,6 @@
         },
         {
             "name": "Company"
-        },
-        {
-            "name": "Documents"
         },
         {
             "name": "Drafts"

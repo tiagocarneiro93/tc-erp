@@ -21,6 +21,13 @@ use Symfony\Component\Messenger\Middleware\StackInterface;
  * listener already owns that context's lifecycle for the rest of the
  * request — clearing it here would break a request that dispatches more
  * than one company-scoped command.
+ *
+ * A stamped message restores whatever context was there before it, rather
+ * than blindly clearing: in a worker that is "none" (so nothing leaks into
+ * the next iteration, as before), but a stamped message dispatched *during*
+ * a request (docs/plans/phase-3.md task 3.2: the post-commit AT wake-up
+ * sent to the transport once issuance has committed) must not wipe the
+ * request's own company context.
  */
 final class RestoreCompanyContextMiddleware implements MiddlewareInterface
 {
@@ -36,12 +43,17 @@ final class RestoreCompanyContextMiddleware implements MiddlewareInterface
             return $stack->next()->handle($envelope, $stack);
         }
 
+        $previous = $this->companyContext->hasCompany() ? $this->companyContext->companyId() : null;
         $this->companyContext->set(CompanyId::fromString($stamp->companyId));
 
         try {
             return $stack->next()->handle($envelope, $stack);
         } finally {
-            $this->companyContext->clear();
+            if (null === $previous) {
+                $this->companyContext->clear();
+            } else {
+                $this->companyContext->set($previous);
+            }
         }
     }
 }

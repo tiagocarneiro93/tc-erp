@@ -497,6 +497,36 @@ export type GetDocumentsList200 = {
   next_cursor?: string | null;
 };
 
+export type GetDocumentsGet200AtCommunicationStatus = typeof GetDocumentsGet200AtCommunicationStatus[keyof typeof GetDocumentsGet200AtCommunicationStatus];
+
+
+export const GetDocumentsGet200AtCommunicationStatus = {
+  pending: 'pending',
+  sending: 'sending',
+  accepted: 'accepted',
+  rejected: 'rejected',
+  failed: 'failed',
+} as const;
+
+/**
+ * Where this document stands with the AT (technical-scope.md §7.5); null when it is never communicated (training series).
+ * @nullable
+ */
+export type GetDocumentsGet200AtCommunication = {
+  status?: GetDocumentsGet200AtCommunicationStatus;
+  attempts?: number;
+  /**
+     * The AT's own CodigoResposta of the last attempt.
+     * @nullable
+     */
+  response_code?: string | null;
+  /** @nullable */
+  response_message?: string | null;
+  updated_at?: string;
+  /** Whether POST .../at-communication/retry would currently succeed. */
+  can_retry?: boolean;
+} | null;
+
 export type GetDocumentsGet200LinesItem = {
   line_number?: number;
   pending_quantity?: string;
@@ -532,6 +562,11 @@ export type GetDocumentsGet200 = {
   can_credit_note?: boolean;
   /** Document types POST .../convert would currently accept for this document; empty if it cannot be converted at all. */
   convert_targets?: string[];
+  /**
+     * Where this document stands with the AT (technical-scope.md §7.5); null when it is never communicated (training series).
+     * @nullable
+     */
+  at_communication?: GetDocumentsGet200AtCommunication;
   lines?: GetDocumentsGet200LinesItem[];
 };
 
@@ -1026,6 +1061,76 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getPostDocumentsAtCommunicationRetryUrl = (companyId: string,
+    documentId: string,) => {
+
+
+
+
+  return `/api/v1/companies/${companyId}/documents/${documentId}/at-communication/retry`
+}
+
+export const postDocumentsAtCommunicationRetry = async (companyId: string,
+    documentId: string, options?: RequestInit): Promise<void> => {
+
+  return httpClient<void>(getPostDocumentsAtCommunicationRetryUrl(companyId,documentId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPostDocumentsAtCommunicationRetryMutationKey = () => ['postDocumentsAtCommunicationRetry'] as const;
+
+export const getPostDocumentsAtCommunicationRetryMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsAtCommunicationRetry>>, TError,PostDocumentsAtCommunicationRetryMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postDocumentsAtCommunicationRetry>>, TError,PostDocumentsAtCommunicationRetryMutationVariables, TContext> => {
+
+const mutationKey = getPostDocumentsAtCommunicationRetryMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postDocumentsAtCommunicationRetry>>, PostDocumentsAtCommunicationRetryMutationVariables> = (props) => {
+          const {companyId,documentId} = props ?? {};
+
+          return  postDocumentsAtCommunicationRetry(companyId,documentId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostDocumentsAtCommunicationRetryMutationResult = NonNullable<Awaited<ReturnType<typeof postDocumentsAtCommunicationRetry>>>
+
+    export type PostDocumentsAtCommunicationRetryMutationError = void
+    export type PostDocumentsAtCommunicationRetryMutationVariables = {companyId: string;documentId: string}
+
+    export const usePostDocumentsAtCommunicationRetry = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postDocumentsAtCommunicationRetry>>, TError,PostDocumentsAtCommunicationRetryMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postDocumentsAtCommunicationRetry>>,
+        TError,
+        PostDocumentsAtCommunicationRetryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostDocumentsAtCommunicationRetryMutationOptions(options), queryClient);
+    }
 
 export const getGetPriceListsListUrl = (companyId: string,) => {
 

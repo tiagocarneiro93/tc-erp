@@ -179,6 +179,21 @@ services:
         arguments:
             $wsdlPath: '%kernel.project_dir%/resources/wsdl/SeriesWS.wsdl'
             $endpoint: '%env(AT_SERIES_WEBSERVICE_ENDPOINT)%'
+    # docs/plans/phase-3.md task 3.2: the e-Fatura document webservice
+    # (RegisterInvoice/RegisterWork/ChangeWorkStatus). SoftwareCertificateNumber
+    # is the same certificate number the document signer prints ("0000" while
+    # uncertified → 0, decision 6). services_test.yaml swaps the client for a fake.
+    App\AtIntegration\Domain\Webservice\AtDocumentWebserviceClient:
+        alias: App\AtIntegration\Infrastructure\Soap\EFaturaWSClient
+        public: true
+    App\AtIntegration\Infrastructure\Soap\EFaturaWSClient:
+        arguments:
+            $endpoint: '%env(AT_EFATURA_WEBSERVICE_ENDPOINT)%'
+    App\AtIntegration\Infrastructure\Soap\AtSoapHttpTransport:
+        alias: App\AtIntegration\Infrastructure\Soap\CurlAtSoapHttpTransport
+    App\AtIntegration\Domain\Efatura\EFaturaRequestBuilder:
+        arguments:
+            $softwareCertificateNumber: '%env(int:DOCUMENT_SIGNING_CERTIFICATE_NUMBER)%'
     App\Parties\Domain\CustomerRepository:
         alias: App\Parties\Infrastructure\Persistence\Doctrine\Repository\DoctrineCustomerRepository
         public: true

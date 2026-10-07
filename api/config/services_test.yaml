@@ -13,3 +13,10 @@ services:
         public: true
     App\AtIntegration\Infrastructure\Fake\FakeSeriesWebserviceClient:
         public: true
+    # docs/plans/phase-3.md task 3.2: same split for the e-Fatura document client.
+    App\AtIntegration\Domain\Webservice\AtDocumentWebserviceClient:
+        alias: App\AtIntegration\Infrastructure\Fake\FakeAtDocumentWebserviceClient
+        public: true
+    App\AtIntegration\Infrastructure\Fake\FakeAtDocumentWebserviceClient:
+        autowire: true
+        public: true

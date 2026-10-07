@@ -51,6 +51,29 @@ final class RestoreCompanyContextMiddlewareTest extends TestCase
         self::assertFalse($context->hasCompany());
     }
 
+    public function testRestoresTheRequestsOwnCompanyInsteadOfClearingItWhenAStampedMessageIsHandledMidRequest(): void
+    {
+        // docs/plans/phase-3.md task 3.2: the post-commit AT wake-up is a stamped message sent
+        // while a request still owns its company context; handling it must not wipe that context.
+        $context = new RequestCompanyContext();
+        $requestsCompany = CompanyId::generate();
+        $context->set($requestsCompany);
+        $middleware = new RestoreCompanyContextMiddleware($context);
+        $stampedFor = CompanyId::generate();
+
+        $seen = null;
+        $stack = $this->stackThatCalls(static function () use ($context, &$seen): void {
+            $seen = $context->companyId();
+        });
+
+        $middleware->handle(new Envelope(new \stdClass(), [new CompanyStamp($stampedFor)]), $stack);
+
+        self::assertNotNull($seen);
+        self::assertTrue($stampedFor->equals($seen));
+        self::assertTrue($context->hasCompany());
+        self::assertTrue($requestsCompany->equals($context->companyId()));
+    }
+
     public function testLeavesAnAlreadySetContextAloneWhenThereIsNoStamp(): void
     {
         $context = new RequestCompanyContext();

@@ -45,6 +45,15 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * carry there. Guessing a fiscal barcode format is exactly what CLAUDE.md
  * forbids, so this is a genuine open question for the owner, not a gap
  * this task can close alone — flagged in docs/PLAN.md's task 2.9 entry.
+ *
+ * **Never enqueues an AT communication** (docs/plans/phase-3.md task 3.2,
+ * which reverses that plan's own decision 8): `Fatcorews.wsdl`'s
+ * `PaymentTypeType` enumerates only `RC` — "Recibo emitido no âmbito do
+ * regime de IVA de Caixa" (also `at-ws-efatura-aspetos-especificos.pdf`
+ * §2.1.7.1 item 1.6.4) — so `RegisterPayment` can never carry an `RG`
+ * receipt, and AT would reject every one. Communicating `RG` has no
+ * webservice at all; only cash-VAT `RC` receipts do (not issued by this
+ * system yet).
  */
 #[AsMessageHandler(bus: 'command.bus')]
 final class IssueReceiptHandler

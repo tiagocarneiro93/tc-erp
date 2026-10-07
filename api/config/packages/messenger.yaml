@@ -30,12 +30,21 @@ framework:
                     allow_no_handlers: true
                 middleware:
                     - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
+            # AT outbox consumer and sweeper (docs/plans/phase-3.md task 3.2).
+            # Deliberately *no* doctrine_transaction: the handler talks to AT
+            # between two short transactions it opens itself, and an open
+            # transaction around a network call would hold a connection (and
+            # row locks) for as long as AT takes to answer.
+            at.bus:
+                middleware:
+                    - App\Shared\Infrastructure\Messenger\RestoreCompanyContextMiddleware
 
-        # Used from Phase 3 (AT communication outbox); not routed to yet.
+        # AT communication outbox (docs/plans/phase-3.md task 3.2).
         transports:
             async: '%env(MESSENGER_TRANSPORT_DSN)%'
 
-        routing: {}
+        routing:
+            App\AtIntegration\Application\Command\CommunicateToAt: async
 
 when@test:
     framework:

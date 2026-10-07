@@ -327,11 +327,14 @@ deptrac:
             - AtIntegration.Domain
             - Shared.Domain
             - Shared.Infrastructure
+        # Shared.Infrastructure only for IdempotencyKeyGuard, same narrow
+        # exception Fiscal.UIHttp has (see its comment above).
         AtIntegration.UIHttp:
             - AtIntegration.UIHttp
             - AtIntegration.Application
             - AtIntegration.Domain
             - Shared.Domain
+            - Shared.Infrastructure
 
         Shared.Domain:
             - Shared.Domain

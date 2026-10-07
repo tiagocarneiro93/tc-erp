@@ -18,13 +18,35 @@ use App\Shared\Domain\CompanyId;
  */
 interface AtCommunicationQueue
 {
+    /**
+     * Written on the caller's own (default) connection, inside the caller's
+     * transaction — the whole point of the outbox pattern: if issuance
+     * rolls back, so does the row; if it commits, the row is there.
+     *
+     * @return string the new row's id, for {@see \App\Shared\Domain\AtIntegration\AtCommunicationDispatcher}
+     */
     public function enqueue(
         CompanyId $companyId,
         string $kind,
         string $subjectType,
         string $subjectId,
         \DateTimeImmutable $now,
-    ): void;
+    ): string;
+
+    /**
+     * docs/plans/phase-3.md task 3.2: a document's status changed *after*
+     * AT already accepted its registration (today: an `OR`/`PF`/`NE`
+     * reaching `F` once fully converted, task 2.8 — `ChangeWorkStatus`,
+     * `at-ws-efatura-aspetos-especificos.pdf` §2.1.5). Only enqueues when an
+     * `accepted` registration exists: any other registration (not sent yet,
+     * failed, in flight) reads the document's current status when it is
+     * actually sent, so AT hears about the new status in the registration
+     * itself. Cancellation never needs this — task 2.10 only allows it
+     * before AT confirmed the document (`pending`/`failed`/`rejected`).
+     *
+     * @return string|null the new row's id, or null when nothing was enqueued
+     */
+    public function enqueueStatusChange(CompanyId $companyId, string $subjectId, \DateTimeImmutable $now): ?string;
 
     /**
      * docs/plans/phase-3.md task 3.1/decision 3: series register/finish/cancel
