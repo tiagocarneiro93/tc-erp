@@ -670,6 +670,29 @@ whatever caused the rejection is fixed.
   silently ran as `dev`). The spec's timeout is raised to 120 s (the flow takes ~50 s).
   The CI job itself has not run on GitHub — only the equivalent commands locally.
 
+### Live-AT test suite (added after 3.8)
+
+`api/tests/LiveAt/` + `make test-at-live` (own config `phpunit.live-at.dist.xml`, never part
+of `make test`/CI): the production series and e-Fatura adapters wired straight to
+`api/.env.test.local` (sub-user, password, **`AT_TEST_NIF`**, certificate, public key,
+endpoints), no database or UI. Refuses to run (a failure, not a skip) unless both endpoints
+are AT's **test** ones (722/723/725 on `servicos.portaldasfinancas.gov.pt`; production is
+422/423). `SeriesLifecycleTest` is **fixed** (training FT series, AT's exact codes
+2001/2003/2004; only the series code is random per run). `DocumentCommunicationTest` sends
+the scenarios in `scenarios.dist.php` (FT ×3 incl. mixed VAT/discount/exempt and cancelled,
+FS, FR, NC, ND, OR, PF, NE, NE→F via `ChangeWorkStatus`, and a deliberately wrong FT that must
+be rejected), overridable per key in a git-ignored `scenarios.local.php` or narrowed with
+`AT_TEST_ONLY`; amounts come from the real `PriceCalculator`. Requests/responses and a
+`report.md` land in `api/var/at-live/<run>/` (password material blanked). Checked offline in
+the normal suite (`tests/Unit/LiveAt`, 47 tests): the endpoint guard, configuration,
+scenario merging, harness wiring with a throwaway certificate, and that every shipped
+scenario yields a request that validates against AT's own `Fatcorews.wsdl` schema.
+**Not yet run against AT** — it needs your certificate and sub-user.
+**Finding to confirm with the first run:** AT's `finalizarSerie` code 4047 says the last
+document number must be greater than the start of the sequence; `Series::finish()` accepts a
+series that issued only its first document. The series test probes exactly that boundary and
+records AT's answer.
+
 ---
 
 ## Phase 3 exit criteria

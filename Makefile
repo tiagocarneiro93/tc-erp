@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 COMPOSE := docker compose
 
-.PHONY: help up down api-shell test test-api test-web e2e lint fix migrate openapi seed signing-key
+.PHONY: help up down api-shell test test-api test-at-live test-web e2e lint fix migrate openapi seed signing-key
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -22,6 +22,9 @@ test: test-api test-web ## Run all tests (api + web)
 
 test-api: ## Run PHPUnit
 	$(COMPOSE) exec php vendor/bin/phpunit
+
+test-at-live: ## Run the live-AT suite against AT's TEST webservices (needs api/.env.test.local; see api/tests/LiveAt/README.md)
+	$(COMPOSE) exec php vendor/bin/phpunit -c phpunit.live-at.dist.xml
 
 test-web: ## Run Vitest
 	$(COMPOSE) exec node pnpm test

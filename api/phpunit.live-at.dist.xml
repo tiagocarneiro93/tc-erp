@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    The live-AT suite (tests/LiveAt): real calls to AT's TEST webservices, with
+    your certificate and sub-user. Deliberately a configuration of its own, not
+    a testsuite of phpunit.dist.xml, so `make test` / CI can never run it by
+    accident. Run it with `make test-at-live`; see tests/LiveAt/README.md.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         failOnWarning="true"
+>
+    <php>
+        <ini name="error_reporting" value="-1" />
+        <!-- APP_ENV=test so tests/bootstrap.php loads .env.test.local (where the credentials live). -->
+        <env name="APP_ENV" value="test" force="true" />
+        <server name="APP_ENV" value="test" force="true" />
+        <server name="SHELL_VERBOSITY" value="-1" />
+    </php>
+
+    <testsuites>
+        <testsuite name="live-at">
+            <directory>tests/LiveAt</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -533,6 +533,10 @@ Detailed breakdown and acceptance criteria: `docs/plans/phase-3.md`.
 - [x] **Fixed a broken e2e job** (pre-existing since 3.1): AT credentials step missing in the spec, and CI ran the API as `dev` (real AT). New `APP_ENV=e2e` (fake AT clients + sealer, synchronous queue); CI gets MinIO + `gd` and `php -S -d variables_order=EGPCS`. The GitHub job itself has not run yet.
 - Deviations: e2e uses fake AT (not AT's test environment); rejected→retry→accepted is covered by Vitest + the backend flow test, not in the browser.
 
+### Live-AT test suite (after 3.8)
+- [x] `api/tests/LiveAt/`, `make test-at-live`, own PHPUnit config; env-driven (`AT_TEST_SUBUSER/PASSWORD/NIF`, cert, public key, endpoints in `api/.env.test.local`); hard guard: only AT test endpoints (722/723/725), else the run fails. Fixed series lifecycle test (2001/2003/2004); configurable document scenarios (`scenarios.dist.php` + git-ignored `scenarios.local.php`, `AT_TEST_ONLY`). Report + raw XML in `api/var/at-live/`. 47 offline unit tests incl. schema validation of every scenario. See `api/tests/LiveAt/README.md`.
+- 🧑 **Owner:** put the certificate, public key and test sub-user in `api/.env.test.local` and run it; confirm the `finalizarSerie` 4047 boundary (series finished after a single document).
+
 **Phase 3 status:** all eight tasks built. Exit criteria: live AT test-environment run for each document type is **owner-run** (see the task 3.1g/3.2 notes); sealed PDFs are fake-sealed until a trust provider is chosen.
 
 Exit: documents communicated to the AT test environment; SAF-T validates against XSD; sealed PDFs produced in sandbox.
